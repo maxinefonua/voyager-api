@@ -1,5 +1,5 @@
-# <img src="/src/main/resources/static/images/logo.svg" width="30"> Voyager
-### API service for Voyager travel app
+# <img src="/src/main/resources/static/images/logo.svg" width="30"> Voyager API
+### Backend services for Voyager travel app
 A personal project I took on to relearn full-cycle web development, and to better organize my travel wish list. Built entirely on open-sourced data with caching to manage request limits.
 
 #### Voyager UI <a href='https://github.com/maxinefonua/voyager-ui' target='_blank' rel='noopener noreferrer nofollow'>GitHub</a>
