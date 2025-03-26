@@ -1,8 +1,9 @@
 # <img src="/src/main/resources/static/images/logo.svg" width="30"> Voyager API
 ### Backend services for Voyager travel app
-A personal project I took on to relearn full-cycle web development, and to better organize my travel wish list. Built entirely on open-sourced data with caching to manage request limits.
+A personal project I took on to relearn full-cycle development, and to better organize my travel wish list. Built entirely on open-sourced data. Manages caching, authorization, request limits to external APIs
 
-#### Voyager UI <a href='https://github.com/maxinefonua/voyager-ui' target='_blank' rel='noopener noreferrer nofollow'>GitHub</a>
+#### Services Voyager web app: 
+- Voyager UI <a href='https://github.com/maxinefonua/voyager-ui' target='_blank' rel='noopener noreferrer nofollow'>GitHub</a>
 
 #### Built using:
 - Spring Boot
