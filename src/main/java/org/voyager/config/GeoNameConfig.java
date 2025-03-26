@@ -1,12 +1,15 @@
 package org.voyager.config;
 
+import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
 import org.voyager.model.response.geonames.FeatureClass;
+import static org.voyager.utls.ConstantsUtil.GEONAMES_API_USERNAME;
+import static org.voyager.utls.ConstantsUtil.invalidEnvironmentVar;
+import static org.voyager.utls.MessageUtil.EMPTY_ENV_VAR;
 
 @Component
 @ConfigurationProperties(prefix = "geonames")
@@ -17,10 +20,29 @@ public class GeoNameConfig {
     String searchPath;
     String getPath;
     int maxRows;
-    @Value("${GEONAMES_API_USERNAME}")
     String username;
     Boolean isNameRequired;
     FeatureClass featureClass;
+
+    @PostConstruct
+    public void validate() {
+        if (invalidEnvironmentVar(GEONAMES_API_USERNAME,username)) {
+            throw new IllegalArgumentException(String.format(EMPTY_ENV_VAR,GEONAMES_API_USERNAME));
+        }
+        searchUriBuilder = UriComponentsBuilder
+                .newInstance().scheme(protocol)
+                .host(host)
+                .path(searchPath)
+                .queryParam(NAME_REQUIRED_KEY,isNameRequired)
+                .queryParam(FEATURE_CLASS_KEY,featureClass)
+                .queryParam(MAX_ROWS_KEY,maxRows)
+                .queryParam(USERNAME_KEY,username);
+        getUriBuilder = UriComponentsBuilder
+                .newInstance().scheme(protocol)
+                .host(host)
+                .path(getPath)
+                .queryParam(USERNAME_KEY,username);
+    }
 
     private static final String GEONAME_KEY = "geonameId";
     private static final String USERNAME_KEY = "username";
@@ -34,32 +56,15 @@ public class GeoNameConfig {
     private UriComponentsBuilder getUriBuilder;
 
     public String buildSearchURL(String encodedQuery, Integer startRow) {
-        if (searchUriBuilder == null) {
-            searchUriBuilder = UriComponentsBuilder
-                    .newInstance().scheme(protocol)
-                    .host(host)
-                    .path(searchPath);
-        }
         return searchUriBuilder
                 .queryParam(QUERY_KEY,encodedQuery)
                 .queryParam(START_ROW_KEY,startRow)
-                .queryParam(NAME_REQUIRED_KEY,isNameRequired)
-                .queryParam(FEATURE_CLASS_KEY,featureClass)
-                .queryParam(MAX_ROWS_KEY,maxRows)
-                .queryParam(USERNAME_KEY,username)
                 .toUriString();
     }
 
     public String buildGetURL(Long geoNameId) {
-        if (getUriBuilder == null) {
-            getUriBuilder = UriComponentsBuilder
-                    .newInstance().scheme(protocol)
-                    .host(host)
-                    .path(getPath);
-        }
         return getUriBuilder
                 .queryParam(GEONAME_KEY,geoNameId)
-                .queryParam(USERNAME_KEY,username)
                 .toUriString();
     }
 }

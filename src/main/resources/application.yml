@@ -7,8 +7,12 @@ geonames:
   searchPath: /searchJSON
   getPath: /getJSON
   maxRows: 10
+  username: ${GEONAMES_API_USERNAME}
   isNameRequired: true
   featureClass: P
+
+auth:
+  authToken: ${VOYAGER_API_KEY}
 
 spring:
   profiles:
