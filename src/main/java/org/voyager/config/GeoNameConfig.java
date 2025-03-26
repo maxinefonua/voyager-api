@@ -7,9 +7,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
 import org.voyager.model.response.geonames.FeatureClass;
-import static org.voyager.utls.ConstantsUtil.GEONAMES_API_USERNAME;
-import static org.voyager.utls.ConstantsUtil.invalidEnvironmentVar;
-import static org.voyager.utls.MessageUtil.EMPTY_ENV_VAR;
+import org.voyager.utls.ConstantsUtil;
+import java.util.List;
 
 @Component
 @ConfigurationProperties(prefix = "geonames")
@@ -26,9 +25,7 @@ public class GeoNameConfig {
 
     @PostConstruct
     public void validate() {
-        if (invalidEnvironmentVar(GEONAMES_API_USERNAME,username)) {
-            throw new IllegalArgumentException(String.format(EMPTY_ENV_VAR,GEONAMES_API_USERNAME));
-        }
+        ConstantsUtil.validateEnvironVars(List.of(ConstantsUtil.GEONAMES_API_USERNAME));
         searchUriBuilder = UriComponentsBuilder
                 .newInstance().scheme(protocol)
                 .host(host)
@@ -56,15 +53,16 @@ public class GeoNameConfig {
     private UriComponentsBuilder getUriBuilder;
 
     public String buildSearchURL(String encodedQuery, Integer startRow) {
+
         return searchUriBuilder
-                .queryParam(QUERY_KEY,encodedQuery)
-                .queryParam(START_ROW_KEY,startRow)
+                .replaceQueryParam(QUERY_KEY,encodedQuery)
+                .replaceQueryParam(START_ROW_KEY,startRow)
                 .toUriString();
     }
 
     public String buildGetURL(Long geoNameId) {
         return getUriBuilder
-                .queryParam(GEONAME_KEY,geoNameId)
+                .replaceQueryParam(GEONAME_KEY,geoNameId)
                 .toUriString();
     }
 }

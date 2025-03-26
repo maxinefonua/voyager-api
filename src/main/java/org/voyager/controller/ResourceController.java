@@ -3,12 +3,10 @@ package org.voyager.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.voyager.model.TownDisplay;
 import org.voyager.model.response.SearchResponseGeoNames;
-import org.voyager.model.response.geonames.GeoName;
 import org.voyager.repository.TownRepository;
 import org.voyager.service.RegionService;
 import org.voyager.service.SearchLocationService;
@@ -16,7 +14,7 @@ import org.voyager.service.SearchLocationService;
 import java.util.List;
 
 @RestController
-class APIController {
+class ResourceController {
 
     @Autowired
     private TownRepository townRepository;

@@ -13,7 +13,7 @@
 
     <groupId>org.voyager</groupId>
     <artifactId>voyager-api</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>0.1-SNAPSHOT</version>
     <name>VoyagerAPI</name>
     <description>API Services for Voyager project</description>
 
@@ -25,6 +25,7 @@
         <jdom.version>1.0</jdom.version>
         <vavr.version>0.10.6</vavr.version>
         <apache-commons.version>3.17.0</apache-commons.version>
+        <voyager-commons.version>1.0-SNAPSHOT</voyager-commons.version>
     </properties>
     <dependencies>
         <dependency>
@@ -80,6 +81,22 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
             <version>${apache-commons.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.voyager</groupId>
+            <artifactId>voyager-commons</artifactId>
+            <version>${voyager-commons.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-annotations</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.projectlombok</groupId>
+                    <artifactId>lombok</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
     </dependencies>
