@@ -1,0 +1,27 @@
+server:
+  port: 3000
+
+geonames:
+  protocol: https
+  host: secure.geonames.org
+  searchPath: /searchJSON
+  getPath: /getJSON
+  maxRows: 10
+  isNameRequired: true
+  featureClass: P
+
+spring:
+  profiles:
+    active: local
+  datasource:
+    url: jdbc:postgresql://localhost:5432/postgres
+    username: api_user
+    password: ${POSTGRES_API_USER_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  logging:
+    level:
+      org:
+        springframework:
+          cache: trace
