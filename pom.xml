@@ -25,7 +25,8 @@
         <jdom.version>1.0</jdom.version>
         <vavr.version>0.10.6</vavr.version>
         <apache-commons.version>3.17.0</apache-commons.version>
-        <voyager-commons.version>1.0-SNAPSHOT</voyager-commons.version>
+        <voyager-migration.version>1.0-SNAPSHOT</voyager-migration.version>
+        <voyager-models.version>1.0-SNAPSHOT</voyager-models.version>
     </properties>
     <dependencies>
         <dependency>
@@ -82,11 +83,10 @@
             <artifactId>commons-lang3</artifactId>
             <version>${apache-commons.version}</version>
         </dependency>
-
         <dependency>
             <groupId>org.voyager</groupId>
-            <artifactId>voyager-commons</artifactId>
-            <version>${voyager-commons.version}</version>
+            <artifactId>voyager-migration</artifactId>
+            <version>${voyager-migration.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>com.fasterxml.jackson.core</groupId>
@@ -125,17 +125,5 @@
                 </plugin>
             </plugins>
         </pluginManagement>
-
-<!--        <resources>-->
-<!--            <resource>-->
-<!--                <directory>src/main/resources</directory>-->
-<!--                <filtering>true</filtering>-->
-<!--                <excludes>-->
-<!--                    <exclude>**/application.yml</exclude>-->
-<!--                </excludes>-->
-<!--            </resource>-->
-<!--        </resources>-->
-
     </build>
-
 </project>

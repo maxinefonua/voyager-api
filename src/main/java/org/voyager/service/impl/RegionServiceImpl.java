@@ -36,11 +36,10 @@ public class RegionServiceImpl implements RegionService {
     @Override
     public List<TownDisplay> convertTownListToTownDisplayList(Iterable<Town> townList) {
         ArrayList<TownDisplay> townDisplayList = new ArrayList<>();
-        for (Town town: townList) {
+        townList.forEach(town -> {
             Region region = regionRepository.findById(town.getRegionId()).get();
-            TownDisplay townDisplay = new TownDisplay(town.getName(),town.getCountry(),region.getName());
-            townDisplayList.add(townDisplay);
-        }
+            townDisplayList.add(new TownDisplay(town.getName(),town.getCountry(),region.getName()));
+        });
         return townDisplayList;
     }
 }
