@@ -51,6 +51,13 @@ class ResourceController {
         return airportService.getAllIataCodes();
     }
 
+    @GetMapping("/nearby-airports")
+    @Cacheable("nearbyAirportsCache")
+    public List<AirportDisplay> getAirport(@RequestParam Double latitude, @RequestParam Double longitude, @RequestParam(defaultValue = "5") Integer limit) {
+        System.out.println("fetching uncached nearby airports");
+        return airportService.getClosest(latitude,longitude,limit);
+    }
+
     @GetMapping("/iata")
     @Cacheable("iataCache")
     public List<String[]> getAirports() {
