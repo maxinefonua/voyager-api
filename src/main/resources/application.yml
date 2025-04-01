@@ -1,5 +1,7 @@
 server:
   port: 3000
+  error:
+    include-message: always
 
 geonames:
   protocol: https

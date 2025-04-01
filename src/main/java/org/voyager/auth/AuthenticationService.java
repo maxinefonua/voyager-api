@@ -8,8 +8,8 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.stereotype.Component;
-import org.voyager.utls.ConstantsUtil;
-import org.voyager.utls.MessageUtil;
+import org.voyager.utils.ConstantsUtils;
+import org.voyager.utils.MessageUtils;
 
 import java.util.List;
 
@@ -26,13 +26,13 @@ public class AuthenticationService {
 
     @PostConstruct
     public void validate() {
-        ConstantsUtil.validateEnvironVars(List.of(ConstantsUtil.VOYAGER_API_KEY));
+        ConstantsUtils.validateEnvironVars(List.of(ConstantsUtils.VOYAGER_API_KEY));
     }
 
     public static Authentication getAuthentication(HttpServletRequest request) {
-        String apiKey = request.getHeader(ConstantsUtil.AUTH_TOKEN_HEADER_NAME);
+        String apiKey = request.getHeader(ConstantsUtils.AUTH_TOKEN_HEADER_NAME);
         if (apiKey == null || !apiKey.equals(AUTH_TOKEN)) {
-            throw new BadCredentialsException(MessageUtil.getInvalidApiKeyMessage());
+            throw new BadCredentialsException(MessageUtils.getInvalidApiKeyMessage());
         }
 
         return new ApiKeyAuthentication(apiKey, AuthorityUtils.NO_AUTHORITIES);

@@ -7,7 +7,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
 import org.voyager.model.response.geonames.FeatureClass;
-import org.voyager.utls.ConstantsUtil;
+import org.voyager.utils.ConstantsUtils;
 import java.util.List;
 
 @Component
@@ -25,7 +25,7 @@ public class GeoNameConfig {
 
     @PostConstruct
     public void validate() {
-        ConstantsUtil.validateEnvironVars(List.of(ConstantsUtil.GEONAMES_API_USERNAME));
+        ConstantsUtils.validateEnvironVars(List.of(ConstantsUtils.GEONAMES_API_USERNAME));
         searchUriBuilder = UriComponentsBuilder
                 .newInstance().scheme(protocol)
                 .host(host)
