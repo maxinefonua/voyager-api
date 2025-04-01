@@ -12,7 +12,7 @@ Calls to all endpoints require an authorized API key in the request headers. See
 ## API endpoints
 [/search](#search)
 <br>[/airports](#airports)
-<br>[/airports/{iata}](#airports/{iata})
+<br>[/airports/{iata}](#airportsiata)
 <br>[/nearby-airports](#nearby-airports)
 ### Coming Soon
 [/locations](#locations)
