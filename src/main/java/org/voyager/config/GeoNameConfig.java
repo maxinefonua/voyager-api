@@ -6,7 +6,7 @@ import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
-import org.voyager.model.response.geonames.FeatureClass;
+import org.voyager.model.external.geonames.FeatureClass;
 import org.voyager.utils.ConstantsUtils;
 import java.util.List;
 

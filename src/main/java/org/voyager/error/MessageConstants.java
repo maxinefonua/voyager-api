@@ -17,6 +17,7 @@ public class MessageConstants {
         return String.format(INVALID_REQUEST_PARAM,paramName,paramValue,PARAM_TO_CONSTRAINT_MAP.get(paramName));
     }
     public static final String COUNTRY_CODE_PARAM_NAME = "countryCode";
+    public static final String TYPE_PARAM_NAME = "type";
     public static final String IATA_PARAM_NAME = "iata";
     public static final String VALID_IATA_CONSTRAINT = "Must be a valid three-letter IATA code";
 

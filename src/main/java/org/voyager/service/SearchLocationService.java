@@ -1,10 +1,10 @@
 package org.voyager.service;
 
+import org.voyager.model.result.LookupAttribution;
+import org.voyager.model.result.ResultSearch;
 import org.voyager.model.response.VoyagerListResponse;
 
-public interface SearchLocationService<T> {
-    // TODO: change to Either<ServiceError,List<T>> or whichever order is correct
-
-    public VoyagerListResponse<T> search(String searchText, int startRow);
-
+public interface SearchLocationService {
+    public VoyagerListResponse<ResultSearch> search(String query, int startRow, int limit);
+    public LookupAttribution attribution();
 }
