@@ -20,7 +20,6 @@ import org.voyager.model.external.photon.SearchResponsePhoton;
 import org.voyager.service.SearchLocationService;
 import java.util.List;
 
-@Primary
 @Service
 public class PhotonImpl implements SearchLocationService {
     @Autowired

@@ -20,7 +20,7 @@ import org.voyager.model.external.nominatim.SearchResponseNominatim;
 import org.voyager.service.SearchLocationService;
 import java.util.List;
 
-@Service
+@Primary @Service
 public class NominatimImpl implements SearchLocationService {
     @Autowired
     NominatimConfig nominatimConfig;
