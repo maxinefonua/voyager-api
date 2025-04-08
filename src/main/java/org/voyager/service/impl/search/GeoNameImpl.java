@@ -15,6 +15,8 @@ import org.voyager.model.external.geonames.SearchResponseGeoNames;
 import org.voyager.model.response.VoyagerListResponse;
 import org.voyager.model.external.geonames.GeoName;
 import org.voyager.service.SearchLocationService;
+import org.voyager.validate.ValidationUtils;
+
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -44,23 +46,27 @@ public class GeoNameImpl implements SearchLocationService {
 
      @Override
      public LookupAttribution attribution() {
-        return LookupAttribution.builder().name("GeoNames").link("https://www.geonames.org/").build();
+        return LookupAttribution.builder().name(geoNameConfig.getSourceName()).link(geoNameConfig.getSourceLink()).build();
      }
 
      private Stream<ResultSearch> buildResultSearch(GeoName geoName){
         String getURL = geoNameConfig.buildGetURL(geoName.getGeonameId());
         LOGGER.debug(String.format("Fetching geoname details from get URL: %s",getURL));
         ResponseEntity<GeoName> getResponse = restTemplate.getForEntity(getURL, GeoName.class);
-         ExternalExceptions.validateExternalResponse(getResponse,getURL);
+        ExternalExceptions.validateExternalResponse(getResponse,getURL);
         GeoName fullGeoName = getResponse.getBody();
         assert fullGeoName != null;
         if (fullGeoName.getBoundingBox() == null) return Stream.empty();
         return Stream.of(ResultSearch.builder()
-                .name(geoName.getName()).adminName(geoName.getAdminName1())
+                .name(geoName.getName()).subdivision(geoName.getAdminName1())
                 .countryCode(fullGeoName.getCountryCode().toUpperCase())
                 .countryName(geoName.getCountryName()).type(geoName.getFclName())
-                .westBound(fullGeoName.getBoundingBox().getWest().doubleValue()).southBound(fullGeoName.getBoundingBox().getSouth().doubleValue())
-                .eastBound(fullGeoName.getBoundingBox().getEast().doubleValue()).northBound(fullGeoName.getBoundingBox().getNorth().doubleValue())
-                .longitude(geoName.getLng().doubleValue()).latitude(geoName.getLat().doubleValue()).build());
+                .bounds(new Double[]{
+                        fullGeoName.getBoundingBox().getWest().doubleValue(),
+                        fullGeoName.getBoundingBox().getSouth().doubleValue(),
+                        fullGeoName.getBoundingBox().getEast().doubleValue(),
+                        fullGeoName.getBoundingBox().getNorth().doubleValue()
+                }).longitude(geoName.getLng().doubleValue())
+                .latitude(geoName.getLat().doubleValue()).build());
     }
 }

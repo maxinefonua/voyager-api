@@ -16,6 +16,8 @@ public class NominatimConfig {
     String protocol = "https";
     String host = "nominatim.openstreetmap.org";
     String searchPath = "/search";
+    String sourceName = "Nominatim";
+    String sourceLink = "https://nominatim.org/";
     private static final String QUERY_PARAM = "q";
     private static final String LIMIT_PARAM = "limit";
     private static final String FORMAT_PARAM = "format";

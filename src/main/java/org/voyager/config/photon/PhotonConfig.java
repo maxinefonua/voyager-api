@@ -16,6 +16,8 @@ public class PhotonConfig {
     String protocol = "https";
     String host = "photon.komoot.io";
     String searchPath = "/api";
+    String sourceName = "Photon";
+    String sourceLink = "https://nominatim.org/";
     private static final String QUERY_PARAM = "q";
     private static final String LANG_PARAM = "lang";
     private static final String LIMIT_PARAM = "limit";
