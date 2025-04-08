@@ -23,11 +23,7 @@ import org.voyager.service.AirportsService;
 import org.voyager.service.RegionService;
 import org.voyager.service.SearchLocationService;
 import org.voyager.validate.ValidationUtils;
-
-
 import java.util.*;
-
-import static org.voyager.error.MessageConstants.*;
 import static org.voyager.utils.ConstantsUtils.*;
 
 @RestController
@@ -92,7 +88,7 @@ class ResourceController {
 
     @GetMapping("/airports/{iata}")
     @Cacheable("iataCache")
-    public AirportDisplay getAirportsByIata(@PathVariable(IATA_PARAM_NAME) String iata) {
+    public AirportDisplay getAirportByIata(@PathVariable(IATA_PARAM_NAME) String iata) {
         LOGGER.debug(String.format("fetching uncached airport by iata code: %s",iata));
         ValidationUtils.validateIataCode(iata,airportsService.getIata());
         Optional<AirportDisplay> result = airportsService.getByIata(iata.toUpperCase());
