@@ -19,11 +19,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.stream.Stream;
 
- @Service
+@Service
 public class GeoNameImpl implements SearchLocationService {
-    // TODO: http call to GeoNames Search API with searchText (pageable)
-    // Best practices for consuming external APIs: https://hackernoon.com/5-best-practices-for-integrating-with-external-apis
-
     @Autowired
     GeoNameConfig geoNameConfig;
 
@@ -36,10 +33,9 @@ public class GeoNameImpl implements SearchLocationService {
         String requestURL = geoNameConfig.buildSearchURL(encodedQuery, startRow);
         LOGGER.info(String.format("Fetching geoname results from search URL: %s",requestURL));
         ResponseEntity<SearchResponseGeoNames> searchResponse = restTemplate.getForEntity(requestURL, SearchResponseGeoNames.class);
-        ExternalExceptions.validateSearchResponse(searchResponse,requestURL);
+        ExternalExceptions.validateExternalResponse(searchResponse,requestURL);
         SearchResponseGeoNames searchResponseGeoNames = searchResponse.getBody();
         assert searchResponseGeoNames != null;
-        // TODO: a bug - total results count does not include nullified geonames w no bounding box
         List<ResultSearch> resultList = searchResponseGeoNames.getGeoNames().stream()
                 .flatMap(this::buildResultSearch).toList();
         return VoyagerListResponse.<ResultSearch>builder().resultCount(searchResponse.getBody().getTotalResultsCount()).results(resultList).build();
@@ -54,7 +50,7 @@ public class GeoNameImpl implements SearchLocationService {
         String getURL = geoNameConfig.buildGetURL(geoName.getGeonameId());
         LOGGER.debug(String.format("Fetching geoname details from get URL: %s",getURL));
         ResponseEntity<GeoName> getResponse = restTemplate.getForEntity(getURL, GeoName.class);
-        ExternalExceptions.validateSearchResponse(getResponse,getURL);
+         ExternalExceptions.validateExternalResponse(getResponse,getURL);
         GeoName fullGeoName = getResponse.getBody();
         assert fullGeoName != null;
         if (fullGeoName.getBoundingBox() == null) return Stream.empty();

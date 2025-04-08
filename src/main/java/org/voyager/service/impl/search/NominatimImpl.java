@@ -9,8 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.server.ResponseStatusException;
 import org.voyager.config.nominatim.NominatimConfig;
+import org.voyager.error.ExternalExceptions;
 import org.voyager.model.result.LookupAttribution;
 import org.voyager.model.result.ResultSearch;
 import org.voyager.model.response.VoyagerListResponse;
@@ -26,25 +26,14 @@ public class NominatimImpl implements SearchLocationService {
     NominatimConfig nominatimConfig;
 
     private static final RestTemplate restTemplate = new RestTemplate();
-    private static final Logger LOGGER = LoggerFactory.getLogger(PhotonImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(NominatimImpl.class);
 
     @Override
     public VoyagerListResponse<ResultSearch> search(String query, int startRow, int limit) {
         String requestURL = nominatimConfig.buildSearchURL(query,limit);
         LOGGER.info("full request URL: " + requestURL);
         ResponseEntity<SearchResponseNominatim> searchResponse = restTemplate.getForEntity(requestURL, SearchResponseNominatim.class);
-        if (searchResponse.getStatusCode().value() != 200) {
-            StringBuilder sb = new StringBuilder();
-            sb.append("Received non-200 status code from external API endpoint: ");
-            sb.append(requestURL);
-            if (searchResponse.hasBody()) {
-                sb.append("\n");
-                sb.append("Response: ");
-                sb.append(searchResponse.getBody());
-            }
-            LOGGER.error(sb.toString());
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Internal error occurred fetching search results.");
-        }
+        ExternalExceptions.validateExternalResponse(searchResponse,requestURL);
         assert searchResponse.getBody() != null;
         List<ResultSearch> resultSearchList = searchResponse.getBody().getFeatures().stream()
                 .map(feature -> {

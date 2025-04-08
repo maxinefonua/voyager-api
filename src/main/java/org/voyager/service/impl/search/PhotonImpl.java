@@ -4,13 +4,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Primary;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.server.ResponseStatusException;
 import org.voyager.config.photon.PhotonConfig;
+import org.voyager.error.ExternalExceptions;
 import org.voyager.model.result.LookupAttribution;
 import org.voyager.model.result.ResultSearch;
 import org.voyager.model.response.VoyagerListResponse;
@@ -33,18 +31,7 @@ public class PhotonImpl implements SearchLocationService {
         String requestURL = photonConfig.buildSearchURL(query,limit);
         LOGGER.info("full request URL: " + requestURL);
         ResponseEntity<SearchResponsePhoton> searchResponse = restTemplate.getForEntity(requestURL, SearchResponsePhoton.class);
-        if (searchResponse.getStatusCode().value() != 200 || !searchResponse.hasBody()) {
-            StringBuilder sb = new StringBuilder();
-            sb.append("Received non-200 status code or null response body from external API endpoint: ");
-            sb.append(requestURL);
-            if (searchResponse.hasBody()) {
-                sb.append("\n");
-                sb.append("Response: ");
-                sb.append(searchResponse.getBody());
-            }
-            LOGGER.error(sb.toString());
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Internal error occurred fetching search results.");
-        }
+        ExternalExceptions.validateExternalResponse(searchResponse,requestURL);
         assert searchResponse.getBody() != null;
         List<Feature> featureList = searchResponse.getBody().getFeatures();
         List<ResultSearch> resultList = featureList.stream()
