@@ -10,7 +10,6 @@ import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.stereotype.Component;
 import org.voyager.utils.ConstantsUtils;
 import org.voyager.utils.MessageUtils;
-
 import java.util.List;
 
 @Component
@@ -35,6 +34,6 @@ public class AuthenticationService {
             throw new BadCredentialsException(MessageUtils.getInvalidApiKeyMessage());
         }
 
-        return new ApiKeyAuthentication(apiKey, AuthorityUtils.NO_AUTHORITIES);
+        return new ApiKeyAuthentication(apiKey,AuthorityUtils.NO_AUTHORITIES);
     }
 }
