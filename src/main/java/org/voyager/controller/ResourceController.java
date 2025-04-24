@@ -11,15 +11,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import org.voyager.error.MessageConstants;
-import org.voyager.model.Airline;
-import org.voyager.model.AirportDisplay;
-import org.voyager.model.AirportType;
-import org.voyager.model.TownDisplay;
+import org.voyager.model.*;
+import org.voyager.model.entity.Location;
 import org.voyager.model.result.LookupAttribution;
 import org.voyager.model.result.ResultSearch;
 import org.voyager.model.response.VoyagerListResponse;
 import org.voyager.repository.TownRepository;
 import org.voyager.service.AirportsService;
+import org.voyager.service.LocationService;
 import org.voyager.service.RegionService;
 import org.voyager.service.SearchLocationService;
 import org.voyager.validate.ValidationUtils;
@@ -37,6 +36,9 @@ class ResourceController {
 
     @Autowired
     private SearchLocationService searchLocationService;
+
+    @Autowired
+    private LocationService locationService;
 
     @Autowired
     private AirportsService<AirportDisplay> airportsService;
@@ -84,6 +86,13 @@ class ResourceController {
     public List<String> getIataCodes(@RequestParam Optional<AirportType> type) {
         if (type.isEmpty()) return airportsService.getIata();
         return airportsService.getIataByType(type.get());
+    }
+
+    @GetMapping("/locations")
+    @Cacheable("locationsCache")
+    public List<LocationDisplay> getLocations(@RequestParam Optional<Location.Status> status) {
+        if (status.isEmpty()) return locationService.getLocations();
+        return locationService.getLocationsByStatus(status.get());
     }
 
     @GetMapping("/airports/{iata}")

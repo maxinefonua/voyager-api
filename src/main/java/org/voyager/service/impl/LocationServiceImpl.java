@@ -1,6 +1,7 @@
 package org.voyager.service.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import org.voyager.model.LocationDisplay;
 import org.voyager.model.entity.Location;
 import org.voyager.model.location.LocationForm;
@@ -10,6 +11,7 @@ import org.voyager.service.utils.MapperUtils;
 
 import java.util.List;
 
+@Service
 public class LocationServiceImpl implements LocationService {
     @Autowired
     LocationRepository locationRepository;
@@ -18,6 +20,11 @@ public class LocationServiceImpl implements LocationService {
     public LocationDisplay save(LocationForm locationForm) {
         Location location = MapperUtils.formToLocation(locationForm);
         return MapperUtils.locationToDisplay(locationRepository.save(location));
+    }
+
+    @Override
+    public List<LocationDisplay> getLocations() {
+        return locationRepository.findAll().stream().map(MapperUtils::locationToDisplay).toList();
     }
 
     @Override
