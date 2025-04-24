@@ -22,8 +22,8 @@ public class Location {
     @Column(length = 30)
     private String name;
 
-    @Column(length = 50)
-    private String subd;
+    @Column(name = "subd", length = 50)
+    private String subdivision;
 
     @Column(name = "cc",length = 2, columnDefinition = "bpchar")
     private String countryCode;
@@ -36,4 +36,13 @@ public class Location {
 
     @Column
     private Double[] bbox;
+
+    @Enumerated(EnumType.STRING)
+    Status status;
+
+    public enum Status {
+        ACTIVE,
+        ARCHIVED,
+        DELETED
+    }
 }
