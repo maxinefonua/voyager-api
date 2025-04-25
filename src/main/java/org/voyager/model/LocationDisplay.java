@@ -20,4 +20,6 @@ public class LocationDisplay {
     private Double longitude;
     private Double[] bbox;
     private Location.Status status;
+    private Location.Source source;
+    private String sourceId;
 }

@@ -2,6 +2,7 @@ package org.voyager.model.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.voyager.model.location.LocationForm;
 
 @Entity
 @Data @NoArgsConstructor
@@ -13,8 +14,9 @@ public class Location {
     @Getter
     private Integer id;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "src", length = 16)
-    private String source;
+    private Source source;
 
     @Column(name = "src_id", length = 30)
     private String sourceId;
@@ -44,5 +46,12 @@ public class Location {
         ACTIVE,
         ARCHIVED,
         DELETED
+    }
+
+    public enum Source {
+        GEONAMES,
+        PHOTON,
+        NOMINATIM,
+        MANUAL;
     }
 }

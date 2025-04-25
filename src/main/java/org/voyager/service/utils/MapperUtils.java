@@ -28,13 +28,16 @@ public class MapperUtils {
                 .latitude(location.getLatitude())
                 .longitude(location.getLongitude())
                 .countryCode(location.getCountryCode())
+                .subdivision(location.getSubdivision())
                 .status(location.getStatus())
+                .source(location.getSource())
+                .sourceId(location.getSourceId())
                 .build();
     }
 
     public static Location formToLocation(LocationForm locationForm) {
         return Location.builder()
-                .source(locationForm.getSource())
+                .source(Location.Source.valueOf(locationForm.getSource()))
                 .sourceId(locationForm.getSourceId())
                 .countryCode(locationForm.getCountryCode())
                 .latitude(locationForm.getLatitude())
