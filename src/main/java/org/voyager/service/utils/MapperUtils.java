@@ -2,7 +2,9 @@ package org.voyager.service.utils;
 
 import org.voyager.entity.Airport;
 import org.voyager.model.AirportDisplay;
-import org.voyager.model.LocationDisplay;
+import org.voyager.model.location.LocationDisplay;
+import org.voyager.model.location.Source;
+import org.voyager.model.location.Status;
 import org.voyager.model.entity.Location;
 import org.voyager.model.location.LocationForm;
 
@@ -37,13 +39,13 @@ public class MapperUtils {
 
     public static Location formToLocation(LocationForm locationForm) {
         return Location.builder()
-                .source(Location.Source.valueOf(locationForm.getSource()))
+                .source(Source.valueOf(locationForm.getSource()))
                 .sourceId(locationForm.getSourceId())
                 .countryCode(locationForm.getCountryCode())
                 .latitude(locationForm.getLatitude())
                 .longitude(locationForm.getLongitude())
                 .name(locationForm.getName())
-                .status(Location.Status.ACTIVE)
+                .status(Status.ACTIVE)
                 .subdivision(locationForm.getSubdivision())
                 .bbox(new Double[]{locationForm.getWest(),locationForm.getSouth(),locationForm.getEast(),locationForm.getNorth()})
                 .build();

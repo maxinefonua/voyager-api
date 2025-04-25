@@ -2,7 +2,8 @@ package org.voyager.model.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.voyager.model.location.LocationForm;
+import org.voyager.model.location.Source;
+import org.voyager.model.location.Status;
 
 @Entity
 @Data @NoArgsConstructor
@@ -41,17 +42,4 @@ public class Location {
 
     @Enumerated(EnumType.STRING)
     Status status;
-
-    public enum Status {
-        ACTIVE,
-        ARCHIVED,
-        DELETED
-    }
-
-    public enum Source {
-        GEONAMES,
-        PHOTON,
-        NOMINATIM,
-        MANUAL;
-    }
 }

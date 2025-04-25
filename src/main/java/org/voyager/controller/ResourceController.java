@@ -7,17 +7,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ProblemDetail;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.voyager.error.MessageConstants;
 import org.voyager.model.*;
-import org.voyager.model.entity.Location;
 import org.voyager.model.location.LocationForm;
+import org.voyager.model.location.LocationDisplay;
+import org.voyager.model.location.Status;
 import org.voyager.model.result.LookupAttribution;
 import org.voyager.model.result.ResultSearch;
 import org.voyager.model.response.VoyagerListResponse;
@@ -94,7 +91,7 @@ class ResourceController {
     }
 
     @GetMapping("/locations")
-    public List<LocationDisplay> getLocations(@RequestParam Optional<Location.Status> status) {
+    public List<LocationDisplay> getLocations(@RequestParam Optional<Status> status) {
         if (status.isEmpty()) return locationService.getLocations();
         return locationService.getLocationsByStatus(status.get());
     }

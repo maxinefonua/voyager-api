@@ -7,9 +7,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import org.voyager.error.MessageConstants;
-import org.voyager.model.LocationDisplay;
+import org.voyager.model.location.LocationDisplay;
 import org.voyager.model.entity.Location;
 import org.voyager.model.location.LocationForm;
+import org.voyager.model.location.Status;
 import org.voyager.repository.LocationRepository;
 import org.voyager.service.LocationService;
 import org.voyager.service.utils.MapperUtils;
@@ -43,12 +44,12 @@ public class LocationServiceImpl implements LocationService {
     }
 
     @Override
-    public List<LocationDisplay> getLocationsByStatus(Location.Status status) {
+    public List<LocationDisplay> getLocationsByStatus(Status status) {
         return locationRepository.findByStatus(status).stream().map(MapperUtils::locationToDisplay).toList();
     }
 
     @Override
-    public List<LocationDisplay> getLocationsByStatusList(List<Location.Status> statusList) {
+    public List<LocationDisplay> getLocationsByStatusList(List<Status> statusList) {
         return locationRepository.findByStatusIn(statusList).stream().map(MapperUtils::locationToDisplay).toList();
     }
 }

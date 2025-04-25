@@ -5,12 +5,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
-import org.springframework.validation.beanvalidation.SpringValidatorAdapter;
 import org.springframework.web.server.ResponseStatusException;
 import org.voyager.error.MessageConstants;
 import org.voyager.model.Airline;
 import org.voyager.model.AirportType;
-import org.voyager.model.entity.Location;
+import org.voyager.model.location.Source;
 import org.voyager.model.location.LocationForm;
 
 import java.util.*;
@@ -19,8 +18,6 @@ import static org.voyager.error.MessageConstants.VALID_IATA_CONSTRAINT;
 import static org.voyager.utils.ConstantsUtils.*;
 
 public class ValidationUtils {
-    private static ObjectError error;
-
     public static Optional<AirportType> resolveTypeOptional(Optional<String> typeOptional) {
         Optional<AirportType> airportType = Optional.empty();
         String type = typeOptional.orElse(null);
@@ -66,7 +63,7 @@ public class ValidationUtils {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,String.format("Invalid request body: %s.",joiner));
         }
         try {
-            Location.Source.valueOf(locationForm.getSource().toUpperCase());
+            Source.valueOf(locationForm.getSource().toUpperCase());
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, MessageConstants.buildInvalidRequestBodyPropertyNoMessage(SOURCE_PROPERTY_NAME,locationForm.getSource()));
         }

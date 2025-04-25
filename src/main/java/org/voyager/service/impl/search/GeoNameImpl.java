@@ -58,6 +58,8 @@ public class GeoNameImpl implements SearchLocationService {
         assert fullGeoName != null;
         if (fullGeoName.getBoundingBox() == null) return Stream.empty();
         return Stream.of(ResultSearch.builder()
+                .source(geoNameConfig.getSourceName())
+                .sourceId(String.valueOf(geoName.getGeonameId()))
                 .name(geoName.getName()).subdivision(geoName.getAdminName1())
                 .countryCode(fullGeoName.getCountryCode().toUpperCase())
                 .countryName(geoName.getCountryName()).type(geoName.getFclName())
