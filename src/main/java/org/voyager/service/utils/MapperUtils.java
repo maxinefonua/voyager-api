@@ -45,7 +45,7 @@ public class MapperUtils {
                 .latitude(locationForm.getLatitude())
                 .longitude(locationForm.getLongitude())
                 .name(locationForm.getName())
-                .status(Status.ACTIVE)
+                .status(Status.SAVED)
                 .subdivision(locationForm.getSubdivision())
                 .bbox(new Double[]{locationForm.getWest(),locationForm.getSouth(),locationForm.getEast(),locationForm.getNorth()})
                 .build();

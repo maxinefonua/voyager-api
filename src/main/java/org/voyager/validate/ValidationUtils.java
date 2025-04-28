@@ -46,6 +46,19 @@ public class ValidationUtils {
         return airline;
     }
 
+    public static Source resolveSourceOptional(Optional<String> sourceOptional) {
+        if (sourceOptional.isEmpty() || StringUtils.isEmpty(sourceOptional.get())) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                MessageConstants.buildMissingRequestParameterMessage(SOURCE_PROPERTY_NAME));
+        String sourceText = sourceOptional.get();
+        try {
+            Source source = Source.valueOf(sourceText.toUpperCase());
+            return source;
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    MessageConstants.buildInvalidRequestParameterMessage(SOURCE_PROPERTY_NAME, sourceText));
+        }
+    }
+
     public static void validateIataCode(String iata, List<String> airportsServiceIata) {
         Set<String> validCodes = new HashSet<>(airportsServiceIata);
         if (!validCodes.contains(iata.toUpperCase())) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,

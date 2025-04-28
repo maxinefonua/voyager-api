@@ -14,7 +14,7 @@ import org.voyager.error.MessageConstants;
 import org.voyager.model.*;
 import org.voyager.model.location.LocationForm;
 import org.voyager.model.location.LocationDisplay;
-import org.voyager.model.location.Status;
+import org.voyager.model.location.Source;
 import org.voyager.model.result.LookupAttribution;
 import org.voyager.model.result.ResultSearch;
 import org.voyager.model.response.VoyagerListResponse;
@@ -57,7 +57,6 @@ class ResourceController {
     }
 
     @GetMapping("/search")
-    @Cacheable("searchCache")
     public VoyagerListResponse<ResultSearch> search(@RequestParam(QUERY_PARAM_NAME) String q,
                                                     @RequestParam(name=SKIP_ROW_PARAM_NAME,defaultValue = "0") Integer skipRowCount,
                                                     @RequestParam(name=LIMIT_PARAM_NAME,defaultValue = "10") Integer limit) {
@@ -91,9 +90,11 @@ class ResourceController {
     }
 
     @GetMapping("/locations")
-    public List<LocationDisplay> getLocations(@RequestParam Optional<Status> status) {
-        if (status.isEmpty()) return locationService.getLocations();
-        return locationService.getLocationsByStatus(status.get());
+    public List<LocationDisplay> getLocations(@RequestParam(SOURCE_PROPERTY_NAME) Optional<String> sourceOptional, @RequestParam(SOURCE_ID_PARAM_NAME) Optional<String> sourceIdOptional) {
+        if (sourceOptional.isEmpty() && sourceIdOptional.isEmpty()) return locationService.getLocations();
+        Source source = ValidationUtils.resolveSourceOptional(sourceOptional);
+        if (sourceIdOptional.isEmpty()) return locationService.getLocationsBySource(source);
+        return locationService.getLocationsBySourceAndSourceId(source,sourceIdOptional.get());
     }
 
     @PostMapping("/locations")

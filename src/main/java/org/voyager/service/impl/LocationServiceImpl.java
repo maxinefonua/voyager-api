@@ -10,12 +10,16 @@ import org.voyager.error.MessageConstants;
 import org.voyager.model.location.LocationDisplay;
 import org.voyager.model.entity.Location;
 import org.voyager.model.location.LocationForm;
+import org.voyager.model.location.Source;
 import org.voyager.model.location.Status;
 import org.voyager.repository.LocationRepository;
 import org.voyager.service.LocationService;
 import org.voyager.service.utils.MapperUtils;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.voyager.utils.ConstantsUtils.SOURCE_PROPERTY_NAME;
 
@@ -46,6 +50,26 @@ public class LocationServiceImpl implements LocationService {
     @Override
     public List<LocationDisplay> getLocationsByStatus(Status status) {
         return locationRepository.findByStatus(status).stream().map(MapperUtils::locationToDisplay).toList();
+    }
+
+    @Override
+    public List<LocationDisplay> getLocationsBySourceAndSourceId(Source source, String sourceId) {
+        return locationRepository.findBySourceAndSourceId(source,sourceId).stream().map(MapperUtils::locationToDisplay).toList();
+    }
+
+    @Override
+    public List<LocationDisplay> getLocationsBySource(Source source) {
+        return locationRepository.findBySource(source).stream().map(MapperUtils::locationToDisplay).toList();
+    }
+
+    @Override
+    public Set<String> getLocationIdsBySource(Source source) {
+        return locationRepository.findBySource(source).stream().map(Location::getSourceId).collect(Collectors.toSet());
+    }
+
+    @Override
+    public Map<String, Status> getLocationIdToStatusBySource(Source source) {
+        return locationRepository.findBySource(source).stream().collect(Collectors.toMap(Location::getSourceId,Location::getStatus));
     }
 
     @Override
