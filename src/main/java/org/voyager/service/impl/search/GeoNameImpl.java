@@ -40,7 +40,7 @@ public class GeoNameImpl implements SearchLocationService {
     @Override
     public VoyagerListResponse<ResultSearch> search(String query, int startRow, int limit) {
         SearchResponseGeoNames searchResponseGeoNames = getSearchResponse(query,startRow,limit);
-        Map<String,Status> locationIdToStatusDB = locationService.getLocationIdToStatusBySource(Source.valueOf(geoNameConfig.getSourceName().toUpperCase()));
+        Map<String,Status> locationIdToStatusDB = locationService.getLocationIdsToStatusBySource(Source.valueOf(geoNameConfig.getSourceName().toUpperCase()));
         List<ResultSearch> resultList = searchResponseGeoNames.getGeoNames().stream()
                 .flatMap(geoName -> buildResultSearch(geoName,locationIdToStatusDB.getOrDefault(String.valueOf(geoName.getGeonameId()),Status.NEW))).toList();
         return VoyagerListResponse.<ResultSearch>builder().resultCount(searchResponseGeoNames.getTotalResultsCount()).results(resultList).build();

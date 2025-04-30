@@ -68,7 +68,7 @@ public class LocationServiceImpl implements LocationService {
     }
 
     @Override
-    public Map<String, Status> getLocationIdToStatusBySource(Source source) {
+    public Map<String, Status> getLocationIdsToStatusBySource(Source source) {
         return locationRepository.findBySource(source).stream().collect(Collectors.toMap(Location::getSourceId,Location::getStatus));
     }
 

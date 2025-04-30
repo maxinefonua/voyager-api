@@ -16,6 +16,6 @@ public interface LocationService {
     public List<LocationDisplay> getLocationsBySourceAndSourceId(Source source, String sourceId);
     public List<LocationDisplay> getLocationsBySource(Source source);
     public Set<String> getLocationIdsBySource(Source source);
-    public Map<String,Status> getLocationIdToStatusBySource(Source source);
+    public Map<String,Status> getLocationIdsToStatusBySource(Source source);
     public List<LocationDisplay> getLocationsByStatusList(List<Status> statusList);
 }
