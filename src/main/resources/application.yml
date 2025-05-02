@@ -6,6 +6,8 @@ server:
 geonames:
   protocol: https
   host: secure.geonames.org
+  sourceName: GeoNames
+  sourceLink: https://www.geonames.org/
   searchPath: /searchJSON
   getPath: /getJSON
   maxRows: 10

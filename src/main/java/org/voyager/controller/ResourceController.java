@@ -1,25 +1,26 @@
 package org.voyager.controller;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.voyager.error.MessageConstants;
-import org.voyager.model.Airline;
-import org.voyager.model.AirportDisplay;
-import org.voyager.model.AirportType;
-import org.voyager.model.TownDisplay;
+import org.voyager.model.*;
+import org.voyager.model.location.LocationForm;
+import org.voyager.model.location.LocationDisplay;
+import org.voyager.model.location.Source;
 import org.voyager.model.result.LookupAttribution;
 import org.voyager.model.result.ResultSearch;
 import org.voyager.model.response.VoyagerListResponse;
 import org.voyager.repository.TownRepository;
 import org.voyager.service.AirportsService;
+import org.voyager.service.LocationService;
 import org.voyager.service.RegionService;
 import org.voyager.service.SearchLocationService;
 import org.voyager.validate.ValidationUtils;
@@ -39,6 +40,9 @@ class ResourceController {
     private SearchLocationService searchLocationService;
 
     @Autowired
+    private LocationService locationService;
+
+    @Autowired
     private AirportsService<AirportDisplay> airportsService;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ResourceController.class);
@@ -53,7 +57,6 @@ class ResourceController {
     }
 
     @GetMapping("/search")
-    @Cacheable("searchCache")
     public VoyagerListResponse<ResultSearch> search(@RequestParam(QUERY_PARAM_NAME) String q,
                                                     @RequestParam(name=SKIP_ROW_PARAM_NAME,defaultValue = "0") Integer skipRowCount,
                                                     @RequestParam(name=LIMIT_PARAM_NAME,defaultValue = "10") Integer limit) {
@@ -84,6 +87,20 @@ class ResourceController {
     public List<String> getIataCodes(@RequestParam Optional<AirportType> type) {
         if (type.isEmpty()) return airportsService.getIata();
         return airportsService.getIataByType(type.get());
+    }
+
+    @GetMapping("/locations")
+    public List<LocationDisplay> getLocations(@RequestParam(SOURCE_PROPERTY_NAME) Optional<String> sourceOptional, @RequestParam(SOURCE_ID_PARAM_NAME) Optional<String> sourceIdOptional) {
+        if (sourceOptional.isEmpty() && sourceIdOptional.isEmpty()) return locationService.getLocations();
+        Source source = ValidationUtils.resolveSourceOptional(sourceOptional);
+        if (sourceIdOptional.isEmpty()) return locationService.getLocationsBySource(source);
+        return locationService.getLocationsBySourceAndSourceId(source,sourceIdOptional.get());
+    }
+
+    @PostMapping("/locations")
+    public LocationDisplay addLocation(@RequestBody @Valid @NotNull LocationForm locationForm, BindingResult bindingResult) {
+        ValidationUtils.validateLocationForm(locationForm, bindingResult);
+        return locationService.save(locationForm);
     }
 
     @GetMapping("/airports/{iata}")

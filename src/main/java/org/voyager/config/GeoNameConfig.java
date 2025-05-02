@@ -18,6 +18,8 @@ public class GeoNameConfig {
     String protocol;
     String searchPath;
     String getPath;
+    String sourceName;
+    String sourceLink;
     int maxRows;
     String username;
     Boolean isNameRequired;

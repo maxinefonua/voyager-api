@@ -4,8 +4,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Primary;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -39,17 +37,15 @@ public class NominatimImpl implements SearchLocationService {
                 .map(feature -> {
                     Properties props = feature.getProperties();
                     Double[] coordinates = feature.getGeometry().getCoordinates();
-                    Double[] bbox = feature.getBbox();
                     Address address = props.getAddress();
                     String adminNameVal = resolveAdminNameVal(address);
                     String type = resolveType(props);
                     return ResultSearch.builder()
-                            .name(props.getName()).adminName(adminNameVal)
+                            .name(props.getName()).subdivision(adminNameVal)
                             .countryCode(address.getCountryCode().toUpperCase())
                             .countryName(address.getCountry()).type(type)
-                            .westBound(bbox[0]).southBound(bbox[1])
-                            .eastBound(bbox[2]).northBound(bbox[3])
-                            .longitude(coordinates[0]).latitude(coordinates[1]).build();
+                            .bounds(feature.getBbox()).latitude(coordinates[1])
+                            .longitude(coordinates[0]).build();
                 })
                 .toList();
         return VoyagerListResponse.<ResultSearch>builder().results(resultSearchList).resultCount(resultSearchList.size()).build();
@@ -57,7 +53,7 @@ public class NominatimImpl implements SearchLocationService {
 
     @Override
     public LookupAttribution attribution() {
-        return LookupAttribution.builder().name("Nominatim").link("https://nominatim.org/").build();
+        return LookupAttribution.builder().name(nominatimConfig.getSourceName()).link(nominatimConfig.getSourceLink()).build();
     }
 
     private String resolveAdminNameVal(Address address) {

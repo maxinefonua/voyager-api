@@ -39,16 +39,13 @@ public class PhotonImpl implements SearchLocationService {
                 .map(feature -> {
                     Properties props = feature.getProperties();
                     Double[] coordinates = feature.getGeometry().getCoordinates();
-                    Double[] bbox = props.getExtent();
-                    String adminNameVal = props.getState();
                     String type = resolveType(props);
                     return ResultSearch.builder()
-                            .name(props.getName()).adminName(adminNameVal)
+                            .name(props.getName()).subdivision(props.getState())
                             .countryCode(props.getCountryCode().toUpperCase())
                             .countryName(props.getCountry()).type(type)
-                            .westBound(bbox[0]).southBound(bbox[1])
-                            .eastBound(bbox[2]).northBound(bbox[3])
-                            .longitude(coordinates[0]).latitude(coordinates[1]).build();
+                            .bounds(props.getExtent()).latitude(coordinates[1])
+                            .longitude(coordinates[0]).build();
                         })
                 .toList();
         return VoyagerListResponse.<ResultSearch>builder().results(resultList).resultCount(resultList.size()).build();
