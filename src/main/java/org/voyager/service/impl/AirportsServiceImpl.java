@@ -1,5 +1,6 @@
 package org.voyager.service.impl;
 
+import io.vavr.control.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +20,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public class AirportsServiceImpl implements AirportsService<AirportDisplay> {
+public class AirportsServiceImpl implements AirportsService {
     @Autowired
     AirportRepository airportRepository;
 
@@ -28,10 +29,20 @@ public class AirportsServiceImpl implements AirportsService<AirportDisplay> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AirportsServiceImpl.class);
 
-    public Optional<AirportDisplay> updateAirport(AirportDisplay airportDisplay) {
-        Optional<Airport> dbOptional = airportRepository.findById(airportDisplay.getIata());
-        if (dbOptional.isEmpty()) return Optional.empty();
-        return Optional.empty();
+    public Option<AirportDisplay> updateAirport(AirportDisplay airportDisplay) {
+        Optional<Airport> result = airportRepository.findById(airportDisplay.getIata());
+        result.ifPresent(airport -> {
+            airport.setName(airportDisplay.getName());
+            airport.setSubdivision(airportDisplay.getSubdivision());
+            airport.setCity(airportDisplay.getCity());
+            airport.setCountryCode(airportDisplay.getCountryCode());
+            airport.setType(airportDisplay.getType());
+            airport.setLatitude(airportDisplay.getLatitude());
+            airport.setLongitude(airportDisplay.getLongitude());
+            airportRepository.save(airport);
+        });
+        if (result.isPresent()) return Option.of(MapperUtils.airportToDisplay(result.get()));
+        return Option.none();
     }
 
     @Override
@@ -45,7 +56,7 @@ public class AirportsServiceImpl implements AirportsService<AirportDisplay> {
     }
 
     @Override
-    public List<AirportDisplay> getAll(Optional<String> countryCode, Optional<AirportType> type, Optional<Airline> airline) {
+    public List<AirportDisplay> getAll(Option<String> countryCode, Option<AirportType> type, Option<Airline> airline) {
         if (countryCode.isEmpty() && type.isEmpty() && airline.isEmpty()) {
             LOGGER.debug("fetching uncached get all airports");
             return airportRepository.findByTypeInOrderByIataAsc(List.of(AirportType.CIVIL,AirportType.MILITARY)).stream().map(MapperUtils::airportToDisplay).toList();
@@ -84,7 +95,7 @@ public class AirportsServiceImpl implements AirportsService<AirportDisplay> {
     }
 
     @Override
-    public List<AirportDisplay> getByDistance(double latitude, double longitude, int limit, Optional<AirportType> type, Optional<Airline> airline) {
+    public List<AirportDisplay> getByDistance(double latitude, double longitude, int limit, Option<AirportType> type, Option<Airline> airline) {
         if (type.isEmpty() && airline.isEmpty()) {
             LOGGER.debug(String.format("fetching uncached get nearby airports for latitude: %f, longitude: %f, with limit: %d",latitude,longitude,limit));
             return airportRepository.findByTypeIn(List.of(AirportType.CIVIL,AirportType.MILITARY)).stream().map(airport -> MapperUtils.airportToDisplay(airport,
@@ -109,10 +120,10 @@ public class AirportsServiceImpl implements AirportsService<AirportDisplay> {
     }
 
     @Override
-    public Optional<AirportDisplay> getByIata(String iata) {
+    public Option<AirportDisplay> getByIata(String iata) {
         Optional<Airport> optional = airportRepository.findById(iata);
-        if (optional.isEmpty()) return Optional.empty();
-        return optional.map(MapperUtils::airportToDisplay);
+        if (optional.isEmpty()) return Option.none();
+        return Option.of(MapperUtils.airportToDisplay(optional.get()));
     }
 
     private List<String> getDeltaCodes(List<Status> statusList) {

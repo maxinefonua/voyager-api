@@ -2,6 +2,7 @@ package org.voyager.model.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.voyager.model.Airline;
 
 @Entity
 @Data
@@ -15,12 +16,12 @@ public class Route {
     @Getter
     private Integer id;
 
-    @Column(name = "from",length = 3,columnDefinition = "bpchar")
-    String fromAirport;
+    @Column(name = "orgn",length = 3,columnDefinition = "bpchar")
+    String origin;
 
-    @Column(name = "to",length = 3,columnDefinition = "bpchar")
-    String toAirport;
+    @Column(name = "dstn",length = 3,columnDefinition = "bpchar")
+    String destination;
 
-    @Column(name = "is_delta")
-    Boolean isDelta;
+    @Enumerated(EnumType.STRING)
+    Airline airline;
 }

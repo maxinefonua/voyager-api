@@ -1,4 +1,5 @@
 package org.voyager.controller;
+import io.vavr.control.Option;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.apache.commons.lang3.StringUtils;
@@ -18,11 +19,10 @@ import org.voyager.model.location.Source;
 import org.voyager.model.result.LookupAttribution;
 import org.voyager.model.result.ResultSearch;
 import org.voyager.model.response.VoyagerListResponse;
+import org.voyager.model.route.RouteDisplay;
+import org.voyager.model.route.RouteForm;
 import org.voyager.repository.TownRepository;
-import org.voyager.service.AirportsService;
-import org.voyager.service.LocationService;
-import org.voyager.service.RegionService;
-import org.voyager.service.SearchLocationService;
+import org.voyager.service.*;
 import org.voyager.validate.ValidationUtils;
 import java.util.*;
 import static org.voyager.utils.ConstantsUtils.*;
@@ -43,7 +43,10 @@ class ResourceController {
     private LocationService locationService;
 
     @Autowired
-    private AirportsService<AirportDisplay> airportsService;
+    private RouteService routeService;
+
+    @Autowired
+    private AirportsService airportsService;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ResourceController.class);
 
@@ -58,8 +61,8 @@ class ResourceController {
 
     @GetMapping("/search")
     public VoyagerListResponse<ResultSearch> search(@RequestParam(QUERY_PARAM_NAME) String q,
-                                                    @RequestParam(name=SKIP_ROW_PARAM_NAME,defaultValue = "0") Integer skipRowCount,
-                                                    @RequestParam(name=LIMIT_PARAM_NAME,defaultValue = "10") Integer limit) {
+                                                    @RequestParam(name = SKIP_ROW_PARAM_NAME,defaultValue = "0") Integer skipRowCount,
+                                                    @RequestParam(name = LIMIT_PARAM_NAME,defaultValue = "10") Integer limit) {
         LOGGER.debug(String.format("fetching uncached q = '%s', skipRowCount = %d",q,skipRowCount));
         return searchLocationService.search(q,skipRowCount,limit);
     }
@@ -74,19 +77,51 @@ class ResourceController {
     @Cacheable("nearbyAirportsCache")
     public List<AirportDisplay> nearbyAirports(@RequestParam(LATITUDE_PARAM_NAME) Double latitude,
                                                @RequestParam(LONGITUDE_PARAM_NAME) Double longitude,
-                                               @RequestParam(name=LIMIT_PARAM_NAME,defaultValue = "5") Integer limit,
-                                               @RequestParam(TYPE_PARAM_NAME) Optional<String> typeOptional,
-                                               @RequestParam(AIRLINE_PARAM_NAME) Optional<String> airlineOptional) {
-        Optional<AirportType> airportType = ValidationUtils.resolveTypeOptional(typeOptional);
-        Optional<Airline> airline = ValidationUtils.resolveAirlineOptional(airlineOptional);
+                                               @RequestParam(name = LIMIT_PARAM_NAME,defaultValue = "5") Integer limit,
+                                               @RequestParam(name = TYPE_PARAM_NAME, required = false) String typeString,
+                                               @RequestParam(name = AIRLINE_PARAM_NAME, required = false) String airlineString) {
+        Option<AirportType> airportType = ValidationUtils.resolveTypeString(typeString);
+        Option<Airline> airline = ValidationUtils.resolveAirlineString(airlineString);
         return airportsService.getByDistance(latitude,longitude,limit,airportType,airline);
     }
 
     @GetMapping("/iata")
     @Cacheable("iataCodesCache")
-    public List<String> getIataCodes(@RequestParam Optional<AirportType> type) {
-        if (type.isEmpty()) return airportsService.getIata();
-        return airportsService.getIataByType(type.get());
+    public List<String> getIataCodes(@RequestParam(name = TYPE_PARAM_NAME, required = false) String typeString) {
+        Option<AirportType> typeOptional = ValidationUtils.resolveTypeString(typeString);
+        if (typeOptional.isEmpty()) return airportsService.getIata();
+        return airportsService.getIataByType(typeOptional.get());
+    }
+
+    @GetMapping("/routes/{id}")
+    public RouteDisplay getRouteById(@PathVariable(name = "id") String idString) {
+        Integer id = ValidationUtils.validateAndGetInteger(ID_PATH_VAR_NAME,idString,false);
+        Option<RouteDisplay> routeDisplay = routeService.getRouteById(id);
+        if (routeDisplay.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                MessageConstants.buildResourceNotFoundForPathVariableMessage(ID_PATH_VAR_NAME,String.valueOf(id)));
+        return routeDisplay.get();
+    }
+
+    @GetMapping("/routes")
+    public List<RouteDisplay> getRoutes(@RequestParam(name = AIRLINE_PARAM_NAME, required = false) String airlineString, @RequestParam(name = ORIGIN_PARAM_NAME, required = false) String origin, @RequestParam(name = DESTINATION_PARAM_NAME, required = false) String destination) {
+        Option<String> originOption = Option.none();
+        Option<String> destinationOption = Option.none();
+        if (!StringUtils.isEmpty(origin)) {
+            ValidationUtils.validateAndGetIata(airportsService,origin,ORIGIN_PARAM_NAME,true);
+            originOption = Option.of(origin.toUpperCase());
+        }
+        if (!StringUtils.isEmpty(destination)) {
+            ValidationUtils.validateAndGetIata(airportsService,destination,DESTINATION_PARAM_NAME,true);
+            destinationOption = Option.of(destination.toUpperCase());
+        }
+        Option<Airline> airlineOptional = ValidationUtils.resolveAirlineString(airlineString);
+        return routeService.getRoutes(originOption,destinationOption,airlineOptional);
+    }
+
+    @PostMapping("/routes")
+    public RouteDisplay addRoute(@RequestBody @Valid @NotNull RouteForm routeForm, BindingResult bindingResult) {
+        ValidationUtils.validateRouteForm(routeForm, bindingResult);
+        return routeService.save(routeForm);
     }
 
     @GetMapping("/locations")
@@ -107,25 +142,17 @@ class ResourceController {
     @Cacheable("iataCache")
     public AirportDisplay getAirportByIata(@PathVariable(IATA_PARAM_NAME) String iata) {
         LOGGER.debug(String.format("fetching uncached airport by iata code: %s",iata));
-        ValidationUtils.validateIataCode(iata,airportsService.getIata());
-        Optional<AirportDisplay> result = airportsService.getByIata(iata.toUpperCase());
-        assert result.isPresent();
-        return result.get();
+        return ValidationUtils.validateAndGetIata(airportsService,iata,IATA_PARAM_NAME,false);
     }
 
     @GetMapping("/airports")
     @Cacheable("airportsCache")
-    public List<AirportDisplay> getAirports(@RequestParam(COUNTRY_CODE_PARAM_NAME) Optional<String> countryCodeOptional,
-                                            @RequestParam(TYPE_PARAM_NAME) Optional<String> typeOptional,
-                                            @RequestParam(AIRLINE_PARAM_NAME) Optional<String> airlineOptional) {
-        String countryCode = countryCodeOptional.orElse(null);
-        if (StringUtils.isNotEmpty(countryCode)) {
-            if (countryCode.length() != 2) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    MessageConstants.buildInvalidRequestParameterMessage(COUNTRY_CODE_PARAM_NAME,countryCode));
-            countryCodeOptional = Optional.of(countryCode.toUpperCase());
-        }
-        Optional<AirportType> airportType = ValidationUtils.resolveTypeOptional(typeOptional);
-        Optional<Airline> airline = ValidationUtils.resolveAirlineOptional(airlineOptional);
-        return airportsService.getAll(countryCodeOptional,airportType,airline);
+    public List<AirportDisplay> getAirports(@RequestParam(name = COUNTRY_CODE_PARAM_NAME, required = false) String countryCodeString,
+                                            @RequestParam(name = TYPE_PARAM_NAME, required = false) String typeString,
+                                            @RequestParam(name = AIRLINE_PARAM_NAME, required = false) String airlineString) {
+        countryCodeString = ValidationUtils.validateAndGetCountryCode(countryCodeString);
+        Option<AirportType> airportType = ValidationUtils.resolveTypeString(typeString);
+        Option<Airline> airline = ValidationUtils.resolveAirlineString(airlineString);
+        return airportsService.getAll(Option.of(countryCodeString),airportType,airline);
     }
 }

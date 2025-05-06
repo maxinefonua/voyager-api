@@ -22,5 +22,4 @@ public interface AirportRepository extends JpaRepository<Airport,String> {
     List<Airport> findByType(AirportType airportType);
     List<Airport> findByTypeIn(List<AirportType> typeList);
     List<Airport> findByTypeInOrderByIataAsc(List<AirportType> typeList);
-    Airport saveAndFlush(Airport airport);
 }

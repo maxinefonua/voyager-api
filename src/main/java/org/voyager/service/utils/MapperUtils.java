@@ -1,12 +1,16 @@
 package org.voyager.service.utils;
 
 import org.voyager.entity.Airport;
+import org.voyager.model.Airline;
 import org.voyager.model.AirportDisplay;
+import org.voyager.model.entity.Route;
 import org.voyager.model.location.LocationDisplay;
 import org.voyager.model.location.Source;
 import org.voyager.model.location.Status;
 import org.voyager.model.entity.Location;
 import org.voyager.model.location.LocationForm;
+import org.voyager.model.route.RouteDisplay;
+import org.voyager.model.route.RouteForm;
 
 public class MapperUtils {
     public static AirportDisplay airportToDisplay(Airport airport) {
@@ -48,6 +52,23 @@ public class MapperUtils {
                 .status(Status.SAVED)
                 .subdivision(locationForm.getSubdivision())
                 .bbox(new Double[]{locationForm.getWest(),locationForm.getSouth(),locationForm.getEast(),locationForm.getNorth()})
+                .build();
+    }
+
+    public static RouteDisplay routeToDisplay(Route route) {
+        return RouteDisplay.builder()
+                .id(route.getId())
+                .origin(route.getOrigin())
+                .destination(route.getDestination())
+                .airline(route.getAirline())
+                .build();
+    }
+
+    public static Route formToRoute(RouteForm routeForm) {
+        return Route.builder()
+                .origin(routeForm.getOrigin())
+                .destination(routeForm.getDestination())
+                .airline(Airline.valueOf(routeForm.getAirline()))
                 .build();
     }
 }
