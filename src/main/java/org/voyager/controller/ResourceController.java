@@ -150,7 +150,7 @@ class ResourceController {
     public List<AirportDisplay> getAirports(@RequestParam(name = COUNTRY_CODE_PARAM_NAME, required = false) String countryCodeString,
                                             @RequestParam(name = TYPE_PARAM_NAME, required = false) String typeString,
                                             @RequestParam(name = AIRLINE_PARAM_NAME, required = false) String airlineString) {
-        countryCodeString = ValidationUtils.validateAndGetCountryCode(countryCodeString);
+        if (countryCodeString != null) countryCodeString = ValidationUtils.validateAndGetCountryCode(countryCodeString);
         Option<AirportType> airportType = ValidationUtils.resolveTypeString(typeString);
         Option<Airline> airline = ValidationUtils.resolveAirlineString(airlineString);
         return airportsService.getAll(Option.of(countryCodeString),airportType,airline);

@@ -92,7 +92,7 @@ public class ValidationUtils {
     }
 
     public static String validateAndGetCountryCode(String countryCodeString) {
-        if (StringUtils.isNotEmpty(countryCodeString) && !countryCodeString.matches(COUNTRY_CODE_REGEX)) {
+        if (!countryCodeString.matches(COUNTRY_CODE_REGEX)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     MessageConstants.buildInvalidRequestParameterMessage(COUNTRY_CODE_PARAM_NAME, countryCodeString));
         }
