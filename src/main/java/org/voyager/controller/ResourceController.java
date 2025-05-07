@@ -125,11 +125,11 @@ class ResourceController {
     }
 
     @GetMapping("/locations")
-    public List<LocationDisplay> getLocations(@RequestParam(SOURCE_PROPERTY_NAME) Optional<String> sourceOptional, @RequestParam(SOURCE_ID_PARAM_NAME) Optional<String> sourceIdOptional) {
-        if (sourceOptional.isEmpty() && sourceIdOptional.isEmpty()) return locationService.getLocations();
-        Source source = ValidationUtils.resolveSourceOptional(sourceOptional);
-        if (sourceIdOptional.isEmpty()) return locationService.getLocationsBySource(source);
-        return locationService.getLocationsBySourceAndSourceId(source,sourceIdOptional.get());
+    public List<LocationDisplay> getLocations(@RequestParam(name = SOURCE_PROPERTY_NAME,required = false) String sourceString, @RequestParam(name = SOURCE_ID_PARAM_NAME, required = false) String sourceId) {
+        if (StringUtils.isEmpty(sourceString) && StringUtils.isEmpty(sourceId)) return locationService.getLocations();
+        Source source = ValidationUtils.validateAndGetSource(sourceString);
+        if (StringUtils.isEmpty(sourceId)) return locationService.getLocationsBySource(source);
+        return locationService.getLocationsBySourceAndSourceId(source,sourceId);
     }
 
     @PostMapping("/locations")

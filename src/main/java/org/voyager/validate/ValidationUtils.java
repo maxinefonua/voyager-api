@@ -47,16 +47,14 @@ public class ValidationUtils {
         return airline;
     }
 
-    public static Source resolveSourceOptional(Optional<String> sourceOptional) {
-        if (sourceOptional.isEmpty() || StringUtils.isEmpty(sourceOptional.get())) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+    public static Source validateAndGetSource(String sourceString) {
+        if (StringUtils.isEmpty(sourceString)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                 MessageConstants.buildMissingRequestParameterMessage(SOURCE_PROPERTY_NAME));
-        String sourceText = sourceOptional.get();
         try {
-            Source source = Source.valueOf(sourceText.toUpperCase());
-            return source;
+            return Source.valueOf(sourceString.toUpperCase());
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    MessageConstants.buildInvalidRequestParameterMessage(SOURCE_PROPERTY_NAME, sourceText));
+                    MessageConstants.buildInvalidRequestParameterMessage(SOURCE_PROPERTY_NAME, sourceString));
         }
     }
 
