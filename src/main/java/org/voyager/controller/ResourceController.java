@@ -132,6 +132,15 @@ class ResourceController {
         return locationService.getLocationsBySourceAndSourceId(source,sourceId);
     }
 
+    @GetMapping("/locations/{id}")
+    public LocationDisplay getLocationById(@PathVariable(name = "id") String idString) {
+        Integer id = ValidationUtils.validateAndGetInteger("id",idString,false);
+        Option<LocationDisplay> locationDisplay = locationService.getLocationById(id);
+        if (locationDisplay.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                MessageConstants.buildResourceNotFoundForPathVariableNoMessage("id",idString));
+        return locationDisplay.get();
+    }
+
     @PostMapping("/locations")
     public LocationDisplay addLocation(@RequestBody @Valid @NotNull LocationForm locationForm, BindingResult bindingResult) {
         ValidationUtils.validateLocationForm(locationForm, bindingResult);

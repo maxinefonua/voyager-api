@@ -1,5 +1,6 @@
 package org.voyager.service.impl;
 
+import io.vavr.control.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,10 +19,9 @@ import org.voyager.service.utils.MapperUtils;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import static org.voyager.utils.ConstantsUtils.SOURCE_PROPERTY_NAME;
 
 @Service
 public class LocationServiceImpl implements LocationService {
@@ -60,6 +60,13 @@ public class LocationServiceImpl implements LocationService {
     @Override
     public List<LocationDisplay> getLocationsBySource(Source source) {
         return locationRepository.findBySource(source).stream().map(MapperUtils::locationToDisplay).toList();
+    }
+
+    @Override
+    public Option<LocationDisplay> getLocationById(Integer id) {
+        Optional<Location> location = locationRepository.findById(id);
+        if (location.isEmpty()) return Option.none();
+        return Option.of(MapperUtils.locationToDisplay(location.get()));
     }
 
     @Override

@@ -1,5 +1,6 @@
 package org.voyager.service;
 
+import io.vavr.control.Option;
 import org.voyager.model.location.LocationDisplay;
 import org.voyager.model.location.Source;
 import org.voyager.model.location.Status;
@@ -15,6 +16,7 @@ public interface LocationService {
     public List<LocationDisplay> getLocationsByStatus(Status status);
     public List<LocationDisplay> getLocationsBySourceAndSourceId(Source source, String sourceId);
     public List<LocationDisplay> getLocationsBySource(Source source);
+    Option<LocationDisplay> getLocationById(Integer id);
     public Set<String> getLocationIdsBySource(Source source);
     public Map<String,Status> getLocationIdsToStatusBySource(Source source);
     public List<LocationDisplay> getLocationsByStatusList(List<Status> statusList);

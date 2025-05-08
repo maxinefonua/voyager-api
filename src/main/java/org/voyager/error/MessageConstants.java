@@ -11,6 +11,7 @@ public class MessageConstants {
     private static final String INVALID_REQUEST_BODY_PROPERTY_NO_MESSAGE = "Invalid request body property '%s' with value '%s'";
 
     private static final String RESOURCE_NOT_FOUND_FOR_PATH_VAR = "Resource not found for path variable '%s' with value '%s'. %s";
+    private static final String RESOURCE_NOT_FOUND_FOR_PATH_VAR_NO_MESSAGE = "Resource not found for path variable '%s' with value '%s'";
     private static final String RESOURCE_NOT_FOUND_FOR_PARAM = "Resource not found for parameter '%s' with value '%s'. %s";
     private static final String INVALID_PATH_VAR = "Invalid path variable '%s' with value '%s'. %s";
 
@@ -35,6 +36,10 @@ public class MessageConstants {
 
     public static String buildResourceNotFoundForPathVariableMessage(String varName, String varValue){
         return String.format(RESOURCE_NOT_FOUND_FOR_PATH_VAR,varName,varValue,NOT_FOUND_MAP.get(varName));
+    }
+
+    public static String buildResourceNotFoundForPathVariableNoMessage(String varName, String varValue){
+        return String.format(RESOURCE_NOT_FOUND_FOR_PATH_VAR_NO_MESSAGE,varName,varValue);
     }
 
     public static String buildResourceNotFoundForParameterMessage(String paramName, String varValue){
