@@ -71,7 +71,8 @@ public class MessageConstants {
     private static final Map<String,String> NOT_FOUND_MAP = Map.ofEntries(
             Map.entry(IATA_PARAM_NAME,IATA_RESOURCE_NOT_FOUND),
             Map.entry(ORIGIN_PARAM_NAME,IATA_RESOURCE_NOT_FOUND),
-            Map.entry(DESTINATION_PARAM_NAME,IATA_RESOURCE_NOT_FOUND)
+            Map.entry(DESTINATION_PARAM_NAME,IATA_RESOURCE_NOT_FOUND),
+            Map.entry(EXCLUDE_PARAM_NAME,IATA_RESOURCE_NOT_FOUND)
     );
 
     private static final Map<String,String> CONSTRAINT_MAP = Map.ofEntries(
@@ -82,7 +83,8 @@ public class MessageConstants {
             Map.entry(IATA_PARAM_NAME,VALID_IATA_CONSTRAINT),
             Map.entry(ID_PATH_VAR_NAME,VALID_ID_CONSTRAINT),
             Map.entry(ORIGIN_PARAM_NAME,VALID_IATA_CONSTRAINT),
-            Map.entry(DESTINATION_PARAM_NAME,VALID_IATA_CONSTRAINT)
+            Map.entry(DESTINATION_PARAM_NAME,VALID_IATA_CONSTRAINT),
+            Map.entry(EXCLUDE_PARAM_NAME,VALID_IATA_CONSTRAINT)
     );
 
     private static final Map<String,String> REQUEST_BODY_PROPERTY_TO_CONSTRAINT_MAP = Map.ofEntries(

@@ -1,6 +1,8 @@
 package org.voyager.validate;
 
 import io.vavr.control.Option;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.BindingResult;
@@ -14,6 +16,7 @@ import org.voyager.model.AirportType;
 import org.voyager.model.location.Source;
 import org.voyager.model.location.LocationForm;
 import org.voyager.model.route.RouteForm;
+import org.voyager.model.route.RoutePatch;
 import org.voyager.service.AirportsService;
 
 import java.util.*;
@@ -58,21 +61,20 @@ public class ValidationUtils {
         }
     }
 
-    public static AirportDisplay validateAndGetIata(AirportsService airportsService, String iata, String varName, boolean isParam) {
-        if (StringUtils.isNotEmpty(iata) && !iata.matches(IATA_CODE_REGEX)) {
+    public static String validateIataToUpperCase(String iata, AirportsService airportsService, String varName, boolean isParam) {
+        if (!iata.matches(IATA_CODE_REGEX)) {
             if (isParam) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                        MessageConstants.buildInvalidRequestParameterMessage(varName,iata));
+                    MessageConstants.buildInvalidRequestParameterMessage(varName,iata));
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                        MessageConstants.buildInvalidPathVariableMessage(varName,iata));
+                    MessageConstants.buildInvalidPathVariableMessage(varName,iata));
         }
-        Option<AirportDisplay> result = airportsService.getByIata(iata.toUpperCase());
-        if (result.isEmpty()) {
+        if (!airportsService.ifIataExists(iata.toUpperCase())) {
             if (isParam) throw new ResponseStatusException(HttpStatus.NOT_FOUND,
                     MessageConstants.buildResourceNotFoundForParameterMessage(varName,iata));
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
                     MessageConstants.buildResourceNotFoundForPathVariableMessage(varName,iata));
         }
-        return result.get();
+        return iata.toUpperCase();
     }
 
     public static Integer validateAndGetInteger(String varName, String varVal, boolean isParam) {
@@ -137,5 +139,17 @@ public class ValidationUtils {
         routeForm.setAirline(routeForm.getAirline().toUpperCase());
         routeForm.setOrigin(routeForm.getOrigin().toUpperCase());
         routeForm.setDestination(routeForm.getDestination().toUpperCase());
+    }
+
+    public static void validateRoutePatch(@Valid @NotNull RoutePatch routePatch, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            StringJoiner joiner = new StringJoiner("; ");
+            for (ObjectError error : bindingResult.getAllErrors()) {
+                if (error instanceof FieldError fieldError) {
+                    joiner.add(String.format("'%s' %s",fieldError.getField(),fieldError.getDefaultMessage()));
+                }
+            }
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,String.format("Invalid request body: %s.",joiner));
+        }
     }
 }

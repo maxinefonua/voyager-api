@@ -4,8 +4,11 @@ import io.vavr.control.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import org.voyager.entity.Airport;
+import org.voyager.error.MessageConstants;
 import org.voyager.model.Airline;
 import org.voyager.model.AirportDisplay;
 import org.voyager.model.AirportType;
@@ -43,6 +46,11 @@ public class AirportsServiceImpl implements AirportsService {
         });
         if (result.isPresent()) return Option.of(MapperUtils.airportToDisplay(result.get()));
         return Option.none();
+    }
+
+    @Override
+    public Boolean ifIataExists(String iata) {
+        return airportRepository.existsById(iata);
     }
 
     @Override
@@ -120,10 +128,13 @@ public class AirportsServiceImpl implements AirportsService {
     }
 
     @Override
-    public Option<AirportDisplay> getByIata(String iata) {
+    public AirportDisplay getByIata(String iata) {
         Optional<Airport> optional = airportRepository.findById(iata);
-        if (optional.isEmpty()) return Option.none();
-        return Option.of(MapperUtils.airportToDisplay(optional.get()));
+        if (optional.isEmpty()) {
+            LOGGER.error(String.format("getByIata called with a nonexistent iata value = '%s'",iata));
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,"An internal service exception was thrown");
+        }
+        return MapperUtils.airportToDisplay(optional.get());
     }
 
     private List<String> getDeltaCodes(List<Status> statusList) {

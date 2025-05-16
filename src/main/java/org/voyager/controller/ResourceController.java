@@ -19,8 +19,10 @@ import org.voyager.model.location.Source;
 import org.voyager.model.result.LookupAttribution;
 import org.voyager.model.result.ResultSearch;
 import org.voyager.model.response.VoyagerListResponse;
+import org.voyager.model.route.PathDisplay;
 import org.voyager.model.route.RouteDisplay;
 import org.voyager.model.route.RouteForm;
+import org.voyager.model.route.RoutePatch;
 import org.voyager.repository.TownRepository;
 import org.voyager.service.*;
 import org.voyager.validate.ValidationUtils;
@@ -102,20 +104,37 @@ class ResourceController {
         return routeDisplay.get();
     }
 
+    @PatchMapping("/routes/{id}")
+    public RouteDisplay patchRouteById(@RequestBody @Valid @NotNull RoutePatch routePatch, BindingResult bindingResult, @PathVariable(name = "id") String idString) {
+        ValidationUtils.validateRoutePatch(routePatch,bindingResult);
+        Integer id = ValidationUtils.validateAndGetInteger(ID_PATH_VAR_NAME,idString,false);
+        Option<RouteDisplay> routeDisplay = routeService.getRouteById(id);
+        if (routeDisplay.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                MessageConstants.buildResourceNotFoundForPathVariableMessage(ID_PATH_VAR_NAME,String.valueOf(id)));
+        return routeService.patch(routeDisplay.get(),routePatch);
+    }
+
     @GetMapping("/routes")
-    public List<RouteDisplay> getRoutes(@RequestParam(name = AIRLINE_PARAM_NAME, required = false) String airlineString, @RequestParam(name = ORIGIN_PARAM_NAME, required = false) String origin, @RequestParam(name = DESTINATION_PARAM_NAME, required = false) String destination) {
+    public List<RouteDisplay> getRoutes(@RequestParam(name = AIRLINE_PARAM_NAME, required = false) String airlineString, @RequestParam(name = ORIGIN_PARAM_NAME, required = false) String origin, @RequestParam(name = DESTINATION_PARAM_NAME, required = false) String destination,@RequestParam(name = IS_ACTIVE_PARAM_NAME, required = false) Boolean isActive) {
         Option<String> originOption = Option.none();
         Option<String> destinationOption = Option.none();
-        if (!StringUtils.isEmpty(origin)) {
-            ValidationUtils.validateAndGetIata(airportsService,origin,ORIGIN_PARAM_NAME,true);
-            originOption = Option.of(origin.toUpperCase());
+        if (StringUtils.isNotEmpty(origin)) originOption = Option.of(ValidationUtils.validateIataToUpperCase(origin,airportsService,ORIGIN_PARAM_NAME,true));
+        if (StringUtils.isNotEmpty(destination)) destinationOption = Option.of(ValidationUtils.validateIataToUpperCase(destination,airportsService,DESTINATION_PARAM_NAME,true));
+        Option<Airline> airlineOption = ValidationUtils.resolveAirlineString(airlineString);
+        if (isActive == null) return routeService.getRoutes(originOption,destinationOption,airlineOption);
+        return routeService.getActiveRoutes(originOption,destinationOption,airlineOption,isActive);
+    }
+
+    @GetMapping("/path/{origin}/to/{destination}")
+    public PathDisplay getRoutes(@PathVariable(name = ORIGIN_PARAM_NAME) String origin, @PathVariable(name = DESTINATION_PARAM_NAME) String destination,@RequestParam(name = EXCLUDE_PARAM_NAME, required = false) List<String> exclusionList) {
+        origin = ValidationUtils.validateIataToUpperCase(origin,airportsService,ORIGIN_PARAM_NAME,false);
+        destination = ValidationUtils.validateIataToUpperCase(destination,airportsService,DESTINATION_PARAM_NAME,false);
+        Set<String> exclusionSet = Set.of();
+        if (exclusionList != null) {
+            exclusionList.replaceAll(iata -> ValidationUtils.validateIataToUpperCase(iata, airportsService, EXCLUDE_PARAM_NAME, true));
+            exclusionSet = Set.copyOf(exclusionList);
         }
-        if (!StringUtils.isEmpty(destination)) {
-            ValidationUtils.validateAndGetIata(airportsService,destination,DESTINATION_PARAM_NAME,true);
-            destinationOption = Option.of(destination.toUpperCase());
-        }
-        Option<Airline> airlineOptional = ValidationUtils.resolveAirlineString(airlineString);
-        return routeService.getRoutes(originOption,destinationOption,airlineOptional);
+        return routeService.buildPathWithExclusions(origin,destination,exclusionSet);
     }
 
     @PostMapping("/routes")
@@ -151,7 +170,8 @@ class ResourceController {
     @Cacheable("iataCache")
     public AirportDisplay getAirportByIata(@PathVariable(IATA_PARAM_NAME) String iata) {
         LOGGER.debug(String.format("fetching uncached airport by iata code: %s",iata));
-        return ValidationUtils.validateAndGetIata(airportsService,iata,IATA_PARAM_NAME,false);
+        iata = ValidationUtils.validateIataToUpperCase(iata,airportsService,IATA_PARAM_NAME,false);
+        return airportsService.getByIata(iata);
     }
 
     @GetMapping("/airports")

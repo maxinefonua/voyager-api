@@ -24,4 +24,7 @@ public class Route {
 
     @Enumerated(EnumType.STRING)
     Airline airline;
+
+    @Column(name = "active")
+    Boolean isActive;
 }

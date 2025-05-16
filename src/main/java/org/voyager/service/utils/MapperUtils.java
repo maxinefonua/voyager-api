@@ -11,6 +11,7 @@ import org.voyager.model.entity.Location;
 import org.voyager.model.location.LocationForm;
 import org.voyager.model.route.RouteDisplay;
 import org.voyager.model.route.RouteForm;
+import org.voyager.model.route.RoutePatch;
 
 public class MapperUtils {
     public static AirportDisplay airportToDisplay(Airport airport) {
@@ -61,6 +62,7 @@ public class MapperUtils {
                 .origin(route.getOrigin())
                 .destination(route.getDestination())
                 .airline(route.getAirline())
+                .isActive(route.getIsActive())
                 .build();
     }
 
@@ -69,6 +71,17 @@ public class MapperUtils {
                 .origin(routeForm.getOrigin())
                 .destination(routeForm.getDestination())
                 .airline(Airline.valueOf(routeForm.getAirline()))
+                .isActive(routeForm.getIsActive())
+                .build();
+    }
+
+    public static Route patchDisplayToRoute(RouteDisplay routeDisplay, RoutePatch routePatch) {
+        return Route.builder()
+                .id(routeDisplay.getId())
+                .origin(routeDisplay.getOrigin())
+                .destination(routeDisplay.getDestination())
+                .airline(routeDisplay.getAirline())
+                .isActive(routePatch.getIsActive())
                 .build();
     }
 }
