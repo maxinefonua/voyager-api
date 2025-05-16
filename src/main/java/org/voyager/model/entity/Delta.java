@@ -6,15 +6,20 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Id;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.EnumType;
-import lombok.Getter;
+import lombok.*;
+import org.voyager.model.delta.DeltaStatus;
 
 @Entity
+@Data
+@NoArgsConstructor
+@Builder
+@AllArgsConstructor
 @Table(name = "delta") @Getter
 public class Delta {
     @Id @Column(length = 3, columnDefinition = "bpchar")
     String iata;
     @Enumerated(EnumType.STRING)
-    Status status;
+    DeltaStatus status;
     @Column(name="hub")
     Boolean isHub;
 }

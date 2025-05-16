@@ -8,19 +8,20 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import org.voyager.entity.Airport;
-import org.voyager.error.MessageConstants;
 import org.voyager.model.Airline;
 import org.voyager.model.AirportDisplay;
 import org.voyager.model.AirportType;
+import org.voyager.model.delta.DeltaStatus;
 import org.voyager.model.entity.Delta;
-import org.voyager.model.entity.Status;
 import org.voyager.repository.AirportRepository;
 import org.voyager.repository.DeltaRepository;
 import org.voyager.service.AirportsService;
+import org.voyager.service.DeltaService;
 import org.voyager.service.utils.MapperUtils;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 public class AirportsServiceImpl implements AirportsService {
@@ -28,7 +29,7 @@ public class AirportsServiceImpl implements AirportsService {
     AirportRepository airportRepository;
 
     @Autowired
-    DeltaRepository deltaRepository;
+    DeltaService deltaService;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AirportsServiceImpl.class);
 
@@ -71,7 +72,7 @@ public class AirportsServiceImpl implements AirportsService {
         }
         if (countryCode.isEmpty() && type.isEmpty()) {
             LOGGER.debug(String.format("fetching uncached get airports by airline: %s",airline.get()));
-            return airportRepository.findByIataInOrderByIataAsc(getDeltaCodes(List.of(Status.ACTIVE,Status.SEASONAL))).stream().map(MapperUtils::airportToDisplay).toList();
+            return airportRepository.findByIataInOrderByIataAsc(getActiveDeltaCodes()).stream().map(MapperUtils::airportToDisplay).toList();
         }
         if (countryCode.isEmpty() && airline.isEmpty()) {
             LOGGER.debug(String.format("fetching uncached get airports by type: %s",type.get()));
@@ -116,13 +117,13 @@ public class AirportsServiceImpl implements AirportsService {
                     .sorted(Comparator.comparingDouble(AirportDisplay::getDistance)).limit(limit).toList();
         } else if (type.isEmpty()) {
             LOGGER.debug(String.format("fetching uncached get nearby airports for airline: %s, latitude: %f, longitude: %f, with limit: %d",airline.get(),latitude,longitude,limit));
-            return airportRepository.findByIataIn(getDeltaCodes(List.of(Status.ACTIVE,Status.SEASONAL))).stream().map(airport -> MapperUtils.airportToDisplay(airport,
+            return airportRepository.findByIataIn(getActiveDeltaCodes()).stream().map(airport -> MapperUtils.airportToDisplay(airport,
                             AirportDisplay.calculateDistance(latitude,longitude,airport.getLatitude(),airport.getLongitude())))
                     .sorted(Comparator.comparingDouble(AirportDisplay::getDistance)).limit(limit).toList();
         }
 
         LOGGER.debug(String.format("fetching uncached get nearby airports for type: %s, airline: %s, latitude: %f, longitude: %f, with limit: %d",type.get(),airline.get(),latitude,longitude,limit));
-        return airportRepository.findByIataIn(getDeltaCodes(List.of(Status.ACTIVE,Status.SEASONAL))).stream().map(airport -> MapperUtils.airportToDisplay(airport,
+        return airportRepository.findByIataIn(getActiveDeltaCodes()).stream().map(airport -> MapperUtils.airportToDisplay(airport,
                         AirportDisplay.calculateDistance(latitude,longitude,airport.getLatitude(),airport.getLongitude())))
                 .sorted(Comparator.comparingDouble(AirportDisplay::getDistance)).limit(limit).toList();
     }
@@ -137,12 +138,11 @@ public class AirportsServiceImpl implements AirportsService {
         return MapperUtils.airportToDisplay(optional.get());
     }
 
-    private List<String> getDeltaCodes(List<Status> statusList) {
-        return deltaRepository.findByStatusIn(statusList).stream().map(Delta::getIata).toList();
+    private boolean validDeltaCode(String iata) {
+        return deltaService.isActive(iata);
     }
 
-    private boolean validDeltaCode(String iata) {
-        Optional<Delta> found = deltaRepository.findById(iata);
-        return found.isPresent() && (found.get().getStatus().equals(Status.ACTIVE) || found.get().getStatus().equals(Status.SEASONAL));
+    private List<String> getActiveDeltaCodes() {
+        return deltaService.getActiveCodes();
     }
 }

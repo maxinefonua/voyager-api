@@ -6,6 +6,7 @@ import org.voyager.entity.Airport;
 import org.voyager.model.AirportType;
 
 import java.util.List;
+import java.util.Set;
 
 public interface AirportRepository extends JpaRepository<Airport,String> {
     @Query("SELECT a.iata FROM Airport a ORDER BY iata")

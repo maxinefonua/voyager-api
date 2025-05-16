@@ -3,10 +3,15 @@ package org.voyager.service.utils;
 import org.voyager.entity.Airport;
 import org.voyager.model.Airline;
 import org.voyager.model.AirportDisplay;
+import org.voyager.model.delta.DeltaDisplay;
+import org.voyager.model.delta.DeltaForm;
+import org.voyager.model.delta.DeltaPatch;
+import org.voyager.model.entity.Delta;
 import org.voyager.model.entity.Route;
 import org.voyager.model.location.LocationDisplay;
 import org.voyager.model.location.Source;
 import org.voyager.model.location.Status;
+import org.voyager.model.delta.DeltaStatus;
 import org.voyager.model.entity.Location;
 import org.voyager.model.location.LocationForm;
 import org.voyager.model.route.RouteDisplay;
@@ -82,6 +87,30 @@ public class MapperUtils {
                 .destination(routeDisplay.getDestination())
                 .airline(routeDisplay.getAirline())
                 .isActive(routePatch.getIsActive())
+                .build();
+    }
+
+    public static DeltaDisplay deltaToDisplay(Delta delta) {
+        return DeltaDisplay.builder()
+                .iata(delta.getIata())
+                .status(delta.getStatus())
+                .isHub(delta.getIsHub())
+                .build();
+    }
+
+    public static Delta formToDelta(DeltaForm deltaForm) {
+        return Delta.builder()
+                .iata(deltaForm.getIata())
+                .status(DeltaStatus.valueOf(deltaForm.getStatus()))
+                .isHub(deltaForm.getIsHub())
+                .build();
+    }
+
+    public static Delta patchDisplayToDelta(DeltaDisplay deltaDisplay, DeltaPatch deltaPatch) {
+        return Delta.builder()
+                .iata(deltaDisplay.getIata())
+                .status(DeltaStatus.valueOf(deltaPatch.getStatus()))
+                .isHub(deltaPatch.getIsHub())
                 .build();
     }
 }
