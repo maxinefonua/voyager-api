@@ -56,7 +56,7 @@ public class DeltaServiceImpl implements DeltaService {
     }
 
     @Override
-    public Boolean isActive(String iata) {
+    public Boolean exists(String iata) {
         return deltaRepository.existsById(iata);
     }
 }

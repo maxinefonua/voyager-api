@@ -13,6 +13,9 @@ import org.voyager.error.MessageConstants;
 import org.voyager.model.Airline;
 import org.voyager.model.AirportDisplay;
 import org.voyager.model.AirportType;
+import org.voyager.model.delta.DeltaForm;
+import org.voyager.model.delta.DeltaPatch;
+import org.voyager.model.delta.DeltaStatus;
 import org.voyager.model.location.Source;
 import org.voyager.model.location.LocationForm;
 import org.voyager.model.route.RouteForm;
@@ -121,6 +124,25 @@ public class ValidationUtils {
         locationForm.setCountryCode(locationForm.getCountryCode().toUpperCase());
     }
 
+    public static void validateDeltaForm(@Valid @NotNull DeltaForm deltaForm, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            StringJoiner joiner = new StringJoiner("; ");
+            for (ObjectError error : bindingResult.getAllErrors()) {
+                if (error instanceof FieldError fieldError) {
+                    joiner.add(String.format("'%s' %s",fieldError.getField(),fieldError.getDefaultMessage()));
+                }
+            }
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,String.format("Invalid request body: %s.",joiner));
+        }
+        deltaForm.setIata(deltaForm.getIata().toUpperCase());
+        deltaForm.setStatus(deltaForm.getStatus().toUpperCase());
+        try {
+            DeltaStatus.valueOf(deltaForm.getStatus());
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, MessageConstants.buildInvalidRequestBodyPropertyMessage(DELTA_STATUS_PARAM_NAME,deltaForm.getStatus()));
+        }
+    }
+
     public static void validateRouteForm(RouteForm routeForm, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             StringJoiner joiner = new StringJoiner("; ");
@@ -151,5 +173,29 @@ public class ValidationUtils {
             }
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,String.format("Invalid request body: %s.",joiner));
         }
+    }
+
+    public static void validateDeltaPatch(@Valid @NotNull DeltaPatch deltaPatch, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            StringJoiner joiner = new StringJoiner("; ");
+            for (ObjectError error : bindingResult.getAllErrors()) {
+                if (error instanceof FieldError fieldError) {
+                    joiner.add(String.format("'%s' %s",fieldError.getField(),fieldError.getDefaultMessage()));
+                }
+            }
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,String.format("Invalid request body: %s.",joiner));
+        }
+    }
+
+    public static List<DeltaStatus> resolveDeltaStatusList(List<String> statusStringList) {
+        List<DeltaStatus> statusList = new ArrayList<>();
+        statusStringList.forEach(statusString -> {
+            try {
+                statusList.add(DeltaStatus.valueOf(statusString.toUpperCase()));
+            } catch (IllegalArgumentException e) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, MessageConstants.buildInvalidRequestParameterMessage(DELTA_STATUS_PARAM_NAME,statusString));
+            }
+        });
+        return statusList;
     }
 }

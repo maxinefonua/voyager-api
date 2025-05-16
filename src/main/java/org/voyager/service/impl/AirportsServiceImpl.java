@@ -11,17 +11,13 @@ import org.voyager.entity.Airport;
 import org.voyager.model.Airline;
 import org.voyager.model.AirportDisplay;
 import org.voyager.model.AirportType;
-import org.voyager.model.delta.DeltaStatus;
-import org.voyager.model.entity.Delta;
 import org.voyager.repository.AirportRepository;
-import org.voyager.repository.DeltaRepository;
 import org.voyager.service.AirportsService;
 import org.voyager.service.DeltaService;
 import org.voyager.service.utils.MapperUtils;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 @Service
 public class AirportsServiceImpl implements AirportsService {
@@ -139,7 +135,7 @@ public class AirportsServiceImpl implements AirportsService {
     }
 
     private boolean validDeltaCode(String iata) {
-        return deltaService.isActive(iata);
+        return deltaService.exists(iata);
     }
 
     private List<String> getActiveDeltaCodes() {

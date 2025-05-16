@@ -13,6 +13,10 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.voyager.error.MessageConstants;
 import org.voyager.model.*;
+import org.voyager.model.delta.DeltaDisplay;
+import org.voyager.model.delta.DeltaForm;
+import org.voyager.model.delta.DeltaPatch;
+import org.voyager.model.delta.DeltaStatus;
 import org.voyager.model.location.LocationForm;
 import org.voyager.model.location.LocationDisplay;
 import org.voyager.model.location.Source;
@@ -34,21 +38,18 @@ class ResourceController {
 
     @Autowired
     private TownRepository townRepository;
-
     @Autowired
     private RegionService regionService;
-
     @Autowired
     private SearchLocationService searchLocationService;
-
     @Autowired
     private LocationService locationService;
-
     @Autowired
     private RouteService routeService;
-
     @Autowired
     private AirportsService airportsService;
+    @Autowired
+    private DeltaService deltaService;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ResourceController.class);
 
@@ -183,5 +184,35 @@ class ResourceController {
         Option<AirportType> airportType = ValidationUtils.resolveTypeString(typeString);
         Option<Airline> airline = ValidationUtils.resolveAirlineString(airlineString);
         return airportsService.getAll(Option.of(countryCodeString),airportType,airline);
+    }
+
+    @GetMapping("/delta")
+    public List<DeltaDisplay> getDeltas(@RequestParam(name = DELTA_STATUS_PARAM_NAME, required = false) List<String> statusStringList) {
+        if (statusStringList == null) return deltaService.getAll();
+        List<DeltaStatus> statusList = ValidationUtils.resolveDeltaStatusList(statusStringList);
+        return deltaService.getAllByStatusList(statusList);
+    }
+
+    @PostMapping("/delta")
+    public DeltaDisplay addDelta(@RequestBody @Valid @NotNull DeltaForm deltaForm, BindingResult bindingResult) {
+        ValidationUtils.validateDeltaForm(deltaForm, bindingResult);
+        return deltaService.save(deltaForm);
+    }
+
+    @GetMapping("/delta/{iata}")
+    public DeltaDisplay getDeltaByIata(@PathVariable(name = IATA_PARAM_NAME) String iata, @RequestParam(name = DELTA_STATUS_PARAM_NAME, required = false) List<String> statusStringList) {
+        iata = iata.toUpperCase();
+        if (deltaService.exists(iata)) return deltaService.getByIata(iata).get();
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                MessageConstants.buildResourceNotFoundForPathVariableMessage(IATA_PARAM_NAME,iata));
+    }
+
+    @PatchMapping("/delta/{iata}")
+    public DeltaDisplay patchDeltaByIata(@RequestBody @Valid @NotNull DeltaPatch deltaPatch, BindingResult bindingResult, @PathVariable(name = "iata") String iata) {
+        ValidationUtils.validateDeltaPatch(deltaPatch,bindingResult);
+        iata = iata.toUpperCase();
+        if (deltaService.exists(iata)) return deltaService.patch(deltaService.getByIata(iata).get(),deltaPatch);
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                MessageConstants.buildResourceNotFoundForPathVariableMessage(IATA_PARAM_NAME,iata));
     }
 }

@@ -7,7 +7,6 @@ import org.voyager.model.delta.DeltaPatch;
 import org.voyager.model.delta.DeltaStatus;
 
 import java.util.List;
-import java.util.Set;
 
 public interface DeltaService {
     DeltaDisplay save(DeltaForm deltaForm);
@@ -16,5 +15,5 @@ public interface DeltaService {
     List<DeltaDisplay> getAll();
     List<DeltaDisplay> getAllByStatusList(List<DeltaStatus> statusList);
     List<String> getActiveCodes();
-    Boolean isActive(String iata);
+    Boolean exists(String iata);
 }
