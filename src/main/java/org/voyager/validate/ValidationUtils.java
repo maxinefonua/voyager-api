@@ -21,6 +21,7 @@ import org.voyager.model.location.LocationForm;
 import org.voyager.model.route.RouteForm;
 import org.voyager.model.route.RoutePatch;
 import org.voyager.service.AirportsService;
+import org.voyager.service.RouteService;
 
 import java.util.*;
 
@@ -62,6 +63,31 @@ public class ValidationUtils {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     MessageConstants.buildInvalidRequestParameterMessage(SOURCE_PROPERTY_NAME, sourceString));
         }
+    }
+
+    public static String validateIataToUpperCase(String iata, RouteService routeService, String varName, boolean isParam) {
+        if (!iata.matches(IATA_CODE_REGEX)) {
+            if (isParam) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    MessageConstants.buildInvalidRequestParameterMessage(varName,iata));
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    MessageConstants.buildInvalidPathVariableMessage(varName,iata));
+        }
+        if (varName.equals(ORIGIN_PARAM_NAME)) {
+            if (!routeService.originExists(iata.toUpperCase())) {
+                if (isParam) throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        MessageConstants.buildResourceNotFoundForParameterMessage(varName, iata));
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        MessageConstants.buildResourceNotFoundForPathVariableMessage(varName, iata));
+            }
+        } else if (varName.equals(DESTINATION_PARAM_NAME)) {
+            if (!routeService.destinationExists(iata.toUpperCase())) {
+                if (isParam) throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        MessageConstants.buildResourceNotFoundForParameterMessage(varName, iata));
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        MessageConstants.buildResourceNotFoundForPathVariableMessage(varName, iata));
+            }
+        }
+        return iata.toUpperCase();
     }
 
     public static String validateIataToUpperCase(String iata, AirportsService airportsService, String varName, boolean isParam) {

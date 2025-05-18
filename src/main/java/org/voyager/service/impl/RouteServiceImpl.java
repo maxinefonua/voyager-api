@@ -33,6 +33,16 @@ public class RouteServiceImpl implements RouteService {
     private static final Logger LOGGER = LoggerFactory.getLogger(RouteServiceImpl.class);
 
     @Override
+    public Boolean originExists(String origin) {
+        return routeRepository.originExists(origin);
+    }
+
+    @Override
+    public Boolean destinationExists(String destination) {
+        return routeRepository.destinationExists(destination);
+    }
+
+    @Override
     public Option<RouteDisplay> getRouteById(Integer id) {
         Optional<Route> route = routeRepository.findById(id);
         if (route.isEmpty()) return Option.none();

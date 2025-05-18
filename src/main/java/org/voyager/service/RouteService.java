@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Set;
 
 public interface RouteService {
+    Boolean originExists(String origin);
+    Boolean destinationExists(String destination);
     Option<RouteDisplay> getRouteById(Integer id);
     Option<RouteDisplay> getByOriginAndDestinationAndAirline(String origin, String destination, Airline airline);
     List<RouteDisplay> getRoutes(Option<String> origin, Option<String> destination, Option<Airline> airline);

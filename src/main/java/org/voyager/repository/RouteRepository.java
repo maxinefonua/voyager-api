@@ -9,6 +9,11 @@ import java.util.List;
 import java.util.Optional;
 
 public interface RouteRepository extends JpaRepository<Route,Integer> {
+    @Query("SELECT COUNT(*)>0 FROM Route r WHERE r.origin = ?1")
+    Boolean originExists(String origin);
+    @Query("SELECT COUNT(*)>0 FROM Route r WHERE r.destination = ?1")
+    Boolean destinationExists(String destination);
+
     List<Route> findByIsActive(Boolean isActive);
     List<Route> findByOrigin(String origin);
     List<Route> findByOriginAndIsActive(String origin,Boolean isActive);

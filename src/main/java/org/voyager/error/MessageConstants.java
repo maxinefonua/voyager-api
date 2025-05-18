@@ -68,11 +68,13 @@ public class MessageConstants {
     private static final String VALID_DELTA_STATUS_CONSTRAINT = "Valid delta status values are: 'ACTIVE','SEASONAL','TERMINATED','FUTURE'";
 
     private static final String IATA_RESOURCE_NOT_FOUND = "Information on given IATA code is currently unavailable";
+    private static final String ORIGIN_RESOURCE_NOT_FOUND = "No routes found with given origin";
+    private static final String DESTINATION_RESOURCE_NOT_FOUND = "No routes found with given destination";
 
     private static final Map<String,String> NOT_FOUND_MAP = Map.ofEntries(
             Map.entry(IATA_PARAM_NAME,IATA_RESOURCE_NOT_FOUND),
-            Map.entry(ORIGIN_PARAM_NAME,IATA_RESOURCE_NOT_FOUND),
-            Map.entry(DESTINATION_PARAM_NAME,IATA_RESOURCE_NOT_FOUND),
+            Map.entry(ORIGIN_PARAM_NAME,ORIGIN_RESOURCE_NOT_FOUND),
+            Map.entry(DESTINATION_PARAM_NAME,DESTINATION_RESOURCE_NOT_FOUND),
             Map.entry(EXCLUDE_PARAM_NAME,IATA_RESOURCE_NOT_FOUND)
     );
 
