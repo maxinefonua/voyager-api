@@ -121,6 +121,7 @@ public class RouteServiceImpl implements RouteService {
             List<Integer> routeIds = curr._2();
             List<Route> routes = routeRepository.findByOrigin(curr._1());
             for (Route route : routes) {
+                if (!route.getIsActive()) continue;
                 String next = route.getDestination();
                 if (next.equals(destination)) {
                     routeIds.add(route.getId());
