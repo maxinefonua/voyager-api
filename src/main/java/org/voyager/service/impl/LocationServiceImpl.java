@@ -8,8 +8,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import org.voyager.error.MessageConstants;
-import org.voyager.model.location.LocationDisplay;
-import org.voyager.model.entity.Location;
+import org.voyager.model.entity.LocationEntity;
+import org.voyager.model.location.Location;
 import org.voyager.model.location.LocationForm;
 import org.voyager.model.location.Source;
 import org.voyager.model.location.Status;
@@ -31,56 +31,56 @@ public class LocationServiceImpl implements LocationService {
     private static final Logger LOGGER = LoggerFactory.getLogger(LocationServiceImpl.class);
 
     @Override
-    public LocationDisplay save(LocationForm locationForm) {
-        Location location = MapperUtils.formToLocation(locationForm);
+    public Location save(LocationForm locationForm) {
+        LocationEntity locationEntity = MapperUtils.formToLocationEntity(locationForm);
         try {
-            location = locationRepository.save(location);
+            locationEntity = locationRepository.save(locationEntity);
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, MessageConstants.buildRespositorySaveErrorMessage("location"));
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, MessageConstants.buildRespositorySaveErrorMessage("locationEntity"));
         }
-        return MapperUtils.locationToDisplay(location);
+        return MapperUtils.entityToLocation(locationEntity);
     }
 
     @Override
-    public List<LocationDisplay> getLocations() {
-        return locationRepository.findAll().stream().map(MapperUtils::locationToDisplay).toList();
+    public List<Location> getLocations() {
+        return locationRepository.findAll().stream().map(MapperUtils::entityToLocation).toList();
     }
 
     @Override
-    public List<LocationDisplay> getLocationsByStatus(Status status) {
-        return locationRepository.findByStatus(status).stream().map(MapperUtils::locationToDisplay).toList();
+    public List<Location> getLocationsByStatus(Status status) {
+        return locationRepository.findByStatus(status).stream().map(MapperUtils::entityToLocation).toList();
     }
 
     @Override
-    public List<LocationDisplay> getLocationsBySourceAndSourceId(Source source, String sourceId) {
-        return locationRepository.findBySourceAndSourceId(source,sourceId).stream().map(MapperUtils::locationToDisplay).toList();
+    public List<Location> getLocationsBySourceAndSourceId(Source source, String sourceId) {
+        return locationRepository.findBySourceAndSourceId(source,sourceId).stream().map(MapperUtils::entityToLocation).toList();
     }
 
     @Override
-    public List<LocationDisplay> getLocationsBySource(Source source) {
-        return locationRepository.findBySource(source).stream().map(MapperUtils::locationToDisplay).toList();
+    public List<Location> getLocationsBySource(Source source) {
+        return locationRepository.findBySource(source).stream().map(MapperUtils::entityToLocation).toList();
     }
 
     @Override
-    public Option<LocationDisplay> getLocationById(Integer id) {
-        Optional<Location> location = locationRepository.findById(id);
+    public Option<Location> getLocationById(Integer id) {
+        Optional<LocationEntity> location = locationRepository.findById(id);
         if (location.isEmpty()) return Option.none();
-        return Option.of(MapperUtils.locationToDisplay(location.get()));
+        return Option.of(MapperUtils.entityToLocation(location.get()));
     }
 
     @Override
     public Set<String> getLocationIdsBySource(Source source) {
-        return locationRepository.findBySource(source).stream().map(Location::getSourceId).collect(Collectors.toSet());
+        return locationRepository.findBySource(source).stream().map(LocationEntity::getSourceId).collect(Collectors.toSet());
     }
 
     @Override
     public Map<String, Status> getLocationIdsToStatusBySource(Source source) {
-        return locationRepository.findBySource(source).stream().collect(Collectors.toMap(Location::getSourceId,Location::getStatus));
+        return locationRepository.findBySource(source).stream().collect(Collectors.toMap(LocationEntity::getSourceId, LocationEntity::getStatus));
     }
 
     @Override
-    public List<LocationDisplay> getLocationsByStatusList(List<Status> statusList) {
-        return locationRepository.findByStatusIn(statusList).stream().map(MapperUtils::locationToDisplay).toList();
+    public List<Location> getLocationsByStatusList(List<Status> statusList) {
+        return locationRepository.findByStatusIn(statusList).stream().map(MapperUtils::entityToLocation).toList();
     }
 }

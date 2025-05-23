@@ -27,7 +27,7 @@ Calling GET with this endpoint requires a query as a parameter. The query is use
 
 Example request:
 
-<code>curl --location 'http://localhost:3000/search?q=Laie+Hawaii' \
+<code>curl --locationEntity 'http://localhost:3000/search?q=Laie+Hawaii' \
 --header 'X-API-KEY: {DEV_API_KEY}'</code>
 
 | Parameter | Datatype |      Required      | Description |
@@ -137,13 +137,13 @@ Fetches confirmed active military and civil airports with optional query paramet
 <h3>Request</h3>
 Example GET command:
 
-<code>curl --location 'http://localhost:3000/airports?countryCode=br&airline=delta' \
+<code>curl --locationEntity 'http://localhost:3000/airports?countryCode=br&airline=deltaEntity' \
 --header 'X-API-KEY: {DEV_API_KEY}'</code>
 
 | Parameter   | Datatype        | Required | Description |
 |-------------|-----------------|:---------|---|
 | countryCode | 2-letter string | no       | ISO 3166-1 alpha-2 country code |
-| airline | string          | no       | name of airline <br><i>currently only accepts </i>'delta'
+| airline | string          | no       | name of airline <br><i>currently only accepts </i>'deltaEntity'
 
 <h3>Response</h3>
 Example GET response:
@@ -152,7 +152,7 @@ Example GET response:
 [
   {
     "iata": "GIG",
-    "name": "Galeao - Antonio Carlos Jobim International Airport",
+    "name": "Galeao - Antonio Carlos Jobim International AirportEntity",
     "city": "Rio De Janeiro",
     "subdivision": "Rio de Janeiro",
     "countryCode": "BR",
@@ -162,7 +162,7 @@ Example GET response:
   },
   {
     "iata": "GRU",
-    "name": "Guarulhos - Governador Andre Franco Montoro International Airport",
+    "name": "Guarulhos - Governador Andre Franco Montoro International AirportEntity",
     "city": "Sao Paulo",
     "subdivision": "São Paulo",
     "countryCode": "BR",
@@ -174,12 +174,12 @@ Example GET response:
 ```
 
 ## /airports/{iata}
-Fetches airport by IATA code.
+Fetches airportEntity by IATA code.
 
 <h3>Request</h3>
 Example GET command:
 
-<code>curl --location 'http://localhost:3000/airports/itm' \
+<code>curl --locationEntity 'http://localhost:3000/airports/itm' \
 --header 'X-API-KEY: {DEV_API_KEY}'</code>
 
 <h3>Response</h3>
@@ -188,7 +188,7 @@ Example GET response:
 ```json
 {
   "iata": "ITM",
-  "name": "Osaka International Airport",
+  "name": "Osaka International AirportEntity",
   "city": "Osaka",
   "subdivision": "Hyogo",
   "countryCode": "JP",
@@ -204,7 +204,7 @@ Fetches nearest airports to a given point using the <a href="https://en.wikipedi
 <h3>Request</h3>
 Example GET command:
 
-<code>curl --location 'http://localhost:3000/nearby-airports?latitude=21.64547&longitude=-157.9225&limit=5&airline=delta' \
+<code>curl --locationEntity 'http://localhost:3000/nearby-airports?latitude=21.64547&longitude=-157.9225&limit=5&airline=deltaEntity' \
 --header 'X-API-KEY: {DEV_API_KEY}'</code>
 
 | Parameter | Datatype |      Required       | Description |
@@ -213,7 +213,7 @@ Example GET command:
 | longitude | double   |         yes         | longitude for start point  
 | limit     | integer  | no<br><i>Default: 5 | limits nearest airports to return
 | type      | string   | no<br> | filters airports by type<br><i>accepts</i>: 'civil', 'military', 'historical', 'other'
-| airline   | string   | no<br> | filters airports by airline<br><i>currently only accepts </i>'delta'
+| airline   | string   | no<br> | filters airports by airline<br><i>currently only accepts </i>'deltaEntity'
 
 <h3>Response</h3>
 Example GET response:
@@ -222,7 +222,7 @@ Example GET response:
 [
   {
     "iata": "HNL",
-    "name": "Daniel K Inouye International Airport",
+    "name": "Daniel K Inouye International AirportEntity",
     "city": "Honolulu",
     "subdivision": "Hawaii",
     "countryCode": "US",
@@ -233,7 +233,7 @@ Example GET response:
   },
   {
     "iata": "LIH",
-    "name": "Lihue Airport",
+    "name": "Lihue AirportEntity",
     "city": "Lihue",
     "subdivision": "Hawaii",
     "countryCode": "US",
@@ -244,7 +244,7 @@ Example GET response:
   },
   {
     "iata": "OGG",
-    "name": "Kahului Airport",
+    "name": "Kahului AirportEntity",
     "city": "Kahului",
     "subdivision": "Hawaii",
     "countryCode": "US",
@@ -255,7 +255,7 @@ Example GET response:
   },
   {
     "iata": "KOA",
-    "name": "Ellison Onizuka Kona International At Keahole Airport",
+    "name": "Ellison Onizuka Kona International At Keahole AirportEntity",
     "city": "Kailua/Kona",
     "subdivision": "Hawaii",
     "countryCode": "US",
@@ -266,7 +266,7 @@ Example GET response:
   },
   {
     "iata": "SFO",
-    "name": "San Francisco International Airport",
+    "name": "San Francisco International AirportEntity",
     "city": "San Francisco",
     "subdivision": "California",
     "countryCode": "US",

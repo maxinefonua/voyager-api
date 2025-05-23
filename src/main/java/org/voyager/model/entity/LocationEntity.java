@@ -9,7 +9,7 @@ import org.voyager.model.location.Status;
 @Data @NoArgsConstructor
 @Builder @AllArgsConstructor
 @Table(name="locations")
-public class Location {
+public class LocationEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Getter
@@ -34,7 +34,7 @@ public class Location {
     @Column(name = "lat")
     private Double latitude;
 
-    @Column(name = "lon")
+    @Column(name = "lng")
     private Double longitude;
 
     @Column

@@ -1,16 +1,18 @@
 package org.voyager.service.impl;
 
 import io.vavr.control.Option;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-import org.voyager.entity.Airport;
+import org.voyager.model.airport.AirportPatch;
+import org.voyager.model.entity.AirportEntity;
 import org.voyager.model.Airline;
-import org.voyager.model.AirportDisplay;
-import org.voyager.model.AirportType;
+import org.voyager.model.airport.Airport;
+import org.voyager.model.airport.AirportType;
 import org.voyager.repository.AirportRepository;
 import org.voyager.service.AirportsService;
 import org.voyager.service.DeltaService;
@@ -29,19 +31,19 @@ public class AirportsServiceImpl implements AirportsService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AirportsServiceImpl.class);
 
-    public Option<AirportDisplay> updateAirport(AirportDisplay airportDisplay) {
-        Optional<Airport> result = airportRepository.findById(airportDisplay.getIata());
-        result.ifPresent(airport -> {
-            airport.setName(airportDisplay.getName());
-            airport.setSubdivision(airportDisplay.getSubdivision());
-            airport.setCity(airportDisplay.getCity());
-            airport.setCountryCode(airportDisplay.getCountryCode());
-            airport.setType(airportDisplay.getType());
-            airport.setLatitude(airportDisplay.getLatitude());
-            airport.setLongitude(airportDisplay.getLongitude());
-            airportRepository.save(airport);
+    public Option<Airport> updateAirport(Airport airport) {
+        Optional<AirportEntity> result = airportRepository.findById(airport.getIata());
+        result.ifPresent(airportEntity -> {
+            airportEntity.setName(airport.getName());
+            airportEntity.setSubdivision(airport.getSubdivision());
+            airportEntity.setCity(airport.getCity());
+            airportEntity.setCountryCode(airport.getCountryCode());
+            airportEntity.setType(airport.getType());
+            airportEntity.setLatitude(airport.getLatitude());
+            airportEntity.setLongitude(airport.getLongitude());
+            airportRepository.save(airportEntity);
         });
-        if (result.isPresent()) return Option.of(MapperUtils.airportToDisplay(result.get()));
+        if (result.isPresent()) return Option.of(MapperUtils.entityToAirport(result.get()));
         return Option.none();
     }
 
@@ -61,77 +63,96 @@ public class AirportsServiceImpl implements AirportsService {
     }
 
     @Override
-    public List<AirportDisplay> getAll(Option<String> countryCode, Option<AirportType> type, Option<Airline> airline) {
+    public List<Airport> getAll(Option<String> countryCode, Option<AirportType> type, Option<Airline> airline) {
         if (countryCode.isEmpty() && type.isEmpty() && airline.isEmpty()) {
             LOGGER.debug("fetching uncached get all airports");
-            return airportRepository.findByTypeInOrderByIataAsc(List.of(AirportType.CIVIL,AirportType.MILITARY)).stream().map(MapperUtils::airportToDisplay).toList();
+            return airportRepository.findAll().stream().map(MapperUtils::entityToAirport).toList();
         }
         if (countryCode.isEmpty() && type.isEmpty()) {
             LOGGER.debug(String.format("fetching uncached get airports by airline: %s",airline.get()));
-            return airportRepository.findByIataInOrderByIataAsc(getActiveDeltaCodes()).stream().map(MapperUtils::airportToDisplay).toList();
+            return airportRepository.findByIataInOrderByIataAsc(getActiveDeltaCodes()).stream().map(MapperUtils::entityToAirport).toList();
         }
         if (countryCode.isEmpty() && airline.isEmpty()) {
             LOGGER.debug(String.format("fetching uncached get airports by type: %s",type.get()));
-            return airportRepository.findByTypeOrderByIataAsc(type.get()).stream().map(MapperUtils::airportToDisplay).toList();
+            return airportRepository.findByTypeOrderByIataAsc(type.get()).stream().map(MapperUtils::entityToAirport).toList();
         }
         if (type.isEmpty() && airline.isEmpty()) {
             LOGGER.debug(String.format("fetching uncached get airports by country code: %s",countryCode.get()));
-            return airportRepository.findByCountryCodeOrderByIataAsc(countryCode.get()).stream().map(MapperUtils::airportToDisplay).toList();
+            return airportRepository.findByCountryCodeOrderByIataAsc(countryCode.get()).stream().map(MapperUtils::entityToAirport).toList();
         }
         if (airline.isEmpty()) {
             LOGGER.debug(String.format("fetching uncached get airports by type: %s and country code: %s",type.get(),countryCode.get()));
-            return airportRepository.findByCountryCodeAndTypeOrderByIataAsc(countryCode.get(),type.get()).stream().map(MapperUtils::airportToDisplay).toList();
+            return airportRepository.findByCountryCodeAndTypeOrderByIataAsc(countryCode.get(),type.get()).stream().map(MapperUtils::entityToAirport).toList();
         }
         if (type.isEmpty()) {
             LOGGER.debug(String.format("fetching uncached get airports by country code: %s and airline: %s",countryCode.get(),airline.get()));
             return airportRepository.findByCountryCodeOrderByIataAsc(countryCode.get()).stream().filter(
-                    airport -> validDeltaCode(airport.getIata())
-            ).map(MapperUtils::airportToDisplay).toList();
+                    airportEntity -> validDeltaCode(airportEntity.getIata())
+            ).map(MapperUtils::entityToAirport).toList();
         }
         if (countryCode.isEmpty()) {
             LOGGER.debug(String.format("fetching uncached get airports by type: %s and airline: %s",type.get(),airline.get()));
             return airportRepository.findByTypeOrderByIataAsc(type.get()).stream().filter(
-                    airport -> validDeltaCode(airport.getIata())
-            ).map(MapperUtils::airportToDisplay).toList();
+                    airportEntity -> validDeltaCode(airportEntity.getIata())
+            ).map(MapperUtils::entityToAirport).toList();
         }
         return airportRepository.findByCountryCodeAndTypeOrderByIataAsc(countryCode.get(),type.get()).stream().filter(
-                airport -> validDeltaCode(airport.getIata())
-        ).map(MapperUtils::airportToDisplay).toList();
+                airportEntity -> validDeltaCode(airportEntity.getIata())
+        ).map(MapperUtils::entityToAirport).toList();
     }
 
     @Override
-    public List<AirportDisplay> getByDistance(double latitude, double longitude, int limit, Option<AirportType> type, Option<Airline> airline) {
+    public List<Airport> getByDistance(double latitude, double longitude, int limit, Option<AirportType> type, Option<Airline> airline) {
         if (type.isEmpty() && airline.isEmpty()) {
             LOGGER.debug(String.format("fetching uncached get nearby airports for latitude: %f, longitude: %f, with limit: %d",latitude,longitude,limit));
-            return airportRepository.findByTypeIn(List.of(AirportType.CIVIL,AirportType.MILITARY)).stream().map(airport -> MapperUtils.airportToDisplay(airport,
-                    AirportDisplay.calculateDistance(latitude,longitude,airport.getLatitude(),airport.getLongitude())))
-                    .sorted(Comparator.comparingDouble(AirportDisplay::getDistance)).limit(limit).toList();
+            return airportRepository.findByTypeIn(List.of(AirportType.CIVIL,AirportType.MILITARY)).stream().map(airportEntity -> MapperUtils.entityToAirport(airportEntity,
+                            Airport.calculateDistance(latitude,longitude, airportEntity.getLatitude(), airportEntity.getLongitude())))
+                    .sorted(Comparator.comparingDouble(Airport::getDistance)).limit(limit).toList();
         } else if (airline.isEmpty()) {
             LOGGER.debug(String.format("fetching uncached get nearby airports for type: %s, latitude: %f, longitude: %f, with limit: %d",type.get(),latitude,longitude,limit));
-            return airportRepository.findByType(type.get()).stream().map(airport -> MapperUtils.airportToDisplay(airport,
-                    AirportDisplay.calculateDistance(latitude,longitude,airport.getLatitude(),airport.getLongitude())))
-                    .sorted(Comparator.comparingDouble(AirportDisplay::getDistance)).limit(limit).toList();
+            return airportRepository.findByType(type.get()).stream().map(airportEntity -> MapperUtils.entityToAirport(airportEntity,
+                            Airport.calculateDistance(latitude,longitude, airportEntity.getLatitude(), airportEntity.getLongitude())))
+                    .sorted(Comparator.comparingDouble(Airport::getDistance)).limit(limit).toList();
         } else if (type.isEmpty()) {
             LOGGER.debug(String.format("fetching uncached get nearby airports for airline: %s, latitude: %f, longitude: %f, with limit: %d",airline.get(),latitude,longitude,limit));
-            return airportRepository.findByIataIn(getActiveDeltaCodes()).stream().map(airport -> MapperUtils.airportToDisplay(airport,
-                            AirportDisplay.calculateDistance(latitude,longitude,airport.getLatitude(),airport.getLongitude())))
-                    .sorted(Comparator.comparingDouble(AirportDisplay::getDistance)).limit(limit).toList();
+            return airportRepository.findByIataIn(getActiveDeltaCodes()).stream().map(airportEntity -> MapperUtils.entityToAirport(airportEntity,
+                            Airport.calculateDistance(latitude,longitude, airportEntity.getLatitude(), airportEntity.getLongitude())))
+                    .sorted(Comparator.comparingDouble(Airport::getDistance)).limit(limit).toList();
         }
 
         LOGGER.debug(String.format("fetching uncached get nearby airports for type: %s, airline: %s, latitude: %f, longitude: %f, with limit: %d",type.get(),airline.get(),latitude,longitude,limit));
-        return airportRepository.findByIataIn(getActiveDeltaCodes()).stream().map(airport -> MapperUtils.airportToDisplay(airport,
-                        AirportDisplay.calculateDistance(latitude,longitude,airport.getLatitude(),airport.getLongitude())))
-                .sorted(Comparator.comparingDouble(AirportDisplay::getDistance)).limit(limit).toList();
+        return airportRepository.findByIataIn(getActiveDeltaCodes()).stream().map(airportEntity -> MapperUtils.entityToAirport(airportEntity,
+                        Airport.calculateDistance(latitude,longitude, airportEntity.getLatitude(), airportEntity.getLongitude())))
+                .sorted(Comparator.comparingDouble(Airport::getDistance)).limit(limit).toList();
     }
 
     @Override
-    public AirportDisplay getByIata(String iata) {
-        Optional<Airport> optional = airportRepository.findById(iata);
+    public Airport getByIata(String iata) {
+        Optional<AirportEntity> optional = airportRepository.findById(iata);
         if (optional.isEmpty()) {
             LOGGER.error(String.format("getByIata called with a nonexistent iata value = '%s'",iata));
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,"An internal service exception was thrown");
         }
-        return MapperUtils.airportToDisplay(optional.get());
+        return MapperUtils.entityToAirport(optional.get());
+    }
+
+    @Override
+    public Airport patch(String iata, AirportPatch airportPatch) {
+        AirportEntity existing = airportRepository.findById(iata).get();
+        if (StringUtils.isNotBlank(airportPatch.getName()))
+            existing.setName(airportPatch.getName());
+        if (StringUtils.isNotBlank(airportPatch.getCity()))
+            existing.setCity(airportPatch.getCity());
+        if (StringUtils.isNotBlank(airportPatch.getSubdivision()))
+            existing.setSubdivision(airportPatch.getSubdivision());
+        if (StringUtils.isNotBlank(airportPatch.getType()))
+            existing.setType(AirportType.valueOf(airportPatch.getType()));
+        if (airportPatch.getLongitude() != null)
+            existing.setLongitude(airportPatch.getLongitude());
+        if (airportPatch.getLatitude() != null)
+            existing.setLatitude(airportPatch.getLatitude());
+        existing = airportRepository.save(existing);
+        return MapperUtils.entityToAirport(existing);
     }
 
     private boolean validDeltaCode(String iata) {

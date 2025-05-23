@@ -15,7 +15,7 @@ import org.voyager.model.delta.DeltaStatus;
 @Builder
 @AllArgsConstructor
 @Table(name = "delta") @Getter
-public class Delta {
+public class DeltaEntity {
     @Id @Column(length = 3, columnDefinition = "bpchar")
     String iata;
     @Enumerated(EnumType.STRING)

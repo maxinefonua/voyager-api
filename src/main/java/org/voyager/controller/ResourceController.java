@@ -12,22 +12,12 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.voyager.error.MessageConstants;
-import org.voyager.model.*;
-import org.voyager.model.delta.DeltaDisplay;
-import org.voyager.model.delta.DeltaForm;
-import org.voyager.model.delta.DeltaPatch;
-import org.voyager.model.delta.DeltaStatus;
 import org.voyager.model.location.LocationForm;
-import org.voyager.model.location.LocationDisplay;
+import org.voyager.model.location.Location;
 import org.voyager.model.location.Source;
 import org.voyager.model.result.LookupAttribution;
 import org.voyager.model.result.ResultSearch;
 import org.voyager.model.response.VoyagerListResponse;
-import org.voyager.model.route.PathDisplay;
-import org.voyager.model.route.RouteDisplay;
-import org.voyager.model.route.RouteForm;
-import org.voyager.model.route.RoutePatch;
-import org.voyager.repository.TownRepository;
 import org.voyager.service.*;
 import org.voyager.validate.ValidationUtils;
 import java.util.*;
@@ -35,26 +25,12 @@ import static org.voyager.utils.ConstantsUtils.*;
 
 @RestController
 class ResourceController {
-
-    @Autowired
-    private TownRepository townRepository;
-    @Autowired
-    private RegionService regionService;
     @Autowired
     private SearchLocationService searchLocationService;
     @Autowired
     private LocationService locationService;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ResourceController.class);
-
-    @GetMapping("/towns")
-    @Cacheable("townCache")
-    public List<TownDisplay> getTowns() {
-        LOGGER.debug("fetching uncached getTowns");
-        return townRepository.findAll().stream().map(town -> new TownDisplay(town.getName(),town.getCountry(),
-                regionService.getRegionById(town.getRegionId()).get().getName()
-                )).toList();
-    }
 
     @GetMapping("/search")
     public VoyagerListResponse<ResultSearch> search(@RequestParam(QUERY_PARAM_NAME) String q,
@@ -71,7 +47,7 @@ class ResourceController {
     }
 
     @GetMapping("/locations")
-    public List<LocationDisplay> getLocations(@RequestParam(name = SOURCE_PROPERTY_NAME,required = false) String sourceString, @RequestParam(name = SOURCE_ID_PARAM_NAME, required = false) String sourceId) {
+    public List<Location> getLocations(@RequestParam(name = SOURCE_PROPERTY_NAME,required = false) String sourceString, @RequestParam(name = SOURCE_ID_PARAM_NAME, required = false) String sourceId) {
         if (StringUtils.isEmpty(sourceString) && StringUtils.isEmpty(sourceId)) return locationService.getLocations();
         Source source = ValidationUtils.validateAndGetSource(sourceString);
         if (StringUtils.isEmpty(sourceId)) return locationService.getLocationsBySource(source);
@@ -79,16 +55,16 @@ class ResourceController {
     }
 
     @GetMapping("/locations/{id}")
-    public LocationDisplay getLocationById(@PathVariable(name = "id") String idString) {
+    public Location getLocationById(@PathVariable(name = "id") String idString) {
         Integer id = ValidationUtils.validateAndGetInteger("id",idString,false);
-        Option<LocationDisplay> locationDisplay = locationService.getLocationById(id);
-        if (locationDisplay.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+        Option<Location> locationOption = locationService.getLocationById(id);
+        if (locationOption.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND,
                 MessageConstants.buildResourceNotFoundForPathVariableNoMessage("id",idString));
-        return locationDisplay.get();
+        return locationOption.get();
     }
 
     @PostMapping("/locations")
-    public LocationDisplay addLocation(@RequestBody @Valid @NotNull LocationForm locationForm, BindingResult bindingResult) {
+    public Location addLocation(@RequestBody @Valid @NotNull LocationForm locationForm, BindingResult bindingResult) {
         ValidationUtils.validateLocationForm(locationForm, bindingResult);
         return locationService.save(locationForm);
     }

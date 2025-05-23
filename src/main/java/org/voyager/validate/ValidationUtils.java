@@ -11,8 +11,8 @@ import org.springframework.validation.ObjectError;
 import org.springframework.web.server.ResponseStatusException;
 import org.voyager.error.MessageConstants;
 import org.voyager.model.Airline;
-import org.voyager.model.AirportDisplay;
-import org.voyager.model.AirportType;
+import org.voyager.model.airport.AirportPatch;
+import org.voyager.model.airport.AirportType;
 import org.voyager.model.delta.DeltaForm;
 import org.voyager.model.delta.DeltaPatch;
 import org.voyager.model.delta.DeltaStatus;
@@ -223,5 +223,27 @@ public class ValidationUtils {
             }
         });
         return statusList;
+    }
+
+    public static void validateIataAndAirportPatch(String iata, AirportPatch airportPatch, AirportsService airportsService, String varName) {
+        if (!iata.matches(IATA_CODE_REGEX)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                MessageConstants.buildInvalidPathVariableMessage(varName,iata));
+        if (!airportsService.ifIataExists(iata.toUpperCase())) throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                MessageConstants.buildResourceNotFoundForPathVariableMessage(varName,iata));
+        if (airportPatch == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                ("Invalid request body. A PATCH request to this path requires a non-null request body."));
+        if (StringUtils.isBlank(airportPatch.getName()) && StringUtils.isBlank(airportPatch.getCity())
+                && StringUtils.isBlank(airportPatch.getSubdivision()) && StringUtils.isBlank(airportPatch.getType())
+                && airportPatch.getLongitude() == null && airportPatch.getLatitude() == null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    ("Invalid request body. A PATCH request to this path requires at least one non-null field to update."));
+        if (StringUtils.isNotBlank(airportPatch.getType())) {
+            try {
+                AirportType.valueOf(airportPatch.getType().toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        MessageConstants.buildInvalidRequestBodyPropertyMessage(TYPE_PARAM_NAME, airportPatch.getType()));
+            }
+        }
     }
 }

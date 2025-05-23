@@ -7,10 +7,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.*;
 import org.voyager.model.Airline;
-import org.voyager.model.AirportDisplay;
-import org.voyager.model.AirportType;
+import org.voyager.model.airport.Airport;
+import org.voyager.model.airport.AirportPatch;
+import org.voyager.model.airport.AirportType;
 import org.voyager.service.AirportsService;
-import org.voyager.service.RouteService;
 import org.voyager.validate.ValidationUtils;
 
 import java.util.List;
@@ -34,8 +34,7 @@ public class AirportsController {
     }
 
     @GetMapping("/airports")
-    @Cacheable("airportsCache")
-    public List<AirportDisplay> getAirports(@RequestParam(name = COUNTRY_CODE_PARAM_NAME, required = false) String countryCodeString,
+    public List<Airport> getAirports(@RequestParam(name = COUNTRY_CODE_PARAM_NAME, required = false) String countryCodeString,
                                             @RequestParam(name = TYPE_PARAM_NAME, required = false) String typeString,
                                             @RequestParam(name = AIRLINE_PARAM_NAME, required = false) String airlineString) {
         if (countryCodeString != null) countryCodeString = ValidationUtils.validateAndGetCountryCode(countryCodeString);
@@ -46,19 +45,28 @@ public class AirportsController {
 
     @GetMapping("/airports/{iata}")
     @Cacheable("iataCache")
-    public AirportDisplay getAirportByIata(@PathVariable(IATA_PARAM_NAME) String iata) {
+    public Airport getAirportByIata(@PathVariable(IATA_PARAM_NAME) String iata) {
         LOGGER.debug(String.format("fetching uncached airport by iata code: %s",iata));
         iata = ValidationUtils.validateIataToUpperCase(iata,airportsService,IATA_PARAM_NAME,false);
         return airportsService.getByIata(iata);
     }
 
+    @PatchMapping("/airports/{iata}")
+    public Airport patchAirportByIata(@RequestBody AirportPatch airportPatch, @PathVariable(IATA_PARAM_NAME) String iata) {
+        LOGGER.debug(String.format("patching airport at iata '%s' with patch: %s",iata,airportPatch));
+        ValidationUtils.validateIataAndAirportPatch(iata,airportPatch,airportsService,IATA_PARAM_NAME);
+        iata = iata.toUpperCase();
+        airportPatch.setType(airportPatch.getType().toUpperCase());
+        return airportsService.patch(iata,airportPatch);
+    }
+
     @GetMapping("/nearby-airports")
     @Cacheable("nearbyAirportsCache")
-    public List<AirportDisplay> nearbyAirports(@RequestParam(LATITUDE_PARAM_NAME) Double latitude,
-                                               @RequestParam(LONGITUDE_PARAM_NAME) Double longitude,
-                                               @RequestParam(name = LIMIT_PARAM_NAME,defaultValue = "5") Integer limit,
-                                               @RequestParam(name = TYPE_PARAM_NAME, required = false) String typeString,
-                                               @RequestParam(name = AIRLINE_PARAM_NAME, required = false) String airlineString) {
+    public List<Airport> nearbyAirports(@RequestParam(LATITUDE_PARAM_NAME) Double latitude,
+                                        @RequestParam(LONGITUDE_PARAM_NAME) Double longitude,
+                                        @RequestParam(name = LIMIT_PARAM_NAME,defaultValue = "5") Integer limit,
+                                        @RequestParam(name = TYPE_PARAM_NAME, required = false) String typeString,
+                                        @RequestParam(name = AIRLINE_PARAM_NAME, required = false) String airlineString) {
         Option<AirportType> airportType = ValidationUtils.resolveTypeString(typeString);
         Option<Airline> airline = ValidationUtils.resolveAirlineString(airlineString);
         return airportsService.getByDistance(latitude,longitude,limit,airportType,airline);

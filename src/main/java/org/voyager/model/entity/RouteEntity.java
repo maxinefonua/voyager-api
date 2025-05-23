@@ -10,7 +10,7 @@ import org.voyager.model.Airline;
 @Builder
 @AllArgsConstructor
 @Table(name="routes")
-public class Route {
+public class RouteEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Getter

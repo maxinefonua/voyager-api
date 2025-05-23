@@ -1,54 +1,54 @@
 package org.voyager.service.utils;
 
-import org.voyager.entity.Airport;
+import org.voyager.model.airport.Airport;
+import org.voyager.model.entity.AirportEntity;
 import org.voyager.model.Airline;
-import org.voyager.model.AirportDisplay;
-import org.voyager.model.delta.DeltaDisplay;
+import org.voyager.model.delta.Delta;
 import org.voyager.model.delta.DeltaForm;
 import org.voyager.model.delta.DeltaPatch;
-import org.voyager.model.entity.Delta;
-import org.voyager.model.entity.Route;
-import org.voyager.model.location.LocationDisplay;
+import org.voyager.model.entity.DeltaEntity;
+import org.voyager.model.entity.LocationEntity;
+import org.voyager.model.entity.RouteEntity;
+import org.voyager.model.location.Location;
 import org.voyager.model.location.Source;
 import org.voyager.model.location.Status;
 import org.voyager.model.delta.DeltaStatus;
-import org.voyager.model.entity.Location;
 import org.voyager.model.location.LocationForm;
-import org.voyager.model.route.RouteDisplay;
+import org.voyager.model.route.Route;
 import org.voyager.model.route.RouteForm;
 import org.voyager.model.route.RoutePatch;
 
 public class MapperUtils {
-    public static AirportDisplay airportToDisplay(Airport airport) {
-        return AirportDisplay.builder().iata(airport.getIata()).name(airport.getName())
-                .city(airport.getCity()).subdivision(airport.getSubdivision()).countryCode(airport.getCountryCode())
-                .latitude(airport.getLatitude()).longitude(airport.getLongitude()).type(airport.getType()).build();
+    public static Airport entityToAirport(AirportEntity airportEntity) {
+        return Airport.builder().iata(airportEntity.getIata()).name(airportEntity.getName())
+                .city(airportEntity.getCity()).subdivision(airportEntity.getSubdivision()).countryCode(airportEntity.getCountryCode())
+                .latitude(airportEntity.getLatitude()).longitude(airportEntity.getLongitude()).type(airportEntity.getType()).build();
     }
 
-    public static AirportDisplay airportToDisplay(Airport airport, Double distance) {
-        return AirportDisplay.builder().iata(airport.getIata()).name(airport.getName())
-                .city(airport.getCity()).subdivision(airport.getSubdivision()).countryCode(airport.getCountryCode())
-                .latitude(airport.getLatitude()).longitude(airport.getLongitude()).type(airport.getType())
+    public static Airport entityToAirport(AirportEntity airportEntity, Double distance) {
+        return Airport.builder().iata(airportEntity.getIata()).name(airportEntity.getName())
+                .city(airportEntity.getCity()).subdivision(airportEntity.getSubdivision()).countryCode(airportEntity.getCountryCode())
+                .latitude(airportEntity.getLatitude()).longitude(airportEntity.getLongitude()).type(airportEntity.getType())
                 .distance(distance).build();
     }
 
-    public static LocationDisplay locationToDisplay(Location location) {
-        return LocationDisplay.builder()
-                .name(location.getName())
-                .bbox(location.getBbox())
-                .id(location.getId())
-                .latitude(location.getLatitude())
-                .longitude(location.getLongitude())
-                .countryCode(location.getCountryCode())
-                .subdivision(location.getSubdivision())
-                .status(location.getStatus())
-                .source(location.getSource())
-                .sourceId(location.getSourceId())
+    public static Location entityToLocation(LocationEntity locationEntity) {
+        return Location.builder()
+                .name(locationEntity.getName())
+                .bbox(locationEntity.getBbox())
+                .id(locationEntity.getId())
+                .latitude(locationEntity.getLatitude())
+                .longitude(locationEntity.getLongitude())
+                .countryCode(locationEntity.getCountryCode())
+                .subdivision(locationEntity.getSubdivision())
+                .status(locationEntity.getStatus())
+                .source(locationEntity.getSource())
+                .sourceId(locationEntity.getSourceId())
                 .build();
     }
 
-    public static Location formToLocation(LocationForm locationForm) {
-        return Location.builder()
+    public static LocationEntity formToLocationEntity(LocationForm locationForm) {
+        return LocationEntity.builder()
                 .source(Source.valueOf(locationForm.getSource()))
                 .sourceId(locationForm.getSourceId())
                 .countryCode(locationForm.getCountryCode())
@@ -61,18 +61,18 @@ public class MapperUtils {
                 .build();
     }
 
-    public static RouteDisplay routeToDisplay(Route route) {
-        return RouteDisplay.builder()
-                .id(route.getId())
-                .origin(route.getOrigin())
-                .destination(route.getDestination())
-                .airline(route.getAirline())
-                .isActive(route.getIsActive())
+    public static Route entityToRoute(RouteEntity routeEntity) {
+        return Route.builder()
+                .id(routeEntity.getId())
+                .origin(routeEntity.getOrigin())
+                .destination(routeEntity.getDestination())
+                .airline(routeEntity.getAirline())
+                .isActive(routeEntity.getIsActive())
                 .build();
     }
 
-    public static Route formToRoute(RouteForm routeForm) {
-        return Route.builder()
+    public static RouteEntity formToRouteEntity(RouteForm routeForm) {
+        return RouteEntity.builder()
                 .origin(routeForm.getOrigin())
                 .destination(routeForm.getDestination())
                 .airline(Airline.valueOf(routeForm.getAirline()))
@@ -80,35 +80,35 @@ public class MapperUtils {
                 .build();
     }
 
-    public static Route patchDisplayToRoute(RouteDisplay routeDisplay, RoutePatch routePatch) {
-        return Route.builder()
-                .id(routeDisplay.getId())
-                .origin(routeDisplay.getOrigin())
-                .destination(routeDisplay.getDestination())
-                .airline(routeDisplay.getAirline())
+    public static RouteEntity patchToRouteEntity(Route route, RoutePatch routePatch) {
+        return RouteEntity.builder()
+                .id(route.getId())
+                .origin(route.getOrigin())
+                .destination(route.getDestination())
+                .airline(route.getAirline())
                 .isActive(routePatch.getIsActive())
                 .build();
     }
 
-    public static DeltaDisplay deltaToDisplay(Delta delta) {
-        return DeltaDisplay.builder()
-                .iata(delta.getIata())
-                .status(delta.getStatus())
-                .isHub(delta.getIsHub())
+    public static Delta entityToDelta(DeltaEntity deltaEntity) {
+        return Delta.builder()
+                .iata(deltaEntity.getIata())
+                .status(deltaEntity.getStatus())
+                .isHub(deltaEntity.getIsHub())
                 .build();
     }
 
-    public static Delta formToDelta(DeltaForm deltaForm) {
-        return Delta.builder()
+    public static DeltaEntity formToDeltaEntity(DeltaForm deltaForm) {
+        return DeltaEntity.builder()
                 .iata(deltaForm.getIata())
                 .status(DeltaStatus.valueOf(deltaForm.getStatus()))
                 .isHub(deltaForm.getIsHub())
                 .build();
     }
 
-    public static Delta patchDisplayToDelta(DeltaDisplay deltaDisplay, DeltaPatch deltaPatch) {
-        return Delta.builder()
-                .iata(deltaDisplay.getIata())
+    public static DeltaEntity patchToDeltaEntity(Delta delta, DeltaPatch deltaPatch) {
+        return DeltaEntity.builder()
+                .iata(delta.getIata())
                 .status(DeltaStatus.valueOf(deltaPatch.getStatus()))
                 .isHub(deltaPatch.getIsHub())
                 .build();

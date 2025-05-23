@@ -10,9 +10,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import org.voyager.error.MessageConstants;
 import org.voyager.model.Airline;
-import org.voyager.model.entity.Route;
-import org.voyager.model.route.PathDisplay;
-import org.voyager.model.route.RouteDisplay;
+import org.voyager.model.entity.RouteEntity;
+import org.voyager.model.route.Path;
+import org.voyager.model.route.Route;
 import org.voyager.model.route.RouteForm;
 import org.voyager.model.route.RoutePatch;
 import org.voyager.repository.DeltaRepository;
@@ -43,72 +43,72 @@ public class RouteServiceImpl implements RouteService {
     }
 
     @Override
-    public Option<RouteDisplay> getRouteById(Integer id) {
-        Optional<Route> route = routeRepository.findById(id);
+    public Option<Route> getRouteById(Integer id) {
+        Optional<RouteEntity> route = routeRepository.findById(id);
         if (route.isEmpty()) return Option.none();
-        return Option.of(MapperUtils.routeToDisplay(route.get()));
+        return Option.of(MapperUtils.entityToRoute(route.get()));
     }
 
     @Override
-    public Option<RouteDisplay> getByOriginAndDestinationAndAirline(String origin, String destination, Airline airline) {
-        Optional<Route> route = routeRepository.findByOriginAndDestinationAndAirline(origin,destination,airline);
+    public Option<Route> getByOriginAndDestinationAndAirline(String origin, String destination, Airline airline) {
+        Optional<RouteEntity> route = routeRepository.findByOriginAndDestinationAndAirline(origin,destination,airline);
         if (route.isEmpty()) return Option.none();
-        return Option.of(MapperUtils.routeToDisplay(route.get()));
+        return Option.of(MapperUtils.entityToRoute(route.get()));
     }
 
     @Override
-    public List<RouteDisplay> getRoutes(Option<String> origin, Option<String> destination, Option<Airline> airline) {
-        if (origin.isEmpty() && destination.isEmpty() && airline.isEmpty()) return routeRepository.findAll().stream().map(MapperUtils::routeToDisplay).toList();
-        if (origin.isEmpty() && destination.isEmpty()) return routeRepository.findByAirline(airline.get()).stream().map(MapperUtils::routeToDisplay).toList();
-        if (origin.isEmpty() && airline.isEmpty()) return routeRepository.findByDestination(destination.get()).stream().map(MapperUtils::routeToDisplay).toList();
-        if (destination.isEmpty() && airline.isEmpty()) return routeRepository.findByOrigin(origin.get()).stream().map(MapperUtils::routeToDisplay).toList();
-        if (airline.isEmpty()) return routeRepository.findByOriginAndDestination(origin.get(), destination.get()).stream().map(MapperUtils::routeToDisplay).toList();
-        if (origin.isEmpty()) return routeRepository.findByDestinationAndAirline(destination.get(),airline.get()).stream().map(MapperUtils::routeToDisplay).toList();
-        if (destination.isEmpty()) return routeRepository.findByOriginAndAirline(origin.get(),airline.get()).stream().map(MapperUtils::routeToDisplay).toList();
-        return routeRepository.findByOriginAndDestinationAndAirline(origin.get(), destination.get(),airline.get()).stream().map(MapperUtils::routeToDisplay).toList();
+    public List<Route> getRoutes(Option<String> origin, Option<String> destination, Option<Airline> airline) {
+        if (origin.isEmpty() && destination.isEmpty() && airline.isEmpty()) return routeRepository.findAll().stream().map(MapperUtils::entityToRoute).toList();
+        if (origin.isEmpty() && destination.isEmpty()) return routeRepository.findByAirline(airline.get()).stream().map(MapperUtils::entityToRoute).toList();
+        if (origin.isEmpty() && airline.isEmpty()) return routeRepository.findByDestination(destination.get()).stream().map(MapperUtils::entityToRoute).toList();
+        if (destination.isEmpty() && airline.isEmpty()) return routeRepository.findByOrigin(origin.get()).stream().map(MapperUtils::entityToRoute).toList();
+        if (airline.isEmpty()) return routeRepository.findByOriginAndDestination(origin.get(), destination.get()).stream().map(MapperUtils::entityToRoute).toList();
+        if (origin.isEmpty()) return routeRepository.findByDestinationAndAirline(destination.get(),airline.get()).stream().map(MapperUtils::entityToRoute).toList();
+        if (destination.isEmpty()) return routeRepository.findByOriginAndAirline(origin.get(),airline.get()).stream().map(MapperUtils::entityToRoute).toList();
+        return routeRepository.findByOriginAndDestinationAndAirline(origin.get(), destination.get(),airline.get()).stream().map(MapperUtils::entityToRoute).toList();
     }
 
     @Override
-    public List<RouteDisplay> getActiveRoutes(Option<String> origin, Option<String> destination, Option<Airline> airline, Boolean isActive) {
-        if (origin.isEmpty() && destination.isEmpty() && airline.isEmpty()) return routeRepository.findByIsActive(isActive).stream().map(MapperUtils::routeToDisplay).toList();
-        if (origin.isEmpty() && destination.isEmpty()) return routeRepository.findByAirlineAndIsActive(airline.get(),isActive).stream().map(MapperUtils::routeToDisplay).toList();
-        if (origin.isEmpty() && airline.isEmpty()) return routeRepository.findByDestinationAndIsActive(destination.get(),isActive).stream().map(MapperUtils::routeToDisplay).toList();
-        if (destination.isEmpty() && airline.isEmpty()) return routeRepository.findByOriginAndIsActive(origin.get(),isActive).stream().map(MapperUtils::routeToDisplay).toList();
-        if (airline.isEmpty()) return routeRepository.findByOriginAndDestinationAndIsActive(origin.get(), destination.get(),isActive).stream().map(MapperUtils::routeToDisplay).toList();
-        if (origin.isEmpty()) return routeRepository.findByDestinationAndAirlineAndIsActive(destination.get(),airline.get(),isActive).stream().map(MapperUtils::routeToDisplay).toList();
-        if (destination.isEmpty()) return routeRepository.findByOriginAndAirlineAndIsActive(origin.get(),airline.get(),isActive).stream().map(MapperUtils::routeToDisplay).toList();
-        return routeRepository.findByOriginAndDestinationAndAirlineAndIsActive(origin.get(), destination.get(),airline.get(),isActive).stream().map(MapperUtils::routeToDisplay).toList();
+    public List<Route> getActiveRoutes(Option<String> origin, Option<String> destination, Option<Airline> airline, Boolean isActive) {
+        if (origin.isEmpty() && destination.isEmpty() && airline.isEmpty()) return routeRepository.findByIsActive(isActive).stream().map(MapperUtils::entityToRoute).toList();
+        if (origin.isEmpty() && destination.isEmpty()) return routeRepository.findByAirlineAndIsActive(airline.get(),isActive).stream().map(MapperUtils::entityToRoute).toList();
+        if (origin.isEmpty() && airline.isEmpty()) return routeRepository.findByDestinationAndIsActive(destination.get(),isActive).stream().map(MapperUtils::entityToRoute).toList();
+        if (destination.isEmpty() && airline.isEmpty()) return routeRepository.findByOriginAndIsActive(origin.get(),isActive).stream().map(MapperUtils::entityToRoute).toList();
+        if (airline.isEmpty()) return routeRepository.findByOriginAndDestinationAndIsActive(origin.get(), destination.get(),isActive).stream().map(MapperUtils::entityToRoute).toList();
+        if (origin.isEmpty()) return routeRepository.findByDestinationAndAirlineAndIsActive(destination.get(),airline.get(),isActive).stream().map(MapperUtils::entityToRoute).toList();
+        if (destination.isEmpty()) return routeRepository.findByOriginAndAirlineAndIsActive(origin.get(),airline.get(),isActive).stream().map(MapperUtils::entityToRoute).toList();
+        return routeRepository.findByOriginAndDestinationAndAirlineAndIsActive(origin.get(), destination.get(),airline.get(),isActive).stream().map(MapperUtils::entityToRoute).toList();
     }
 
     @Override
-    public RouteDisplay save(RouteForm routeForm) {
-        Route route = MapperUtils.formToRoute(routeForm);
+    public Route save(RouteForm routeForm) {
+        RouteEntity routeEntity = MapperUtils.formToRouteEntity(routeForm);
         try {
-            route = routeRepository.save(route);
+            routeEntity = routeRepository.save(routeEntity);
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, MessageConstants.buildRespositorySaveErrorMessage("route"));
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, MessageConstants.buildRespositorySaveErrorMessage("routeEntity"));
         }
-        return MapperUtils.routeToDisplay(route);
+        return MapperUtils.entityToRoute(routeEntity);
     }
 
     @Override
-    public RouteDisplay patch(RouteDisplay routeDisplay, RoutePatch routePatch) {
-        Route patched = MapperUtils.patchDisplayToRoute(routeDisplay,routePatch);
+    public Route patch(Route route, RoutePatch routePatch) {
+        RouteEntity patched = MapperUtils.patchToRouteEntity(route,routePatch);
         try {
             patched = routeRepository.save(patched);
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, MessageConstants.buildRespositorySaveErrorMessage("route"));
         }
-        return MapperUtils.routeToDisplay(patched);
+        return MapperUtils.entityToRoute(patched);
     }
 
     @Override
-    public PathDisplay buildPathWithExclusions(String origin, String destination, Set<String> exclusions) {
+    public Path buildPathWithExclusions(String origin, String destination, Set<String> exclusions) {
         List<Integer> routeIds = buildRouteIdListOfShortestPath(origin,destination,exclusions);
-        List<RouteDisplay> routeDisplayList = routeIds.stream().map(id -> routeRepository.findById(id).get()).map(MapperUtils::routeToDisplay).toList();
-        return PathDisplay.builder().routeDisplayList(routeDisplayList).build();
+        List<Route> routeList = routeIds.stream().map(id -> routeRepository.findById(id).get()).map(MapperUtils::entityToRoute).toList();
+        return Path.builder().routeList(routeList).build();
     }
 
     private List<Integer> buildRouteIdListOfShortestPath(String origin, String destination, Set<String> exclusions) {
@@ -119,18 +119,18 @@ public class RouteServiceImpl implements RouteService {
             Tuple2<String,List<Integer>> curr = toSearch.poll();
             visited.add(curr._1());
             List<Integer> routeIds = curr._2();
-            List<Route> routes = routeRepository.findByOrigin(curr._1());
-            for (Route route : routes) {
-                if (!route.getIsActive()) continue;
-                String next = route.getDestination();
+            List<RouteEntity> routeEntities = routeRepository.findByOrigin(curr._1());
+            for (RouteEntity routeEntity : routeEntities) {
+                if (!routeEntity.getIsActive()) continue;
+                String next = routeEntity.getDestination();
                 if (next.equals(destination)) {
-                    routeIds.add(route.getId());
+                    routeIds.add(routeEntity.getId());
                     return routeIds;
                 }
                 if (!visited.contains(next) && !exclusions.contains(next)) {
-                    routeIds.add(route.getId());
+                    routeIds.add(routeEntity.getId());
                     toSearch.add(new Tuple2<>(next,new ArrayList<>(routeIds)));
-                    routeIds.remove(route.getId());
+                    routeIds.remove(routeEntity.getId());
                 }
             }
         }
