@@ -86,8 +86,10 @@ public class RouteServiceImpl implements RouteService {
         try {
             routeEntity = routeRepository.save(routeEntity);
         } catch (Exception e) {
-            LOGGER.error(e.getMessage());
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, MessageConstants.buildRespositorySaveErrorMessage("routeEntity"));
+            LOGGER.error(e.getMessage()); // TODO: implement alerting
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    MessageConstants.buildRespositorySaveErrorMessage("route"),
+                    e);
         }
         return MapperUtils.entityToRoute(routeEntity);
     }
@@ -98,8 +100,10 @@ public class RouteServiceImpl implements RouteService {
         try {
             patched = routeRepository.save(patched);
         } catch (Exception e) {
-            LOGGER.error(e.getMessage());
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, MessageConstants.buildRespositorySaveErrorMessage("route"));
+            LOGGER.error(e.getMessage()); // TODO: implement alerting
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    MessageConstants.buildRespositoryPatchErrorMessage("route",String.valueOf(route.getId())),
+                    e);
         }
         return MapperUtils.entityToRoute(patched);
     }

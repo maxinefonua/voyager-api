@@ -2,12 +2,14 @@ package org.voyager.service.impl;
 
 import io.vavr.control.Option;
 import org.apache.commons.lang3.StringUtils;
+import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import org.voyager.error.MessageConstants;
 import org.voyager.model.airport.AirportPatch;
 import org.voyager.model.entity.AirportEntity;
 import org.voyager.model.Airline;
@@ -31,22 +33,6 @@ public class AirportsServiceImpl implements AirportsService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AirportsServiceImpl.class);
 
-    public Option<Airport> updateAirport(Airport airport) {
-        Optional<AirportEntity> result = airportRepository.findById(airport.getIata());
-        result.ifPresent(airportEntity -> {
-            airportEntity.setName(airport.getName());
-            airportEntity.setSubdivision(airport.getSubdivision());
-            airportEntity.setCity(airport.getCity());
-            airportEntity.setCountryCode(airport.getCountryCode());
-            airportEntity.setType(airport.getType());
-            airportEntity.setLatitude(airport.getLatitude());
-            airportEntity.setLongitude(airport.getLongitude());
-            airportRepository.save(airportEntity);
-        });
-        if (result.isPresent()) return Option.of(MapperUtils.entityToAirport(result.get()));
-        return Option.none();
-    }
-
     @Override
     public Boolean ifIataExists(String iata) {
         return airportRepository.existsById(iata);
@@ -54,12 +40,12 @@ public class AirportsServiceImpl implements AirportsService {
 
     @Override
     public List<String> getIata() {
-        return airportRepository.selectIataOrderByIata();
+        return airportRepository.selectIata();
     }
 
     @Override
     public List<String> getIataByType(AirportType type) {
-        return airportRepository.selectIataByMilitaryTypeOrderByIata(type);
+        return airportRepository.selectIataByType(type);
     }
 
     @Override
@@ -70,33 +56,33 @@ public class AirportsServiceImpl implements AirportsService {
         }
         if (countryCode.isEmpty() && type.isEmpty()) {
             LOGGER.debug(String.format("fetching uncached get airports by airline: %s",airline.get()));
-            return airportRepository.findByIataInOrderByIataAsc(getActiveDeltaCodes()).stream().map(MapperUtils::entityToAirport).toList();
+            return airportRepository.findByIataIn(getActiveDeltaCodes()).stream().map(MapperUtils::entityToAirport).toList();
         }
         if (countryCode.isEmpty() && airline.isEmpty()) {
             LOGGER.debug(String.format("fetching uncached get airports by type: %s",type.get()));
-            return airportRepository.findByTypeOrderByIataAsc(type.get()).stream().map(MapperUtils::entityToAirport).toList();
+            return airportRepository.findByType(type.get()).stream().map(MapperUtils::entityToAirport).toList();
         }
         if (type.isEmpty() && airline.isEmpty()) {
             LOGGER.debug(String.format("fetching uncached get airports by country code: %s",countryCode.get()));
-            return airportRepository.findByCountryCodeOrderByIataAsc(countryCode.get()).stream().map(MapperUtils::entityToAirport).toList();
+            return airportRepository.findByCountryCode(countryCode.get()).stream().map(MapperUtils::entityToAirport).toList();
         }
         if (airline.isEmpty()) {
             LOGGER.debug(String.format("fetching uncached get airports by type: %s and country code: %s",type.get(),countryCode.get()));
-            return airportRepository.findByCountryCodeAndTypeOrderByIataAsc(countryCode.get(),type.get()).stream().map(MapperUtils::entityToAirport).toList();
+            return airportRepository.findByCountryCodeAndType(countryCode.get(),type.get()).stream().map(MapperUtils::entityToAirport).toList();
         }
         if (type.isEmpty()) {
             LOGGER.debug(String.format("fetching uncached get airports by country code: %s and airline: %s",countryCode.get(),airline.get()));
-            return airportRepository.findByCountryCodeOrderByIataAsc(countryCode.get()).stream().filter(
+            return airportRepository.findByCountryCode(countryCode.get()).stream().filter(
                     airportEntity -> validDeltaCode(airportEntity.getIata())
             ).map(MapperUtils::entityToAirport).toList();
         }
         if (countryCode.isEmpty()) {
             LOGGER.debug(String.format("fetching uncached get airports by type: %s and airline: %s",type.get(),airline.get()));
-            return airportRepository.findByTypeOrderByIataAsc(type.get()).stream().filter(
+            return airportRepository.findByType(type.get()).stream().filter(
                     airportEntity -> validDeltaCode(airportEntity.getIata())
             ).map(MapperUtils::entityToAirport).toList();
         }
-        return airportRepository.findByCountryCodeAndTypeOrderByIataAsc(countryCode.get(),type.get()).stream().filter(
+        return airportRepository.findByCountryCodeAndType(countryCode.get(),type.get()).stream().filter(
                 airportEntity -> validDeltaCode(airportEntity.getIata())
         ).map(MapperUtils::entityToAirport).toList();
     }
@@ -151,7 +137,14 @@ public class AirportsServiceImpl implements AirportsService {
             existing.setLongitude(airportPatch.getLongitude());
         if (airportPatch.getLatitude() != null)
             existing.setLatitude(airportPatch.getLatitude());
-        existing = airportRepository.save(existing);
+        try {
+            existing = airportRepository.save(existing);
+        } catch (Throwable e) {
+            LOGGER.error(e.getMessage()); // TODO: implement alerting
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    MessageConstants.buildRespositoryPatchErrorMessage("airport",iata),
+                    e);
+        }
         return MapperUtils.entityToAirport(existing);
     }
 

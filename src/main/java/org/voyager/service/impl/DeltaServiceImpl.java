@@ -1,8 +1,13 @@
 package org.voyager.service.impl;
 
 import io.vavr.control.Option;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+import org.voyager.error.MessageConstants;
 import org.voyager.model.delta.Delta;
 import org.voyager.model.delta.DeltaForm;
 import org.voyager.model.delta.DeltaPatch;
@@ -20,14 +25,34 @@ public class DeltaServiceImpl implements DeltaService {
     @Autowired
     DeltaRepository deltaRepository;
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(DeltaServiceImpl.class);
+
     @Override
     public Delta save(DeltaForm deltaForm) {
-        return MapperUtils.entityToDelta(deltaRepository.save(MapperUtils.formToDeltaEntity(deltaForm)));
+        DeltaEntity deltaEntity = MapperUtils.formToDeltaEntity(deltaForm);
+        try {
+            deltaEntity = deltaRepository.save(deltaEntity);
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage()); // TODO: implement alerting
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    MessageConstants.buildRespositorySaveErrorMessageWithIata("delta entity",deltaForm.getIata()),
+                    e);
+        }
+        return MapperUtils.entityToDelta(deltaEntity);
     }
 
     @Override
     public Delta patch(Delta delta, DeltaPatch deltaPatch) {
-        return MapperUtils.entityToDelta(deltaRepository.save(MapperUtils.patchToDeltaEntity(delta,deltaPatch)));
+        DeltaEntity deltaEntity = MapperUtils.patchToDeltaEntity(delta,deltaPatch);
+        try {
+            deltaEntity = deltaRepository.save(deltaEntity);
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage()); // TODO: implement alerting
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    MessageConstants.buildRespositoryPatchErrorMessage("delta entity",delta.getIata()),
+                    e);
+        }
+        return MapperUtils.entityToDelta(deltaEntity);
     }
 
     @Override

@@ -240,6 +240,7 @@ public class ValidationUtils {
         if (StringUtils.isNotBlank(airportPatch.getType())) {
             try {
                 AirportType.valueOf(airportPatch.getType().toUpperCase());
+                airportPatch.setType(airportPatch.getType().toUpperCase());
             } catch (IllegalArgumentException e) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                         MessageConstants.buildInvalidRequestBodyPropertyMessage(TYPE_PARAM_NAME, airportPatch.getType()));

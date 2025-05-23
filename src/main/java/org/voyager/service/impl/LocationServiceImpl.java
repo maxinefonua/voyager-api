@@ -36,8 +36,10 @@ public class LocationServiceImpl implements LocationService {
         try {
             locationEntity = locationRepository.save(locationEntity);
         } catch (Exception e) {
-            LOGGER.error(e.getMessage());
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, MessageConstants.buildRespositorySaveErrorMessage("locationEntity"));
+            LOGGER.error(e.getMessage()); // TODO: implement alerting
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    MessageConstants.buildRespositorySaveErrorMessage("location"),
+                    e);
         }
         return MapperUtils.entityToLocation(locationEntity);
     }

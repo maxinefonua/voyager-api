@@ -56,7 +56,6 @@ public class AirportsController {
         LOGGER.debug(String.format("patching airport at iata '%s' with patch: %s",iata,airportPatch));
         ValidationUtils.validateIataAndAirportPatch(iata,airportPatch,airportsService,IATA_PARAM_NAME);
         iata = iata.toUpperCase();
-        airportPatch.setType(airportPatch.getType().toUpperCase());
         return airportsService.patch(iata,airportPatch);
     }
 

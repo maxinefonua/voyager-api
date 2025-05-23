@@ -9,17 +9,14 @@ import java.util.List;
 
 public interface AirportRepository extends JpaRepository<AirportEntity,String> {
     @Query("SELECT a.iata FROM AirportEntity a ORDER BY iata")
-    List<String> selectIataOrderByIata();
+    List<String> selectIata();
 
-    @Query("SELECT a.iata FROM AirportEntity a WHERE type = ?1 ORDER BY iata")
-    List<String> selectIataByMilitaryTypeOrderByIata(AirportType type);
+    @Query("SELECT a.iata FROM AirportEntity a WHERE type = ?1")
+    List<String> selectIataByType(AirportType type);
 
     List<AirportEntity> findByIataIn(List<String> iataList);
-    List<AirportEntity> findByIataInOrderByIataAsc(List<String> iataList);
-    List<AirportEntity> findByCountryCodeOrderByIataAsc(String countryCode);
-    List<AirportEntity> findByCountryCodeAndTypeOrderByIataAsc(String countryCode, AirportType type);
-    List<AirportEntity> findByTypeOrderByIataAsc(AirportType airportType);
+    List<AirportEntity> findByCountryCode(String countryCode);
+    List<AirportEntity> findByCountryCodeAndType(String countryCode, AirportType type);
     List<AirportEntity> findByType(AirportType airportType);
     List<AirportEntity> findByTypeIn(List<AirportType> typeList);
-    List<AirportEntity> findByTypeInOrderByIataAsc(List<AirportType> typeList);
 }

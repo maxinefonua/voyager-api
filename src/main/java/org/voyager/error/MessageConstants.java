@@ -16,10 +16,22 @@ public class MessageConstants {
     private static final String INVALID_PATH_VAR = "Invalid path variable '%s' with value '%s'. %s";
 
     private static final String GET_GEONAMEID_ERROR = "Error fetching feature details for query result '%s' with geonameId '%s'.";
-    private static final String REPOSITORY_SAVE_ERROR = "Exception thrown while trying to save %s. Please consult with API docs to ensure request body is of a valid %s.";
+
+    private static final String REPOSITORY_SAVE_ERROR = "Internal error occured attempting to save %s. Please consult with API docs to ensure request body is valid.";
+    private static final String REPOSITORY_SAVE_WITH_IATA_ERROR = "Internal error occured attempting to save %s with '%s'. Please consult with API docs to ensure request body is valid.";
+    private static final String REPOSITORY_PATCH_ERROR = "Internal error occured attempting to patch %s at '%s'. Alerting has yet to be implemented.";
+
 
     public static String buildRespositorySaveErrorMessage(String entityName){
-        return String.format(REPOSITORY_SAVE_ERROR,entityName,entityName);
+        return String.format(REPOSITORY_SAVE_ERROR,entityName);
+    }
+
+    public static String buildRespositorySaveErrorMessageWithIata(String entityName,String iata){
+        return String.format(REPOSITORY_SAVE_WITH_IATA_ERROR,entityName,iata);
+    }
+
+    public static String buildRespositoryPatchErrorMessage(String entityName, String entityId){
+        return String.format(REPOSITORY_PATCH_ERROR,entityName,entityId);
     }
 
     public static String buildGetGeonameErrorMessage(String geonameName, Long geonameId){
