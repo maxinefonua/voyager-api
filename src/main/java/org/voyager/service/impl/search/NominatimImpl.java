@@ -11,7 +11,7 @@ import org.voyager.config.nominatim.NominatimConfig;
 import org.voyager.error.ExternalExceptions;
 import org.voyager.model.result.LookupAttribution;
 import org.voyager.model.result.ResultSearch;
-import org.voyager.model.response.VoyagerListResponse;
+import org.voyager.model.response.SearchResult;
 import org.voyager.model.external.nominatim.Address;
 import org.voyager.model.external.nominatim.Properties;
 import org.voyager.model.external.nominatim.SearchResponseNominatim;
@@ -27,7 +27,7 @@ public class NominatimImpl implements SearchLocationService {
     private static final Logger LOGGER = LoggerFactory.getLogger(NominatimImpl.class);
 
     @Override
-    public VoyagerListResponse<ResultSearch> search(String query, int startRow, int limit) {
+    public SearchResult<ResultSearch> search(String query, int startRow, int limit) {
         String requestURL = nominatimConfig.buildSearchURL(query,limit);
         LOGGER.info("full request URL: " + requestURL);
         ResponseEntity<SearchResponseNominatim> searchResponse = restTemplate.getForEntity(requestURL, SearchResponseNominatim.class);
@@ -48,7 +48,7 @@ public class NominatimImpl implements SearchLocationService {
                             .longitude(coordinates[0]).build();
                 })
                 .toList();
-        return VoyagerListResponse.<ResultSearch>builder().results(resultSearchList).resultCount(resultSearchList.size()).build();
+        return SearchResult.<ResultSearch>builder().results(resultSearchList).resultCount(resultSearchList.size()).build();
     }
 
     @Override

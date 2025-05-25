@@ -65,31 +65,6 @@ public class ValidationUtils {
         }
     }
 
-    public static String validateIataToUpperCase(String iata, RouteService routeService, String varName, boolean isParam) {
-        if (!iata.matches(IATA_CODE_REGEX)) {
-            if (isParam) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    MessageConstants.buildInvalidRequestParameterMessage(varName,iata));
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    MessageConstants.buildInvalidPathVariableMessage(varName,iata));
-        }
-        if (varName.equals(ORIGIN_PARAM_NAME)) {
-            if (!routeService.originExists(iata.toUpperCase())) {
-                if (isParam) throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        MessageConstants.buildResourceNotFoundForParameterMessage(varName, iata));
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        MessageConstants.buildResourceNotFoundForPathVariableMessage(varName, iata));
-            }
-        } else if (varName.equals(DESTINATION_PARAM_NAME)) {
-            if (!routeService.destinationExists(iata.toUpperCase())) {
-                if (isParam) throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        MessageConstants.buildResourceNotFoundForParameterMessage(varName, iata));
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        MessageConstants.buildResourceNotFoundForPathVariableMessage(varName, iata));
-            }
-        }
-        return iata.toUpperCase();
-    }
-
     public static String validateIataToUpperCase(String iata, AirportsService airportsService, String varName, boolean isParam) {
         if (!iata.matches(IATA_CODE_REGEX)) {
             if (isParam) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,

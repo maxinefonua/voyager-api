@@ -11,7 +11,7 @@ import org.voyager.config.photon.PhotonConfig;
 import org.voyager.error.ExternalExceptions;
 import org.voyager.model.result.LookupAttribution;
 import org.voyager.model.result.ResultSearch;
-import org.voyager.model.response.VoyagerListResponse;
+import org.voyager.model.response.SearchResult;
 import org.voyager.model.external.photon.Properties;
 import org.voyager.model.external.photon.Feature;
 import org.voyager.model.external.photon.SearchResponsePhoton;
@@ -27,7 +27,7 @@ public class PhotonImpl implements SearchLocationService {
     private static final RestTemplate restTemplate = new RestTemplate();
 
     @Override
-    public VoyagerListResponse<ResultSearch> search(String query, int startRow, int limit) {
+    public SearchResult<ResultSearch> search(String query, int startRow, int limit) {
         String requestURL = photonConfig.buildSearchURL(query,limit);
         LOGGER.info("full request URL: " + requestURL);
         ResponseEntity<SearchResponsePhoton> searchResponse = restTemplate.getForEntity(requestURL, SearchResponsePhoton.class);
@@ -48,7 +48,7 @@ public class PhotonImpl implements SearchLocationService {
                             .longitude(coordinates[0]).build();
                         })
                 .toList();
-        return VoyagerListResponse.<ResultSearch>builder().results(resultList).resultCount(resultList.size()).build();
+        return SearchResult.<ResultSearch>builder().results(resultList).resultCount(resultList.size()).build();
     }
 
     @Override

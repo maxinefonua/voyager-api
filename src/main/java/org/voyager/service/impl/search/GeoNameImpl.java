@@ -15,7 +15,7 @@ import org.voyager.model.location.Status;
 import org.voyager.model.result.LookupAttribution;
 import org.voyager.model.result.ResultSearch;
 import org.voyager.model.external.geonames.SearchResponseGeoNames;
-import org.voyager.model.response.VoyagerListResponse;
+import org.voyager.model.response.SearchResult;
 import org.voyager.model.external.geonames.GeoName;
 import org.voyager.service.LocationService;
 import org.voyager.service.SearchLocationService;
@@ -38,12 +38,12 @@ public class GeoNameImpl implements SearchLocationService {
     private static final Logger LOGGER = LoggerFactory.getLogger(GeoNameImpl.class);
 
     @Override
-    public VoyagerListResponse<ResultSearch> search(String query, int startRow, int limit) {
+    public SearchResult<ResultSearch> search(String query, int startRow, int limit) {
         SearchResponseGeoNames searchResponseGeoNames = getSearchResponse(query,startRow,limit);
         Map<String,Status> locationIdToStatusDB = locationService.getLocationIdsToStatusBySource(Source.valueOf(geoNameConfig.getSourceName().toUpperCase()));
         List<ResultSearch> resultList = searchResponseGeoNames.getGeoNames().stream()
                 .flatMap(geoName -> buildResultSearch(geoName,locationIdToStatusDB.getOrDefault(String.valueOf(geoName.getGeonameId()),Status.NEW))).toList();
-        return VoyagerListResponse.<ResultSearch>builder().resultCount(searchResponseGeoNames.getTotalResultsCount()).results(resultList).build();
+        return SearchResult.<ResultSearch>builder().resultCount(searchResponseGeoNames.getTotalResultsCount()).results(resultList).build();
     }
 
     @Cacheable("searchCache")

@@ -26,7 +26,6 @@ public class AirportsController {
     private static final Logger LOGGER = LoggerFactory.getLogger(AirportsController.class);
 
     @GetMapping("/iata")
-    @Cacheable("iataCodesCache")
     public List<String> getIataCodes(@RequestParam(name = TYPE_PARAM_NAME, required = false) String typeString) {
         Option<AirportType> typeOptional = ValidationUtils.resolveTypeString(typeString);
         if (typeOptional.isEmpty()) return airportsService.getIata();
@@ -44,7 +43,6 @@ public class AirportsController {
     }
 
     @GetMapping("/airports/{iata}")
-    @Cacheable("iataCache")
     public Airport getAirportByIata(@PathVariable(IATA_PARAM_NAME) String iata) {
         LOGGER.debug(String.format("fetching uncached airport by iata code: %s",iata));
         iata = ValidationUtils.validateIataToUpperCase(iata,airportsService,IATA_PARAM_NAME,false);
@@ -60,7 +58,6 @@ public class AirportsController {
     }
 
     @GetMapping("/nearby-airports")
-    @Cacheable("nearbyAirportsCache")
     public List<Airport> nearbyAirports(@RequestParam(LATITUDE_PARAM_NAME) Double latitude,
                                         @RequestParam(LONGITUDE_PARAM_NAME) Double longitude,
                                         @RequestParam(name = LIMIT_PARAM_NAME,defaultValue = "5") Integer limit,
