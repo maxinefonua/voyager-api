@@ -132,11 +132,7 @@ public class AirportsServiceImpl implements AirportsService {
         if (StringUtils.isNotBlank(airportPatch.getSubdivision()))
             existing.setSubdivision(airportPatch.getSubdivision());
         if (StringUtils.isNotBlank(airportPatch.getType()))
-            existing.setType(AirportType.valueOf(airportPatch.getType()));
-        if (airportPatch.getLongitude() != null)
-            existing.setLongitude(airportPatch.getLongitude());
-        if (airportPatch.getLatitude() != null)
-            existing.setLatitude(airportPatch.getLatitude());
+            existing.setType(AirportType.valueOf(airportPatch.getType().toUpperCase()));
         try {
             existing = airportRepository.save(existing);
         } catch (Throwable e) {

@@ -49,7 +49,7 @@ public class MapperUtils {
 
     public static LocationEntity formToLocationEntity(LocationForm locationForm) {
         return LocationEntity.builder()
-                .source(locationForm.getSource())
+                .source(Source.valueOf(locationForm.getSource()))
                 .sourceId(locationForm.getSourceId())
                 .countryCode(locationForm.getCountryCode())
                 .latitude(locationForm.getLatitude())

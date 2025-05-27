@@ -46,7 +46,7 @@ public class RoutesController {
     }
 
     @PostMapping("/routes")
-    public Route addRoute(@RequestBody @Valid @NotNull RouteForm routeForm, BindingResult bindingResult) {
+    public Route addRoute(@RequestBody(required = false) @Valid RouteForm routeForm, BindingResult bindingResult) {
         ValidationUtils.validateRouteForm(routeForm, bindingResult);
         return routeService.save(routeForm);
     }
@@ -61,7 +61,7 @@ public class RoutesController {
     }
 
     @PatchMapping("/routes/{id}")
-    public Route patchRouteById(@RequestBody @Valid @NotNull RoutePatch routePatch, BindingResult bindingResult, @PathVariable(name = "id") String idString) {
+    public Route patchRouteById(@PathVariable(name = "id") String idString, @RequestBody(required = false) @Valid RoutePatch routePatch, BindingResult bindingResult) {
         ValidationUtils.validateRoutePatch(routePatch,bindingResult);
         Integer id = ValidationUtils.validateAndGetInteger(ID_PATH_VAR_NAME,idString,false);
         Option<Route> routeOption = routeService.getRouteById(id);

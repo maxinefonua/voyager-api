@@ -2,10 +2,8 @@ package org.voyager.validate;
 
 import io.vavr.control.Option;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
-import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
@@ -22,8 +20,10 @@ import org.voyager.model.location.Source;
 import org.voyager.model.location.LocationForm;
 import org.voyager.model.route.RouteForm;
 import org.voyager.model.route.RoutePatch;
+import org.voyager.model.validate.ValidEnum;
 import org.voyager.service.AirportsService;
 
+import java.lang.reflect.Field;
 import java.util.*;
 
 import static org.voyager.utils.ConstantsUtils.*;
@@ -125,11 +125,6 @@ public class ValidationUtils {
 
     public static void validateRouteForm(RouteForm routeForm, BindingResult bindingResult) {
         processRequestBodyBindingErrors(routeForm,bindingResult);
-        try {
-            Airline.valueOf(routeForm.getAirline().toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, MessageConstants.buildInvalidRequestBodyPropertyMessage(AIRLINE_PARAM_NAME,routeForm.getAirline()));
-        }
         routeForm.setAirline(routeForm.getAirline().toUpperCase());
         routeForm.setOrigin(routeForm.getOrigin().toUpperCase());
         routeForm.setDestination(routeForm.getDestination().toUpperCase());
@@ -142,6 +137,10 @@ public class ValidationUtils {
     public static void validateLocationPatch(LocationPatch locationPatch, BindingResult bindingResult, AirportsService airportsService) {
         processRequestBodyBindingErrors(locationPatch,bindingResult);
         if (locationPatch.getAirports() != null) locationPatch.setAirports(getValidatedLocationAirports(locationPatch.getAirports(),airportsService));
+    }
+
+    public static void validateAirportPatch(AirportPatch airportPatch, BindingResult bindingResult) {
+        processRequestBodyBindingErrors(airportPatch,bindingResult);
     }
 
     private static List<String>  getValidatedLocationAirports(List<String> airports, AirportsService airportsService) {
@@ -172,43 +171,43 @@ public class ValidationUtils {
         return statusList;
     }
 
-    public static void validateIataAndAirportPatch(String iata, AirportPatch airportPatch, AirportsService airportsService, String varName) {
-        if (!iata.matches(IATA_CODE_REGEX)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                MessageConstants.buildInvalidPathVariableMessage(varName,iata));
-        if (!airportsService.ifIataExists(iata.toUpperCase())) throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                MessageConstants.buildResourceNotFoundForPathVariableMessage(varName,iata));
-        if (airportPatch == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                ("Invalid request body. A PATCH request to this path requires a non-null request body."));
-        if (StringUtils.isBlank(airportPatch.getName()) && StringUtils.isBlank(airportPatch.getCity())
-                && StringUtils.isBlank(airportPatch.getSubdivision()) && StringUtils.isBlank(airportPatch.getType())
-                && airportPatch.getLongitude() == null && airportPatch.getLatitude() == null)
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    ("Invalid request body. A PATCH request to this path requires at least one non-null field to update."));
-        if (StringUtils.isNotBlank(airportPatch.getType())) {
-            try {
-                AirportType.valueOf(airportPatch.getType().toUpperCase());
-                airportPatch.setType(airportPatch.getType().toUpperCase());
-            } catch (IllegalArgumentException e) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                        MessageConstants.buildInvalidRequestBodyPropertyMessage(TYPE_PARAM_NAME, airportPatch.getType()));
-            }
-        }
-    }
-
-    private static void processRequestBodyBindingErrors(Object requestBody,
-                                                            BindingResult bindingResult){
+    private static void processRequestBodyBindingErrors(Object requestBody, BindingResult bindingResult){
         if (requestBody == null)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Required request body missing");
         if (bindingResult.hasErrors()) {
             StringJoiner joiner = new StringJoiner("; ");
             for (ObjectError error : bindingResult.getAllErrors()) {
                 if (error instanceof FieldError fieldError) {
-                    joiner.add(String.format("'%s' %s",fieldError.getField(),fieldError.getDefaultMessage()));
-                } else {
-                    joiner.add(String.format("%s",error.getDefaultMessage()));
-                }
+                    if (fieldError.getRejectedValue() == null)
+                        joiner.add(String.format("'%s' %s",fieldError.getField(),fieldError.getDefaultMessage()));
+                    else
+                        joiner.add(resolveInvalidInputErrors(fieldError,requestBody));
+                } else joiner.add(error.getDefaultMessage());
+
             }
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,String.format("Invalid request body: %s.",joiner));
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,String.format("Invalid request body: %s",joiner));
         }
+    }
+
+    private static String resolveInvalidInputErrors(FieldError fieldError, Object requestBody) {
+        if (fieldError.getField().equals(SOURCE_PROPERTY_NAME)) return String.format("'%s' %s but has invalid value '%s'",
+                fieldError.getField(),fieldError.getDefaultMessage(),fieldError.getRejectedValue());
+
+        Optional<Field> fieldOptional = Arrays.stream(requestBody.getClass().getDeclaredFields()).filter(
+                field -> fieldError.getField().equals(field.getName())).findAny();
+        if (fieldOptional.isEmpty()) return String.format("'%s' %s but has invalid value '%s'",
+                fieldError.getField(),fieldError.getDefaultMessage(),fieldError.getRejectedValue());
+
+        Field field = fieldOptional.get();
+        ValidEnum validEnum = field.getAnnotation(ValidEnum.class);
+        if (validEnum == null) return String.format("'%s' %s but has invalid value '%s'",
+                fieldError.getField(),fieldError.getDefaultMessage(),fieldError.getRejectedValue());
+
+        StringJoiner valueJoiner = new StringJoiner(",");
+        Arrays.stream(validEnum.enumClass().getEnumConstants()).forEach(value -> {
+            valueJoiner.add(String.format("'%s'",value.name().toLowerCase()));
+        });
+        return (String.format("'%s' accepts values [%s] but has invalid value '%s'",
+                fieldError.getField(),valueJoiner,fieldError.getRejectedValue()));
     }
 }
