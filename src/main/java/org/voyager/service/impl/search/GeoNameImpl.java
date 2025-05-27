@@ -40,13 +40,11 @@ public class GeoNameImpl implements SearchLocationService {
     @Override
     public SearchResult<ResultSearch> search(String query, int startRow, int limit) {
         SearchResponseGeoNames searchResponseGeoNames = getSearchResponse(query,startRow,limit);
-        Map<String,Status> locationIdToStatusDB = locationService.getLocationIdsToStatusBySource(Source.valueOf(geoNameConfig.getSourceName().toUpperCase()));
         List<ResultSearch> resultList = searchResponseGeoNames.getGeoNames().stream()
-                .flatMap(geoName -> buildResultSearch(geoName,locationIdToStatusDB.getOrDefault(String.valueOf(geoName.getGeonameId()),Status.NEW))).toList();
-        return SearchResult.<ResultSearch>builder().resultCount(searchResponseGeoNames.getTotalResultsCount()).results(resultList).build();
+                .flatMap(this::buildResultSearch).toList();
+          return SearchResult.<ResultSearch>builder().resultCount(searchResponseGeoNames.getTotalResultsCount()).results(resultList).build();
     }
 
-    @Cacheable("searchCache")
     private SearchResponseGeoNames getSearchResponse(String query, int startRow, int limit) {
         String encodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8);
         String requestURL = geoNameConfig.buildSearchURL(encodedQuery, startRow);
@@ -61,6 +59,37 @@ public class GeoNameImpl implements SearchLocationService {
         return LookupAttribution.builder().name(geoNameConfig.getSourceName()).link(geoNameConfig.getSourceLink()).build();
      }
 
+    @Override
+    public List<ResultSearch> augmentLocationStatus(List<ResultSearch> cachedResults) {
+        List<String> sourceIds = cachedResults.stream().map(ResultSearch::getSourceId).toList();
+        Map<String,Status> locationIdToStatusDB = locationService.getSourceIdsToStatusMap(Source.valueOf(geoNameConfig.getSourceName().toUpperCase()),sourceIds);
+        cachedResults.forEach(resultSearch -> resultSearch.setStatus(locationIdToStatusDB.getOrDefault(resultSearch.getSourceId(),Status.NEW)));
+        return cachedResults;
+    }
+
+    private Stream<ResultSearch> buildResultSearch(GeoName geoName){
+        String getURL = geoNameConfig.buildGetURL(geoName.getGeonameId());
+        LOGGER.debug(String.format("Fetching geoname details from get URL: %s",getURL));
+        ResponseEntity<GeoName> getResponse = restTemplate.getForEntity(getURL, GeoName.class);
+        ExternalExceptions.validateExternalResponse(getResponse,getURL);
+        GeoName fullGeoName = getResponse.getBody();
+        assert fullGeoName != null;
+        if (fullGeoName.getBoundingBox() == null) return Stream.empty();
+        return Stream.of(ResultSearch.builder()
+                .source(Source.valueOf(geoNameConfig.getSourceName().toUpperCase()))
+                .sourceId(String.valueOf(geoName.getGeonameId()))
+                .name(geoName.getName()).subdivision(geoName.getAdminName1())
+                .countryCode(fullGeoName.getCountryCode().toUpperCase())
+                .countryName(geoName.getCountryName()).type(geoName.getFclName())
+                .bounds(new Double[]{
+                        fullGeoName.getBoundingBox().getWest().doubleValue(),
+                        fullGeoName.getBoundingBox().getSouth().doubleValue(),
+                        fullGeoName.getBoundingBox().getEast().doubleValue(),
+                        fullGeoName.getBoundingBox().getNorth().doubleValue()
+                }).longitude(geoName.getLng().doubleValue())
+                .latitude(geoName.getLat().doubleValue()).build());
+    }
+
      private Stream<ResultSearch> buildResultSearch(GeoName geoName, Status status){
         String getURL = geoNameConfig.buildGetURL(geoName.getGeonameId());
         LOGGER.debug(String.format("Fetching geoname details from get URL: %s",getURL));
@@ -71,7 +100,7 @@ public class GeoNameImpl implements SearchLocationService {
         if (fullGeoName.getBoundingBox() == null) return Stream.empty();
         return Stream.of(ResultSearch.builder()
                 .status(status)
-                .source(geoNameConfig.getSourceName())
+                .source(Source.valueOf(geoNameConfig.getSourceName().toUpperCase()))
                 .sourceId(String.valueOf(geoName.getGeonameId()))
                 .name(geoName.getName()).subdivision(geoName.getAdminName1())
                 .countryCode(fullGeoName.getCountryCode().toUpperCase())

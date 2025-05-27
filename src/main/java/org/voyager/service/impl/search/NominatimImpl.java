@@ -9,19 +9,26 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.voyager.config.nominatim.NominatimConfig;
 import org.voyager.error.ExternalExceptions;
+import org.voyager.model.location.Source;
+import org.voyager.model.location.Status;
 import org.voyager.model.result.LookupAttribution;
 import org.voyager.model.result.ResultSearch;
 import org.voyager.model.response.SearchResult;
 import org.voyager.model.external.nominatim.Address;
 import org.voyager.model.external.nominatim.Properties;
 import org.voyager.model.external.nominatim.SearchResponseNominatim;
+import org.voyager.service.LocationService;
 import org.voyager.service.SearchLocationService;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class NominatimImpl implements SearchLocationService {
     @Autowired
     NominatimConfig nominatimConfig;
+
+    @Autowired
+    LocationService locationService;
 
     private static final RestTemplate restTemplate = new RestTemplate();
     private static final Logger LOGGER = LoggerFactory.getLogger(NominatimImpl.class);
@@ -41,6 +48,8 @@ public class NominatimImpl implements SearchLocationService {
                     String adminNameVal = resolveAdminNameVal(address);
                     String type = resolveType(props);
                     return ResultSearch.builder()
+                            .source(Source.valueOf(nominatimConfig.getSourceName().toUpperCase()))
+                            .sourceId(String.valueOf(props.getOsmId().longValue()))
                             .name(props.getName()).subdivision(adminNameVal)
                             .countryCode(address.getCountryCode().toUpperCase())
                             .countryName(address.getCountry()).type(type)
@@ -54,6 +63,14 @@ public class NominatimImpl implements SearchLocationService {
     @Override
     public LookupAttribution attribution() {
         return LookupAttribution.builder().name(nominatimConfig.getSourceName()).link(nominatimConfig.getSourceLink()).build();
+    }
+
+    @Override
+    public List<ResultSearch> augmentLocationStatus(List<ResultSearch> cachedResults) {
+        List<String> sourceIds = cachedResults.stream().map(ResultSearch::getSourceId).toList();
+        Map<String, Status> locationIdToStatusDB = locationService.getSourceIdsToStatusMap(Source.valueOf(nominatimConfig.getSourceName().toUpperCase()),sourceIds);
+        cachedResults.forEach(resultSearch -> resultSearch.setStatus(locationIdToStatusDB.getOrDefault(resultSearch.getSourceId(),Status.NEW)));
+        return cachedResults;
     }
 
     private String resolveAdminNameVal(Address address) {

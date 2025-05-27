@@ -105,7 +105,7 @@ public class ValidationUtils {
         return countryCodeString.toUpperCase();
     }
 
-    public static void validateLocationForm(LocationForm locationForm, BindingResult bindingResult) {
+    public static void validateLocationForm(LocationForm locationForm, BindingResult bindingResult, AirportsService airportsService) {
         if (bindingResult.hasErrors()) {
             StringJoiner joiner = new StringJoiner("; ");
             for (ObjectError error : bindingResult.getAllErrors()) {
@@ -115,14 +115,8 @@ public class ValidationUtils {
             }
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,String.format("Invalid request body: %s.",joiner));
         }
-        try {
-            Source.valueOf(locationForm.getSource().toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, MessageConstants.buildInvalidRequestBodyPropertyNoMessage(SOURCE_PROPERTY_NAME,locationForm.getSource()));
-        }
-        locationForm.setSource(locationForm.getSource().toUpperCase());
+        locationForm.setAirports(getValidatedLocationAirports(locationForm.getAirports(),airportsService));
         locationForm.setCountryCode(locationForm.getCountryCode().toUpperCase());
-        if (locationForm.getAirports() == null) locationForm.setAirports(new HashSet<>());
     }
 
     public static void validateDeltaForm(@Valid @NotNull DeltaForm deltaForm, BindingResult bindingResult) {
@@ -176,7 +170,7 @@ public class ValidationUtils {
         }
     }
 
-    public static void validateLocationPatch(@Valid LocationPatch locationPatch, BindingResult bindingResult, AirportsService airportsService) {
+    public static void validateLocationPatch(LocationPatch locationPatch, BindingResult bindingResult, AirportsService airportsService) {
         if (bindingResult.hasErrors()) {
             StringJoiner joiner = new StringJoiner("; ");
             for (ObjectError error : bindingResult.getAllErrors()) {
@@ -186,15 +180,22 @@ public class ValidationUtils {
             }
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,String.format("Invalid request body: %s.",joiner));
         }
-        for (String iata : locationPatch.getAirports()) {
+        locationPatch.setAirports(getValidatedLocationAirports(locationPatch.getAirports(),airportsService));
+    }
+
+    private static List<String>  getValidatedLocationAirports(List<String> airports, AirportsService airportsService) {
+        List<String> unique = new ArrayList<>();
+        for (String iata : airports) {
             if (iata == null || !iata.matches(IATA_CODE_REGEX)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     MessageConstants.buildInvalidRequestBodyPropertyMessage(AIRPORTS_PROPERTY_NAME,iata));
             if (!airportsService.ifIataExists(iata.toUpperCase())) throw new ResponseStatusException(HttpStatus.NOT_FOUND,
                     MessageConstants.buildResourceNotFoundForPathVariableMessage(AIRPORTS_PROPERTY_NAME,iata));
+            if (!unique.contains(iata)) unique.add(iata.toUpperCase());
         }
+        return unique;
     }
 
-    public static void validateDeltaPatch(@Valid @NotNull DeltaPatch deltaPatch, BindingResult bindingResult) {
+    public static void validateDeltaPatch(DeltaPatch deltaPatch, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             StringJoiner joiner = new StringJoiner("; ");
             for (ObjectError error : bindingResult.getAllErrors()) {

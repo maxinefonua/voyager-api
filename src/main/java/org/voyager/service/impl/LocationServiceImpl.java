@@ -55,6 +55,11 @@ public class LocationServiceImpl implements LocationService {
     }
 
     @Override
+    public List<Location> getLocationsBySourceAndSourceIdList(Source source, List<String> sourceIdList) {
+        return locationRepository.findBySourceAndSourceIdIn(source,sourceIdList).stream().map(MapperUtils::entityToLocation).toList();
+    }
+
+    @Override
     public List<Location> getLocationsBySource(Source source) {
         return locationRepository.findBySource(source).stream().map(MapperUtils::entityToLocation).toList();
     }
@@ -72,8 +77,13 @@ public class LocationServiceImpl implements LocationService {
     }
 
     @Override
-    public Map<String, Status> getLocationIdsToStatusBySource(Source source) {
+    public Map<String, Status> getSourceIdsToStatusBySource(Source source) {
         return locationRepository.findBySource(source).stream().collect(Collectors.toMap(LocationEntity::getSourceId, LocationEntity::getStatus));
+    }
+
+    @Override
+    public Map<String, Status> getSourceIdsToStatusMap(Source source, List<String> sourceIdList) {
+        return locationRepository.findBySourceAndSourceIdIn(source,sourceIdList).stream().collect(Collectors.toMap(LocationEntity::getSourceId, LocationEntity::getStatus));
     }
 
     @Override

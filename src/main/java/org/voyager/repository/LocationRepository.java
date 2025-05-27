@@ -12,4 +12,5 @@ public interface LocationRepository extends JpaRepository<LocationEntity,Integer
     List<LocationEntity> findByStatusIn(List<Status> statusList);
     List<LocationEntity> findBySource(Source source);
     List<LocationEntity> findBySourceAndSourceId(Source source, String sourceId);
+    List<LocationEntity> findBySourceAndSourceIdIn(Source source, List<String> sourceIdList);
 }

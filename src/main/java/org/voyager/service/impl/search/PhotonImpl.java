@@ -9,19 +9,26 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.voyager.config.photon.PhotonConfig;
 import org.voyager.error.ExternalExceptions;
+import org.voyager.model.location.Source;
+import org.voyager.model.location.Status;
 import org.voyager.model.result.LookupAttribution;
 import org.voyager.model.result.ResultSearch;
 import org.voyager.model.response.SearchResult;
 import org.voyager.model.external.photon.Properties;
 import org.voyager.model.external.photon.Feature;
 import org.voyager.model.external.photon.SearchResponsePhoton;
+import org.voyager.service.LocationService;
 import org.voyager.service.SearchLocationService;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class PhotonImpl implements SearchLocationService {
     @Autowired
     PhotonConfig photonConfig;
+
+    @Autowired
+    LocationService locationService;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PhotonImpl.class);
     private static final RestTemplate restTemplate = new RestTemplate();
@@ -41,6 +48,8 @@ public class PhotonImpl implements SearchLocationService {
                     Double[] coordinates = feature.getGeometry().getCoordinates();
                     String type = resolveType(props);
                     return ResultSearch.builder()
+                            .source(Source.valueOf(photonConfig.getSourceName().toUpperCase()))
+                            .sourceId(String.valueOf(props.getOsmId().longValue()))
                             .name(props.getName()).subdivision(props.getState())
                             .countryCode(props.getCountryCode().toUpperCase())
                             .countryName(props.getCountry()).type(type)
@@ -54,6 +63,14 @@ public class PhotonImpl implements SearchLocationService {
     @Override
     public LookupAttribution attribution() {
         return LookupAttribution.builder().name("Photon").link("https://photon.komoot.io/").build();
+    }
+
+    @Override
+    public List<ResultSearch> augmentLocationStatus(List<ResultSearch> cachedResults) {
+        List<String> sourceIds = cachedResults.stream().map(ResultSearch::getSourceId).toList();
+        Map<String, Status> locationIdToStatusDB = locationService.getSourceIdsToStatusMap(Source.valueOf(photonConfig.getSourceName().toUpperCase()),sourceIds);
+        cachedResults.forEach(resultSearch -> resultSearch.setStatus(locationIdToStatusDB.getOrDefault(resultSearch.getSourceId(),Status.NEW)));
+        return cachedResults;
     }
 
     private static String resolveType(Properties props) {

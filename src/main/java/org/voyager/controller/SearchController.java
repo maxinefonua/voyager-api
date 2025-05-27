@@ -23,7 +23,10 @@ class SearchController {
                                                     @RequestParam(name = SKIP_ROW_PARAM_NAME,defaultValue = "0") Integer skipRowCount,
                                                     @RequestParam(name = LIMIT_PARAM_NAME,defaultValue = "10") Integer limit) {
         LOGGER.debug(String.format("fetching uncached q = '%s', skipRowCount = %d",q,skipRowCount));
-        return searchLocationService.search(q,skipRowCount,limit);
+        SearchResult<ResultSearch> cachedResults = searchLocationService.search(q,skipRowCount,limit);
+        return SearchResult.<ResultSearch>builder()
+                .results(searchLocationService.augmentLocationStatus(cachedResults.getResults()))
+                .resultCount(cachedResults.getResultCount()).build();
     }
 
     @GetMapping("/search-attribution")

@@ -58,7 +58,7 @@ public class LocationController {
 
     @PostMapping("/locations")
     public Location addLocation(@RequestBody @Valid @NotNull LocationForm locationForm, BindingResult bindingResult) {
-        ValidationUtils.validateLocationForm(locationForm, bindingResult);
+        ValidationUtils.validateLocationForm(locationForm, bindingResult,airportsService);
         return locationService.save(locationForm);
     }
 }

@@ -49,10 +49,4 @@ public class LocationEntity {
     private Status status;
 
     private String[] airports;
-
-    public void setAirports(String[] airports) {
-        Set<String> set = Arrays.stream(airports).filter(StringUtils::isNotBlank)
-                .map(String::toUpperCase).collect(Collectors.toSet());
-        this.airports = set.toArray(String[]::new);
-    }
 }

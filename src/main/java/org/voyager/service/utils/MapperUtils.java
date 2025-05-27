@@ -15,10 +15,7 @@ import org.voyager.model.route.Route;
 import org.voyager.model.route.RouteForm;
 import org.voyager.model.route.RoutePatch;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.StringJoiner;
+import java.util.*;
 
 public class MapperUtils {
     public static Airport entityToAirport(AirportEntity airportEntity) {
@@ -46,13 +43,13 @@ public class MapperUtils {
                 .status(locationEntity.getStatus())
                 .source(locationEntity.getSource())
                 .sourceId(locationEntity.getSourceId())
-                .airports(new HashSet<>(Set.of(locationEntity.getAirports())))
+                .airports(new ArrayList<>(Arrays.asList(locationEntity.getAirports())))
                 .build();
     }
 
     public static LocationEntity formToLocationEntity(LocationForm locationForm) {
         return LocationEntity.builder()
-                .source(Source.valueOf(locationForm.getSource()))
+                .source(locationForm.getSource())
                 .sourceId(locationForm.getSourceId())
                 .countryCode(locationForm.getCountryCode())
                 .latitude(locationForm.getLatitude())
