@@ -94,7 +94,7 @@ public class LocationServiceImpl implements LocationService {
     @Override
     public Location patch(Location location, LocationPatch locationPatch) {
         LocationEntity patched = locationRepository.findById(location.getId()).get();
-        patched.setAirports(locationPatch.getAirports().toArray(String[]::new));
+        if (locationPatch.getAirports() != null) patched.setAirports(locationPatch.getAirports().toArray(String[]::new));
         try {
             LocationEntity saved = locationRepository.save(patched);
             return MapperUtils.entityToLocation(saved);

@@ -7,6 +7,7 @@ import static org.voyager.utils.ConstantsUtils.*;
 public class MessageConstants {
     private static final String INVALID_REQUEST_PARAM = "Invalid request parameter '%s' with value '%s'. %s";
     private static final String MISSING_REQUEST_PARAM = "Missing request parameter '%s'. %s";
+    private static final String INVALID_REQUEST_BODY_PATCH = "Invalid request body for '%s'. A valid PATCH has at least one field set";
     private static final String INVALID_REQUEST_BODY_PROPERTY = "Invalid request body property '%s' with value '%s'. %s";
     private static final String INVALID_REQUEST_BODY_PROPERTY_NO_MESSAGE = "Invalid request body property '%s' with value '%s'";
 
@@ -65,6 +66,11 @@ public class MessageConstants {
     public static String buildMissingRequestParameterMessage(String paramName){
         return String.format(MISSING_REQUEST_PARAM,paramName,MISSING_SOURCE_CONSTRAINT);
     }
+
+    public static String buildInvalidRequestBodyPatch(String requestBodyEntity){
+        return String.format(INVALID_REQUEST_BODY_PATCH,requestBodyEntity);
+    }
+
 
     public static String buildInvalidRequestBodyPropertyMessage(String propertyName, String propertyValue){
         return String.format(INVALID_REQUEST_BODY_PROPERTY,propertyName,propertyValue,CONSTRAINT_MAP.get(propertyName));

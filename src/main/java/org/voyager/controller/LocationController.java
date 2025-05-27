@@ -47,7 +47,7 @@ public class LocationController {
     }
 
     @PatchMapping("/locations/{id}")
-    public Location patchLocation(@PathVariable(name = "id") String idString, @RequestBody @Valid LocationPatch locationPatch, BindingResult bindingResult) {
+    public Location patchLocation(@PathVariable(name = "id") String idString, @RequestBody(required = false) @Valid LocationPatch locationPatch, BindingResult bindingResult) {
         ValidationUtils.validateLocationPatch(locationPatch,bindingResult,airportsService);
         Integer id = ValidationUtils.validateAndGetInteger("id",idString,false);
         Option<Location> locationOption = locationService.getLocationById(id);
@@ -57,8 +57,8 @@ public class LocationController {
     }
 
     @PostMapping("/locations")
-    public Location addLocation(@RequestBody @Valid @NotNull LocationForm locationForm, BindingResult bindingResult) {
-        ValidationUtils.validateLocationForm(locationForm, bindingResult,airportsService);
+    public Location addLocation(@RequestBody(required = false) @Valid LocationForm locationForm, BindingResult bindingResult) {
+        ValidationUtils.validateLocationForm(locationForm,bindingResult,airportsService);
         return locationService.save(locationForm);
     }
 }
