@@ -48,6 +48,7 @@ public class LocationController {
     @GetMapping("/locations/{id}")
     public Location getLocation(@PathVariable(name = "id") String idString) {
         Integer id = ValidationUtils.validateAndGetInteger("id",idString,false);
+        // TODO: update to check if location id exists instead of fetching location
         Option<Location> locationOption = locationService.getLocationById(id);
         if (locationOption.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND,
                 MessageConstants.buildResourceNotFoundForPathVariableNoMessage("id",idString));
@@ -58,6 +59,7 @@ public class LocationController {
     public Location patchLocation(@PathVariable(name = "id") String idString, @RequestBody(required = false) @Valid LocationPatch locationPatch, BindingResult bindingResult) {
         ValidationUtils.validateLocationPatch(locationPatch,bindingResult,airportsService);
         Integer id = ValidationUtils.validateAndGetInteger("id",idString,false);
+        // TODO: update to check if location id exists instead of fetching location
         Option<Location> locationOption = locationService.getLocationById(id);
         if (locationOption.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND,
                 MessageConstants.buildResourceNotFoundForPathVariableMessage(ID_PATH_VAR_NAME,String.valueOf(id)));

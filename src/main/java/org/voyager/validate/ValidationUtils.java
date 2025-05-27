@@ -137,6 +137,7 @@ public class ValidationUtils {
     public static void validateLocationPatch(LocationPatch locationPatch, BindingResult bindingResult, AirportsService airportsService) {
         processRequestBodyBindingErrors(locationPatch,bindingResult);
         if (locationPatch.getAirports() != null) locationPatch.setAirports(getValidatedLocationAirports(locationPatch.getAirports(),airportsService));
+        if (locationPatch.getStatus() != null) locationPatch.setStatus(locationPatch.getStatus().toUpperCase());
     }
 
     public static void validateAirportPatch(AirportPatch airportPatch, BindingResult bindingResult) {
