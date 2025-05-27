@@ -9,18 +9,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import org.voyager.error.MessageConstants;
 import org.voyager.model.entity.LocationEntity;
-import org.voyager.model.location.Location;
-import org.voyager.model.location.LocationForm;
-import org.voyager.model.location.Source;
-import org.voyager.model.location.Status;
+import org.voyager.model.entity.RouteEntity;
+import org.voyager.model.location.*;
 import org.voyager.repository.LocationRepository;
 import org.voyager.service.LocationService;
 import org.voyager.service.utils.MapperUtils;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -84,5 +79,21 @@ public class LocationServiceImpl implements LocationService {
     @Override
     public List<Location> getLocationsByStatusList(List<Status> statusList) {
         return locationRepository.findByStatusIn(statusList).stream().map(MapperUtils::entityToLocation).toList();
+    }
+
+    @Override
+    public Location patch(Location location, LocationPatch locationPatch) {
+        LocationEntity patched = locationRepository.findById(location.getId()).get();
+        patched.setAirports(locationPatch.getAirports().toArray(String[]::new));
+        try {
+            LocationEntity saved = locationRepository.save(patched);
+            return MapperUtils.entityToLocation(saved);
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage()); // TODO: implement alerting
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    MessageConstants.buildRespositoryPatchErrorMessage(
+                            "location",String.valueOf(location.getId())),
+                    e);
+        }
     }
 }

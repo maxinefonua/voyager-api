@@ -35,13 +35,15 @@ public class DeltaServiceImpl implements DeltaService {
 
     @Override
     public List<String> getActiveCodes() {
-        Set<String> originIata = routeService.getRoutes(Option.none(),Option.none(),Option.of(Airline.DELTA)).stream().map(Route::getOrigin).collect(Collectors.toSet());
+        Set<String> originIata = routeService.getActiveRoutes(Option.none(),Option.none(),Option.of(Airline.DELTA),
+                        true).stream().map(Route::getOrigin).collect(Collectors.toSet());
         return originIata.stream().toList();
     }
 
     @Override
     public Boolean exists(String iata) {
-        Set<String> originIata = routeService.getRoutes(Option.none(),Option.none(),Option.of(Airline.DELTA)).stream().map(Route::getOrigin).collect(Collectors.toSet());
+        Set<String> originIata = routeService.getActiveRoutes(Option.none(),Option.none(),Option.of(Airline.DELTA),
+                        true).stream().map(Route::getOrigin).collect(Collectors.toSet());
         return originIata.contains(iata);
     }
 }

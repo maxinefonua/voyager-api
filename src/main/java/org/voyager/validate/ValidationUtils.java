@@ -16,12 +16,12 @@ import org.voyager.model.airport.AirportType;
 import org.voyager.model.delta.DeltaForm;
 import org.voyager.model.delta.DeltaPatch;
 import org.voyager.model.delta.DeltaStatus;
+import org.voyager.model.location.LocationPatch;
 import org.voyager.model.location.Source;
 import org.voyager.model.location.LocationForm;
 import org.voyager.model.route.RouteForm;
 import org.voyager.model.route.RoutePatch;
 import org.voyager.service.AirportsService;
-import org.voyager.service.RouteService;
 
 import java.util.*;
 
@@ -121,8 +121,8 @@ public class ValidationUtils {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, MessageConstants.buildInvalidRequestBodyPropertyNoMessage(SOURCE_PROPERTY_NAME,locationForm.getSource()));
         }
         locationForm.setSource(locationForm.getSource().toUpperCase());
-        // TODO: validate country
         locationForm.setCountryCode(locationForm.getCountryCode().toUpperCase());
+        if (locationForm.getAirports() == null) locationForm.setAirports(new HashSet<>());
     }
 
     public static void validateDeltaForm(@Valid @NotNull DeltaForm deltaForm, BindingResult bindingResult) {
@@ -173,6 +173,24 @@ public class ValidationUtils {
                 }
             }
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,String.format("Invalid request body: %s.",joiner));
+        }
+    }
+
+    public static void validateLocationPatch(@Valid LocationPatch locationPatch, BindingResult bindingResult, AirportsService airportsService) {
+        if (bindingResult.hasErrors()) {
+            StringJoiner joiner = new StringJoiner("; ");
+            for (ObjectError error : bindingResult.getAllErrors()) {
+                if (error instanceof FieldError fieldError) {
+                    joiner.add(String.format("'%s' %s",fieldError.getField(),fieldError.getDefaultMessage()));
+                }
+            }
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,String.format("Invalid request body: %s.",joiner));
+        }
+        for (String iata : locationPatch.getAirports()) {
+            if (iata == null || !iata.matches(IATA_CODE_REGEX)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    MessageConstants.buildInvalidRequestBodyPropertyMessage(AIRPORTS_PROPERTY_NAME,iata));
+            if (!airportsService.ifIataExists(iata.toUpperCase())) throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    MessageConstants.buildResourceNotFoundForPathVariableMessage(AIRPORTS_PROPERTY_NAME,iata));
         }
     }
 

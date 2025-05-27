@@ -2,8 +2,13 @@ package org.voyager.model.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.apache.commons.lang3.StringUtils;
 import org.voyager.model.location.Source;
 import org.voyager.model.location.Status;
+
+import java.util.Arrays;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Entity
 @Data @NoArgsConstructor
@@ -41,5 +46,13 @@ public class LocationEntity {
     private Double[] bbox;
 
     @Enumerated(EnumType.STRING)
-    Status status;
+    private Status status;
+
+    private String[] airports;
+
+    public void setAirports(String[] airports) {
+        Set<String> set = Arrays.stream(airports).filter(StringUtils::isNotBlank)
+                .map(String::toUpperCase).collect(Collectors.toSet());
+        this.airports = set.toArray(String[]::new);
+    }
 }

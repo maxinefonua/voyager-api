@@ -50,6 +50,10 @@ public class MessageConstants {
         return String.format(RESOURCE_NOT_FOUND_FOR_PATH_VAR,varName,varValue,NOT_FOUND_MAP.get(varName));
     }
 
+    public static String buildResourceNotFoundForRequestBodyProperty(String varName, String varValue){
+        return String.format(INVALID_REQUEST_BODY_PROPERTY,varName,varValue,NOT_FOUND_MAP.get(varName));
+    }
+
     public static String buildResourceNotFoundForPathVariableNoMessage(String varName, String varValue){
         return String.format(RESOURCE_NOT_FOUND_FOR_PATH_VAR_NO_MESSAGE,varName,varValue);
     }
@@ -78,6 +82,7 @@ public class MessageConstants {
     private static final String MISSING_SOURCE_CONSTRAINT = "Must also include 'source' parameter when providing a 'sourceId'";
     private static final String VALID_SOURCE_PROPERTY_CONSTRAINT = "Valid sources are: 'GEONAMES','NOMINATIM','PHOTON','MANUAL'";
     private static final String VALID_DELTA_STATUS_CONSTRAINT = "Valid delta status values are: 'ACTIVE','SEASONAL','TERMINATED','FUTURE'";
+    private static final String VALID_AIRPORTS_PROPERTY_CONSTRAINT = "Valid airports are existing three-letter IATA codes";
 
     private static final String IATA_RESOURCE_NOT_FOUND = "Information on given IATA code is currently unavailable";
 
@@ -85,8 +90,9 @@ public class MessageConstants {
             Map.entry(IATA_PARAM_NAME,IATA_RESOURCE_NOT_FOUND),
             Map.entry(ORIGIN_PARAM_NAME,IATA_RESOURCE_NOT_FOUND),
             Map.entry(DESTINATION_PARAM_NAME,IATA_RESOURCE_NOT_FOUND),
-            Map.entry(EXCLUDE_PARAM_NAME,IATA_RESOURCE_NOT_FOUND)
-    );
+            Map.entry(EXCLUDE_PARAM_NAME,IATA_RESOURCE_NOT_FOUND),
+            Map.entry(AIRPORTS_PROPERTY_NAME,IATA_RESOURCE_NOT_FOUND)
+            );
 
     private static final Map<String,String> CONSTRAINT_MAP = Map.ofEntries(
             Map.entry(COUNTRY_CODE_PARAM_NAME,VALID_COUNTRY_CODE_CONSTRAINT),
@@ -98,7 +104,8 @@ public class MessageConstants {
             Map.entry(ORIGIN_PARAM_NAME,VALID_IATA_CONSTRAINT),
             Map.entry(DESTINATION_PARAM_NAME,VALID_IATA_CONSTRAINT),
             Map.entry(EXCLUDE_PARAM_NAME,VALID_IATA_CONSTRAINT),
-            Map.entry(DELTA_STATUS_PARAM_NAME,VALID_DELTA_STATUS_CONSTRAINT)
+            Map.entry(DELTA_STATUS_PARAM_NAME,VALID_DELTA_STATUS_CONSTRAINT),
+            Map.entry(AIRPORTS_PROPERTY_NAME,VALID_AIRPORTS_PROPERTY_CONSTRAINT)
     );
 
     private static final Map<String,String> REQUEST_BODY_PROPERTY_TO_CONSTRAINT_MAP = Map.ofEntries(

@@ -1,10 +1,8 @@
 package org.voyager.service;
 
 import io.vavr.control.Option;
-import org.voyager.model.location.Location;
-import org.voyager.model.location.Source;
-import org.voyager.model.location.Status;
-import org.voyager.model.location.LocationForm;
+import jakarta.validation.Valid;
+import org.voyager.model.location.*;
 
 import java.util.List;
 import java.util.Map;
@@ -20,4 +18,5 @@ public interface LocationService {
     public Set<String> getLocationIdsBySource(Source source);
     public Map<String,Status> getLocationIdsToStatusBySource(Source source);
     public List<Location> getLocationsByStatusList(List<Status> statusList);
+    Location patch(Location location, @Valid LocationPatch locationPatch);
 }

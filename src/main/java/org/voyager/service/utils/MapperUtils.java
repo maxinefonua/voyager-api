@@ -9,14 +9,16 @@ import org.voyager.model.delta.DeltaPatch;
 import org.voyager.model.entity.DeltaEntity;
 import org.voyager.model.entity.LocationEntity;
 import org.voyager.model.entity.RouteEntity;
-import org.voyager.model.location.Location;
-import org.voyager.model.location.Source;
-import org.voyager.model.location.Status;
+import org.voyager.model.location.*;
 import org.voyager.model.delta.DeltaStatus;
-import org.voyager.model.location.LocationForm;
 import org.voyager.model.route.Route;
 import org.voyager.model.route.RouteForm;
 import org.voyager.model.route.RoutePatch;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.StringJoiner;
 
 public class MapperUtils {
     public static Airport entityToAirport(AirportEntity airportEntity) {
@@ -44,6 +46,7 @@ public class MapperUtils {
                 .status(locationEntity.getStatus())
                 .source(locationEntity.getSource())
                 .sourceId(locationEntity.getSourceId())
+                .airports(new HashSet<>(Set.of(locationEntity.getAirports())))
                 .build();
     }
 
@@ -58,6 +61,7 @@ public class MapperUtils {
                 .status(Status.SAVED)
                 .subdivision(locationForm.getSubdivision())
                 .bbox(new Double[]{locationForm.getWest(),locationForm.getSouth(),locationForm.getEast(),locationForm.getNorth()})
+                .airports(locationForm.getAirports().toArray(String[]::new))
                 .build();
     }
 
