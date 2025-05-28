@@ -18,6 +18,7 @@ import org.voyager.model.delta.DeltaStatus;
 import org.voyager.model.location.LocationPatch;
 import org.voyager.model.location.Source;
 import org.voyager.model.location.LocationForm;
+import org.voyager.model.location.Status;
 import org.voyager.model.route.RouteForm;
 import org.voyager.model.route.RoutePatch;
 import org.voyager.model.validate.ValidEnum;
@@ -63,6 +64,15 @@ public class ValidationUtils {
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     MessageConstants.buildInvalidRequestParameterMessage(SOURCE_PROPERTY_NAME, sourceString));
+        }
+    }
+
+    public static Status validateAndGetLocationStatus(String statusString) {
+        try {
+            return Status.valueOf(statusString.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    MessageConstants.buildInvalidRequestParameterMessage(LOCATION_STATUS_PARAM_NAME, statusString));
         }
     }
 

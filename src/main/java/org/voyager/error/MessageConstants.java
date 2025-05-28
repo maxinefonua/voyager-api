@@ -88,6 +88,7 @@ public class MessageConstants {
     private static final String MISSING_SOURCE_CONSTRAINT = "Must also include 'source' parameter when providing a 'sourceId'";
     private static final String VALID_SOURCE_PROPERTY_CONSTRAINT = "Valid sources are: 'GEONAMES','NOMINATIM','PHOTON','MANUAL'";
     private static final String VALID_DELTA_STATUS_CONSTRAINT = "Valid delta status values are: 'ACTIVE','SEASONAL','TERMINATED','FUTURE'";
+    private static final String VALID_LOCATION_STATUS_CONSTRAINT = "Valid location status values are: 'ARCHVED','SAVED'";
     private static final String VALID_AIRPORTS_PROPERTY_CONSTRAINT = "Valid airports are existing three-letter IATA codes";
 
     private static final String IATA_RESOURCE_NOT_FOUND = "Information on given IATA code is currently unavailable";
@@ -105,6 +106,7 @@ public class MessageConstants {
             Map.entry(AIRLINE_PARAM_NAME,VALID_AIRLINE_CONSTRAINT),
             Map.entry(TYPE_PARAM_NAME,VALID_TYPE_CONSTRAINT),
             Map.entry(SOURCE_PROPERTY_NAME,VALID_SOURCE_PROPERTY_CONSTRAINT),
+            Map.entry(LOCATION_STATUS_PARAM_NAME,VALID_LOCATION_STATUS_CONSTRAINT),
             Map.entry(IATA_PARAM_NAME,VALID_IATA_CONSTRAINT),
             Map.entry(ID_PATH_VAR_NAME,VALID_ID_CONSTRAINT),
             Map.entry(ORIGIN_PARAM_NAME,VALID_IATA_CONSTRAINT),

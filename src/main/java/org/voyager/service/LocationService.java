@@ -13,6 +13,8 @@ public interface LocationService {
     public List<Location> getLocations();
     public List<Location> getLocationsByStatus(Status status);
     public List<Location> getLocationsBySourceAndSourceId(Source source, String sourceId);
+    public List<Location> getLocationsBySourceAndSourceIdAndStatus(Source source, String sourceId, Status status);
+    public List<Location> getLocationsBySourceAndStatus(Source source, Status status);
     public List<Location> getLocationsBySourceAndSourceIdList(Source source, List<String> sourceIdList);
     public List<Location> getLocationsBySource(Source source);
     Option<Location> getLocationById(Integer id);
