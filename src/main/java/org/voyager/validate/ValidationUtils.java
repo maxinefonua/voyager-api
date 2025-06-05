@@ -1,7 +1,6 @@
 package org.voyager.validate;
 
 import io.vavr.control.Option;
-import jakarta.validation.Valid;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.BindingResult;
