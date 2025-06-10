@@ -9,25 +9,32 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.voyager.config.photon.PhotonConfig;
 import org.voyager.error.ExternalExceptions;
+import org.voyager.model.location.Source;
+import org.voyager.model.location.Status;
 import org.voyager.model.result.LookupAttribution;
 import org.voyager.model.result.ResultSearch;
-import org.voyager.model.response.VoyagerListResponse;
+import org.voyager.model.response.SearchResult;
 import org.voyager.model.external.photon.Properties;
 import org.voyager.model.external.photon.Feature;
 import org.voyager.model.external.photon.SearchResponsePhoton;
+import org.voyager.service.LocationService;
 import org.voyager.service.SearchLocationService;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class PhotonImpl implements SearchLocationService {
     @Autowired
     PhotonConfig photonConfig;
 
+    @Autowired
+    LocationService locationService;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(PhotonImpl.class);
     private static final RestTemplate restTemplate = new RestTemplate();
 
     @Override
-    public VoyagerListResponse<ResultSearch> search(String query, int startRow, int limit) {
+    public SearchResult<ResultSearch> search(String query, int startRow, int limit) {
         String requestURL = photonConfig.buildSearchURL(query,limit);
         LOGGER.info("full request URL: " + requestURL);
         ResponseEntity<SearchResponsePhoton> searchResponse = restTemplate.getForEntity(requestURL, SearchResponsePhoton.class);
@@ -41,6 +48,8 @@ public class PhotonImpl implements SearchLocationService {
                     Double[] coordinates = feature.getGeometry().getCoordinates();
                     String type = resolveType(props);
                     return ResultSearch.builder()
+                            .source(Source.valueOf(photonConfig.getSourceName().toUpperCase()))
+                            .sourceId(String.valueOf(props.getOsmId().longValue()))
                             .name(props.getName()).subdivision(props.getState())
                             .countryCode(props.getCountryCode().toUpperCase())
                             .countryName(props.getCountry()).type(type)
@@ -48,12 +57,20 @@ public class PhotonImpl implements SearchLocationService {
                             .longitude(coordinates[0]).build();
                         })
                 .toList();
-        return VoyagerListResponse.<ResultSearch>builder().results(resultList).resultCount(resultList.size()).build();
+        return SearchResult.<ResultSearch>builder().results(resultList).resultCount(resultList.size()).build();
     }
 
     @Override
     public LookupAttribution attribution() {
         return LookupAttribution.builder().name("Photon").link("https://photon.komoot.io/").build();
+    }
+
+    @Override
+    public List<ResultSearch> augmentLocationStatus(List<ResultSearch> cachedResults) {
+        List<String> sourceIds = cachedResults.stream().map(ResultSearch::getSourceId).toList();
+        Map<String, Status> locationIdToStatusDB = locationService.getSourceIdsToStatusMap(Source.valueOf(photonConfig.getSourceName().toUpperCase()),sourceIds);
+        cachedResults.forEach(resultSearch -> resultSearch.setStatus(locationIdToStatusDB.getOrDefault(resultSearch.getSourceId(),Status.NEW)));
+        return cachedResults;
     }
 
     private static String resolveType(Properties props) {

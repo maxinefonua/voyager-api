@@ -1,21 +1,26 @@
 package org.voyager.service;
 
-import org.voyager.model.location.LocationDisplay;
-import org.voyager.model.location.Source;
-import org.voyager.model.location.Status;
-import org.voyager.model.location.LocationForm;
+import io.vavr.control.Option;
+import jakarta.validation.Valid;
+import org.voyager.model.location.*;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 public interface LocationService {
-    public LocationDisplay save(LocationForm locationForm);
-    public List<LocationDisplay> getLocations();
-    public List<LocationDisplay> getLocationsByStatus(Status status);
-    public List<LocationDisplay> getLocationsBySourceAndSourceId(Source source, String sourceId);
-    public List<LocationDisplay> getLocationsBySource(Source source);
+    public Location save(LocationForm locationForm);
+    public List<Location> getLocations();
+    public List<Location> getLocationsByStatus(Status status);
+    public List<Location> getLocationsBySourceAndSourceId(Source source, String sourceId);
+    public List<Location> getLocationsBySourceAndSourceIdAndStatus(Source source, String sourceId, Status status);
+    public List<Location> getLocationsBySourceAndStatus(Source source, Status status);
+    public List<Location> getLocationsBySourceAndSourceIdList(Source source, List<String> sourceIdList);
+    public List<Location> getLocationsBySource(Source source);
+    Option<Location> getLocationById(Integer id);
     public Set<String> getLocationIdsBySource(Source source);
-    public Map<String,Status> getLocationIdsToStatusBySource(Source source);
-    public List<LocationDisplay> getLocationsByStatusList(List<Status> statusList);
+    public Map<String,Status> getSourceIdsToStatusBySource(Source source);
+    public Map<String,Status> getSourceIdsToStatusMap(Source source, List<String> sourceIdList);
+    public List<Location> getLocationsByStatusList(List<Status> statusList);
+    Location patch(Location location, @Valid LocationPatch locationPatch);
 }
