@@ -4,13 +4,18 @@ A personal project I took on to relearn full-cycle development, and to better or
 
 ## API endpoints
 [/search](#search)
+<br>[/locations](#locations)
+<br>[/locations/{id}](#locations/{id})
+
 <br>[/airports](#airports)
 <br>[/airports/{iata}](#airportsiata)
 <br>[/nearby-airports](#nearby-airports)
-### Coming Soon
-[/locations](#locations)
-<br>[/locations/{id}](#locations/{id})
-<br>[/locations/{id}/weather](#locations/{id}/weather)
+
+<br>[/routes]()
+<br>[/routes/{id}]()
+<br>[/path/{origin}/to/{destination}]()
+
+
 
 ## Required Headers
 Calls to all endpoints require an authorized API key in the request headers. See details below. Process to request an authorized key coming soon.
