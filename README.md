@@ -285,20 +285,22 @@ Example GET response:
 
 ## Project Repos
 - Voyager UI <a href='https://github.com/maxinefonua/voyager-ui' target='_blank' rel='noopener noreferrer nofollow'>GitHub</a>
-  - request mapping for web domain
+  - mapped requests and web feature functions
   - dynamic page injection
 - Voyager Commons <a href='https://github.com/maxinefonua/voyager-commons' target='_blank' rel='noopener noreferrer nofollow'>GitHub</a>
-  - shared models and utils
-  - scripts for data syncing
+  - an SDK for API services
+  - scripts and jars for syncing data
 
-<h4>Built using:</h4>
-- Spring Boot
+<h3>Back-End Tech Stack:</h3>
+- Spring
+- PostgreSQL
+- GeoNames
+- OpenStreetMap
 - Lombok
 - Java Code Coverage (coming soon)
 - IntelliJ
-- PostgreSQL
 
-<h4>External API and Data</h4>
+<h3>External API and Data</h3>
 - GeoNames Full Text Search (Location Lookup)
 - Airport data from csv download at: https://github.com/mborsetti/airportsdata
 - Open Currency Exchange
