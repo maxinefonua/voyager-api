@@ -20,6 +20,8 @@ import org.voyager.service.AirportsService;
 import org.voyager.service.RouteService;
 import org.voyager.validate.ValidationUtils;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -71,14 +73,24 @@ public class RoutesController {
     }
 
     @GetMapping("/path/{origin}/to/{destination}")
-    public Path getRoutes(@PathVariable(name = ORIGIN_PARAM_NAME) String origin, @PathVariable(name = DESTINATION_PARAM_NAME) String destination, @RequestParam(name = EXCLUDE_PARAM_NAME, required = false) List<String> exclusionList) {
+    public Path getRoutes(@PathVariable(name = ORIGIN_PARAM_NAME) String origin,
+                          @PathVariable(name = DESTINATION_PARAM_NAME) String destination,
+                          @RequestParam(name = EXCLUDE_PARAM_NAME, required = false) List<String> exclusionList,
+                          @RequestParam(name = EXCLUDE_ROUTE_PARAM_NAME,required = false) List<String> excludeRouteList) {
         origin = ValidationUtils.validateIataToUpperCase(origin,airportService,ORIGIN_PARAM_NAME,false);
         destination = ValidationUtils.validateIataToUpperCase(destination,airportService,DESTINATION_PARAM_NAME,false);
         Set<String> exclusionSet = Set.of();
+        List<Integer> excludeRouteIds = new ArrayList<>();
         if (exclusionList != null) {
             exclusionList.replaceAll(iata -> ValidationUtils.validateIataToUpperCase(iata,airportService,EXCLUDE_PARAM_NAME, true));
             exclusionSet = Set.copyOf(exclusionList);
         }
-        return routeService.buildPathWithExclusions(origin,destination,exclusionSet);
+        if (excludeRouteList != null) {
+            excludeRouteList.forEach(routeIdString -> {
+                Integer routeId = Integer.parseInt(routeIdString);
+                if (!excludeRouteIds.contains(routeId)) excludeRouteIds.add(routeId);
+            });
+        }
+        return routeService.buildPathWithExclusions(origin,destination,exclusionSet,excludeRouteIds);
     }
 }

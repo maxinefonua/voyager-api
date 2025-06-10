@@ -20,5 +20,5 @@ public interface RouteService {
     List<Route> getActiveRoutes(Option<String> origin, Option<String> destination, Option<Airline> airline,Boolean isActive);
     Route save(RouteForm routeForm);
     Route patch(Route route,RoutePatch routePatch);
-    Path buildPathWithExclusions(String origin, String destination, Set<String> exclusions);
+    Path buildPathWithExclusions(String origin, String destination, Set<String> excludeAirports, List<Integer> excludeRoutes);
 }

@@ -109,13 +109,13 @@ public class RouteServiceImpl implements RouteService {
     }
 
     @Override
-    public Path buildPathWithExclusions(String origin, String destination, Set<String> exclusions) {
-        List<Integer> routeIds = buildRouteIdListOfShortestPath(origin,destination,exclusions);
+    public Path buildPathWithExclusions(String origin, String destination, Set<String> excludeAirports,List<Integer> excludeRoutes) {
+        List<Integer> routeIds = buildRouteIdListOfShortestPath(origin,destination, excludeAirports,excludeRoutes);
         List<Route> routeList = routeIds.stream().map(id -> routeRepository.findById(id).get()).map(MapperUtils::entityToRoute).toList();
         return Path.builder().routeList(routeList).build();
     }
 
-    private List<Integer> buildRouteIdListOfShortestPath(String origin, String destination, Set<String> exclusions) {
+    private List<Integer> buildRouteIdListOfShortestPath(String origin, String destination, Set<String> exclusions, List<Integer> excludeRoutes) {
         Queue<Tuple2<String,List<Integer>>> toSearch = new ArrayDeque<>();
         toSearch.add(new Tuple2<>(origin,new ArrayList<>()));
         Set<String> visited = new HashSet<>();
@@ -125,7 +125,7 @@ public class RouteServiceImpl implements RouteService {
             List<Integer> routeIds = curr._2();
             List<RouteEntity> routeEntities = routeRepository.findByOrigin(curr._1());
             for (RouteEntity routeEntity : routeEntities) {
-                if (!routeEntity.getIsActive()) continue;
+                if (!routeEntity.getIsActive() || excludeRoutes.contains(routeEntity.getId())) continue;
                 String next = routeEntity.getDestination();
                 if (next.equals(destination)) {
                     routeIds.add(routeEntity.getId());
