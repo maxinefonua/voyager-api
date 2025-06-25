@@ -2,7 +2,6 @@ package org.voyager.service.impl;
 
 import io.vavr.control.Option;
 import org.apache.commons.lang3.StringUtils;
-import org.junit.jupiter.api.function.ThrowingSupplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,15 +21,11 @@ import org.voyager.model.airport.AirportType;
 import org.voyager.repository.AirlineRepository;
 import org.voyager.repository.AirportRepository;
 import org.voyager.service.AirportsService;
-import org.voyager.service.DeltaService;
 import org.voyager.service.utils.MapperUtils;
 
-import java.sql.SQLException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.Callable;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 @Service
@@ -63,11 +58,13 @@ public class AirportsServiceImpl implements AirportsService {
         return handleJPAExceptions(() -> {
             if (countryCode.isEmpty() && type.isEmpty() && airline.isEmpty()) {
                 LOGGER.debug("fetching uncached get all airports");
-                return airportRepository.findAll(Sort.by(Sort.Direction.ASC, "iata")).stream().map(MapperUtils::entityToAirport).toList();
+                return airportRepository.findAll(Sort.by(Sort.Direction.ASC, "iata")).stream()
+                        .map(MapperUtils::entityToAirport).toList();
             }
             if (countryCode.isEmpty() && type.isEmpty()) {
                 LOGGER.debug(String.format("fetching uncached get airports by airline: %s", airline.get()));
-                return airportRepository.findByIataInOrderByIataAsc(getActiveDeltaCodes()).stream().map(MapperUtils::entityToAirport).toList();
+                return airportRepository.findByIataInOrderByIataAsc(
+                        getActiveAirlineCodes(airline.get())).stream().map(MapperUtils::entityToAirport).toList();
             }
             if (countryCode.isEmpty() && airline.isEmpty()) {
                 LOGGER.debug(String.format("fetching uncached get airports by type: %s", type.get()));
@@ -83,18 +80,21 @@ public class AirportsServiceImpl implements AirportsService {
             }
             if (type.isEmpty()) {
                 LOGGER.debug(String.format("fetching uncached get airports by country code: %s and airline: %s", countryCode.get(), airline.get()));
-                return airportRepository.findByCountryCodeOrderByIataAsc(countryCode.get()).stream().filter(
-                        airportEntity -> validDeltaCode(airportEntity.getIata())
+                List<String> validAirlineAirports = getActiveAirlineCodes(airline.get());
+                return airportRepository.findByCountryCodeOrderByIataAsc(countryCode.get()).stream()
+                        .filter(airportEntity -> validAirlineAirports.contains(airportEntity.getIata())
                 ).map(MapperUtils::entityToAirport).toList();
             }
             if (countryCode.isEmpty()) {
                 LOGGER.debug(String.format("fetching uncached get airports by type: %s and airline: %s", type.get(), airline.get()));
+                List<String> validAirlineAirports = getActiveAirlineCodes(airline.get());
                 return airportRepository.findByTypeOrderByIataAsc(type.get()).stream().filter(
-                        airportEntity -> validDeltaCode(airportEntity.getIata())
+                        airportEntity -> validAirlineAirports.contains(airportEntity.getIata())
                 ).map(MapperUtils::entityToAirport).toList();
             }
+            List<String> validAirlineAirports = getActiveAirlineCodes(airline.get());
             return airportRepository.findByCountryCodeAndTypeOrderByIataAsc(countryCode.get(), type.get()).stream().filter(
-                    airportEntity -> validDeltaCode(airportEntity.getIata())
+                    airportEntity -> validAirlineAirports.contains(airportEntity.getIata())
             ).map(MapperUtils::entityToAirport).toList();
         });
     }
@@ -115,13 +115,13 @@ public class AirportsServiceImpl implements AirportsService {
                         .sorted(Comparator.comparingDouble(Airport::getDistance)).limit(limit).toList();
             } else if (type.isEmpty()) {
                 LOGGER.debug(String.format("fetching uncached get nearby airports for airline: %s, latitude: %f, longitude: %f, with limit: %d", airline.get(), latitude, longitude, limit));
-                return airportRepository.findByIataInOrderByIataAsc(getActiveDeltaCodes()).stream().map(airportEntity -> MapperUtils.entityToAirport(airportEntity,
+                return airportRepository.findByIataInOrderByIataAsc(getActiveAirlineCodes(airline.get())).stream().map(airportEntity -> MapperUtils.entityToAirport(airportEntity,
                                 Airport.calculateDistance(latitude, longitude, airportEntity.getLatitude(), airportEntity.getLongitude())))
                         .sorted(Comparator.comparingDouble(Airport::getDistance)).limit(limit).toList();
             }
 
             LOGGER.debug(String.format("fetching uncached get nearby airports for type: %s, airline: %s, latitude: %f, longitude: %f, with limit: %d", type.get(), airline.get(), latitude, longitude, limit));
-            return airportRepository.findByIataInOrderByIataAsc(getActiveDeltaCodes()).stream().map(airportEntity -> MapperUtils.entityToAirport(airportEntity,
+            return airportRepository.findByIataInOrderByIataAsc(getActiveAirlineCodes(airline.get())).stream().map(airportEntity -> MapperUtils.entityToAirport(airportEntity,
                             Airport.calculateDistance(latitude, longitude, airportEntity.getLatitude(), airportEntity.getLongitude())))
                     .sorted(Comparator.comparingDouble(Airport::getDistance)).limit(limit).toList();
         });
@@ -162,15 +162,9 @@ public class AirportsServiceImpl implements AirportsService {
         return MapperUtils.entityToAirport(existing);
     }
 
-    private boolean validDeltaCode(String iata) {
-        List<Airline> iataAirlines =
-                handleJPAExceptions(() -> airlineRepository.selectAirlinesByIataAndIsActive(iata,true));
-        return iataAirlines.stream().anyMatch(airline -> airline.equals(Airline.DELTA));
-    }
-
-    private List<String> getActiveDeltaCodes() {
+    private List<String> getActiveAirlineCodes(Airline airline) {
         return handleJPAExceptions(() ->
-                airlineRepository.selectIataCodesByAirlineAndIsActive(Airline.DELTA, true));
+                airlineRepository.selectIataCodesByAirlineAndIsActive(airline,true));
     }
 
     private <T> T handleJPAExceptions(Supplier<T> repositoryFunction) {

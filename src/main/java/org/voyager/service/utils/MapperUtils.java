@@ -14,11 +14,7 @@ import org.voyager.model.delta.DeltaStatus;
 import org.voyager.model.route.Route;
 import org.voyager.model.route.RouteForm;
 import org.voyager.model.route.RoutePatch;
-
-import java.sql.Time;
-import java.sql.Timestamp;
 import java.time.*;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 public class MapperUtils {
@@ -107,30 +103,6 @@ public class MapperUtils {
                 .origin(route.getOrigin())
                 .destination(route.getDestination())
                 .flightIds(flightIds.toArray(new Integer[0]))
-                .build();
-    }
-
-    public static Delta entityToDelta(DeltaEntity deltaEntity) {
-        return Delta.builder()
-                .iata(deltaEntity.getIata())
-                .status(deltaEntity.getStatus())
-                .isHub(deltaEntity.getIsHub())
-                .build();
-    }
-
-    public static DeltaEntity formToDeltaEntity(DeltaForm deltaForm) {
-        return DeltaEntity.builder()
-                .iata(deltaForm.getIata())
-                .status(DeltaStatus.valueOf(deltaForm.getStatus()))
-                .isHub(deltaForm.getIsHub())
-                .build();
-    }
-
-    public static DeltaEntity patchToDeltaEntity(Delta delta, DeltaPatch deltaPatch) {
-        return DeltaEntity.builder()
-                .iata(delta.getIata())
-                .status(DeltaStatus.valueOf(deltaPatch.getStatus()))
-                .isHub(deltaPatch.getIsHub())
                 .build();
     }
 

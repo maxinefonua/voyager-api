@@ -9,13 +9,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import org.voyager.error.MessageConstants;
-import org.voyager.model.Airline;
 import org.voyager.model.entity.RouteEntity;
 import org.voyager.model.route.Path;
 import org.voyager.model.route.Route;
 import org.voyager.model.route.RouteForm;
 import org.voyager.model.route.RoutePatch;
-import org.voyager.repository.DeltaRepository;
 import org.voyager.repository.RouteRepository;
 import org.voyager.service.RouteService;
 import org.voyager.service.utils.MapperUtils;
@@ -26,9 +24,6 @@ import java.util.*;
 public class RouteServiceImpl implements RouteService {
     @Autowired
     RouteRepository routeRepository;
-
-    @Autowired
-    DeltaRepository deltaRepository;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RouteServiceImpl.class);
 
