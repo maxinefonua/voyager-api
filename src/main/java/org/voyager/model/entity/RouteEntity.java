@@ -22,9 +22,6 @@ public class RouteEntity {
     @Column(name = "dstn",length = 3,columnDefinition = "bpchar")
     String destination;
 
-    @Enumerated(EnumType.STRING)
-    Airline airline;
-
-    @Column(name = "active")
-    Boolean isActive;
+    @Column(name = "flight_ids")
+    private Integer[] flightIds;
 }
