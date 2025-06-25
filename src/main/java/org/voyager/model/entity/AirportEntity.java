@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.voyager.model.airport.AirportType;
 
+import java.time.ZoneId;
+import java.util.TimeZone;
+
 @Entity
 @Table(name="airports")
 @Getter @Setter @Builder(toBuilder = true)
@@ -26,4 +29,6 @@ public class AirportEntity {
     Double latitude;
     @Enumerated(EnumType.STRING)
     AirportType type;
+    @Column(name = "tz")
+    ZoneId zoneId;
 }

@@ -1,6 +1,7 @@
 package org.voyager.validate;
 
 import io.vavr.control.Option;
+import jakarta.validation.Valid;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.BindingResult;
@@ -14,6 +15,8 @@ import org.voyager.model.airport.AirportType;
 import org.voyager.model.delta.DeltaForm;
 import org.voyager.model.delta.DeltaPatch;
 import org.voyager.model.delta.DeltaStatus;
+import org.voyager.model.flight.FlightForm;
+import org.voyager.model.flight.FlightPatch;
 import org.voyager.model.location.LocationPatch;
 import org.voyager.model.location.Source;
 import org.voyager.model.location.LocationForm;
@@ -134,9 +137,17 @@ public class ValidationUtils {
 
     public static void validateRouteForm(RouteForm routeForm, BindingResult bindingResult) {
         processRequestBodyBindingErrors(routeForm,bindingResult);
-        routeForm.setAirline(routeForm.getAirline().toUpperCase());
         routeForm.setOrigin(routeForm.getOrigin().toUpperCase());
         routeForm.setDestination(routeForm.getDestination().toUpperCase());
+    }
+
+    public static void validateFlightForm(FlightForm flightForm, BindingResult bindingResult) {
+        processRequestBodyBindingErrors(flightForm,bindingResult);
+        flightForm.setAirline(flightForm.getAirline().toUpperCase());
+    }
+
+    public static void validateFlightPatch(FlightPatch flightPatch, BindingResult bindingResult) {
+        processRequestBodyBindingErrors(flightPatch,bindingResult);
     }
 
     public static void validateRoutePatch(RoutePatch routePatch, BindingResult bindingResult) {
