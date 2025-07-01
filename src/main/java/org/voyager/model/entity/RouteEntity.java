@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.voyager.model.Airline;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Data
 @NoArgsConstructor
@@ -21,7 +24,4 @@ public class RouteEntity {
 
     @Column(name = "dstn",length = 3,columnDefinition = "bpchar")
     String destination;
-
-    @Column(name = "flight_ids")
-    private Integer[] flightIds;
 }

@@ -3,17 +3,12 @@ package org.voyager.service.utils;
 import org.voyager.model.airport.Airport;
 import org.voyager.model.entity.*;
 import org.voyager.model.Airline;
-import org.voyager.model.delta.Delta;
-import org.voyager.model.delta.DeltaForm;
-import org.voyager.model.delta.DeltaPatch;
 import org.voyager.model.flight.Flight;
 import org.voyager.model.flight.FlightForm;
 import org.voyager.model.flight.FlightPatch;
 import org.voyager.model.location.*;
-import org.voyager.model.delta.DeltaStatus;
 import org.voyager.model.route.Route;
 import org.voyager.model.route.RouteForm;
-import org.voyager.model.route.RoutePatch;
 import java.time.*;
 import java.util.*;
 
@@ -83,7 +78,6 @@ public class MapperUtils {
                 .id(routeEntity.getId())
                 .origin(routeEntity.getOrigin())
                 .destination(routeEntity.getDestination())
-                .flightIds(Arrays.asList(routeEntity.getFlightIds()))
                 .build();
     }
 
@@ -91,18 +85,6 @@ public class MapperUtils {
         return RouteEntity.builder()
                 .origin(routeForm.getOrigin())
                 .destination(routeForm.getDestination())
-                .flightIds(routeForm.getFlightIds().toArray(new Integer[0]))
-                .build();
-    }
-
-    public static RouteEntity patchToRouteEntity(Route route, RoutePatch routePatch) {
-        List<Integer> flightIds = route.getFlightIds();
-        if (routePatch.getFlightIds() != null) flightIds = routePatch.getFlightIds();
-        return RouteEntity.builder()
-                .id(route.getId())
-                .origin(route.getOrigin())
-                .destination(route.getDestination())
-                .flightIds(flightIds.toArray(new Integer[0]))
                 .build();
     }
 
