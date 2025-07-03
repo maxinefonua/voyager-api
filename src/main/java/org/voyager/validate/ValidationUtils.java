@@ -99,6 +99,7 @@ public class ValidationUtils {
                     MessageConstants.buildInvalidPathVariableMessage(varName, varVal));
         }
         try {
+            // TODO: return max value of 10, min value of 1
             return Integer.valueOf(varVal);
         } catch (IllegalArgumentException e) {
             if (isParam) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,

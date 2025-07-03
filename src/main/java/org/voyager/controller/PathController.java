@@ -28,30 +28,6 @@ public class PathController {
     @Autowired
     AirportsService airportService;
 
-    @GetMapping("/path2/{origin}/to/{destination}")
-    public Path getOriginalRoutes(@PathVariable(name = ORIGIN_PARAM_NAME) String origin,
-                          @PathVariable(name = DESTINATION_PARAM_NAME) String destination,
-                          @RequestParam(name = AIRLINE_PARAM_NAME, required = false) String airlineString,
-                          @RequestParam(name = EXCLUDE_PARAM_NAME, required = false) List<String> exclusionList,
-                          @RequestParam(name = EXCLUDE_ROUTE_PARAM_NAME,required = false) List<String> excludeRouteList) {
-        origin = ValidationUtils.validateIataToUpperCase(origin,airportService,ORIGIN_PARAM_NAME,false);
-        destination = ValidationUtils.validateIataToUpperCase(destination,airportService,DESTINATION_PARAM_NAME,false);
-        Option<Airline> airlineOption = ValidationUtils.resolveAirlineString(airlineString);
-        Set<String> exclusionSet = Set.of();
-        List<Integer> excludeRouteIds = new ArrayList<>();
-        if (exclusionList != null) {
-            exclusionList.replaceAll(iata -> ValidationUtils.validateIataToUpperCase(iata,airportService,EXCLUDE_PARAM_NAME, true));
-            exclusionSet = Set.copyOf(exclusionList);
-        }
-        if (excludeRouteList != null) {
-            excludeRouteList.forEach(routeIdString -> {
-                Integer routeId = Integer.parseInt(routeIdString);
-                if (!excludeRouteIds.contains(routeId)) excludeRouteIds.add(routeId);
-            });
-        }
-        return routeService.buildPathWithExclusions(origin,destination,airlineOption,exclusionSet,excludeRouteIds);
-    }
-
     @GetMapping("/path/{origin}/to/{destination}")
     public List<PathAirline> getRoutes(@PathVariable(name = ORIGIN_PARAM_NAME) String origin,
                                        @PathVariable(name = DESTINATION_PARAM_NAME) String destination,
@@ -59,7 +35,7 @@ public class PathController {
                                        @RequestParam(name = EXCLUDE_PARAM_NAME, required = false) List<String> excludeAirportCodeList,
                                        @RequestParam(name = EXCLUDE_ROUTE_PARAM_NAME,required = false) List<String> excludeRouteIdList,
                                        @RequestParam(name = EXCLUDE_FLIGHT_PARAM_NAME,required = false) List<String> excludeFlightNumberList,
-                                       @RequestParam(name = LIMIT_PARAM_NAME,defaultValue = "10") String limitString) {
+                                       @RequestParam(name = LIMIT_PARAM_NAME,defaultValue = "5") String limitString) {
         Integer limit = ValidationUtils.validateAndGetInteger(LIMIT_PARAM_NAME,limitString,true);
         origin = ValidationUtils.validateIataToUpperCase(origin,airportService,ORIGIN_PARAM_NAME,false);
         destination = ValidationUtils.validateIataToUpperCase(destination,airportService,DESTINATION_PARAM_NAME,false);

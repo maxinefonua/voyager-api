@@ -17,7 +17,6 @@ public interface RouteService {
     Option<Route> getRouteById(Integer id);
     List<Route> getRoutes(Option<String> origin, Option<String> destination, Option<Airline> airlineOption);
     Route save(RouteForm routeForm);
-    Path buildPathWithExclusions(String origin, String destination, Option<Airline> airlineOption, Set<String> excludeAirports, List<Integer> excludeRoutes);
     List<PathAirline> getAirlinePathList(String origin, String destination,
                                          Option<Airline> airlineOption,
                                          Integer limit,
