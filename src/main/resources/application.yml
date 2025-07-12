@@ -14,6 +14,7 @@ geonames:
   username: ${GEONAMES_API_USERNAME}
   isNameRequired: true
   featureClass: P
+  featureClassAdmin: A
 
 auth:
   authToken: ${VOYAGER_API_KEY}

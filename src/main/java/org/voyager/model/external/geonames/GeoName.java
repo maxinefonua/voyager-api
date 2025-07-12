@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.util.Map;
+
 @Setter @Getter
 @ToString(includeFieldNames = false)
 public class GeoName {
@@ -12,24 +14,24 @@ public class GeoName {
     @JsonProperty("bbox")
     BoundingBox boundingBox;
 
-//    AlternativeName[] alternateNames;
-//    String asciiName;
-//    String wikipediaURL;
+    AlternativeName[] alternateNames;
+    String asciiName;
+    String wikipediaURL;
     Long geonameId;
     String name;
-//    String toponymName;
+    String toponymName;
 
-//    @JsonProperty("srtm3")
-//    Integer elevationSRTM;
-//    @JsonProperty("astergdem")
-//    Integer elevationAGDEM;
+    @JsonProperty("srtm3")
+    Integer elevationSRTM;
+    @JsonProperty("astergdem")
+    Integer elevationAGDEM;
     Long population;
 
-//    Map<String,Object> adminCodes1;
-//    String adminCode1;
-//    String adminCode2;
-//    String adminId1;
-//    String adminId2;
+    Map<String,Object> adminCodes1;
+    String adminCode1;
+    String adminCode2;
+    String adminId1;
+    String adminId2;
 
 
     String countryId;
@@ -38,16 +40,16 @@ public class GeoName {
     ContinentCode continentCode;
 
     String adminName1;
-//    String adminName2;
-//    String adminName3;
-//    String adminName4;
-//    String adminName5;
+    String adminName2;
+    String adminName3;
+    String adminName4;
+    String adminName5;
 
     Float lng;
     Float lat;
 
-//    String fcode;
-//    String fcodeName;
+    String fcode;
+    String fcodeName;
     FeatureClass fcl;
     String fclName;
 }

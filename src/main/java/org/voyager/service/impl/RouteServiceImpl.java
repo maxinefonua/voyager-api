@@ -10,12 +10,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import org.voyager.error.MessageConstants;
 import org.voyager.model.Airline;
-import org.voyager.model.entity.FlightEntity;
 import org.voyager.model.entity.RouteEntity;
-import org.voyager.model.route.Path;
-import org.voyager.model.route.PathAirline;
-import org.voyager.model.route.Route;
-import org.voyager.model.route.RouteForm;
+import org.voyager.model.route.*;
 import org.voyager.repository.AirlineRepository;
 import org.voyager.repository.FlightRepository;
 import org.voyager.repository.RouteRepository;
@@ -135,6 +131,53 @@ public class RouteServiceImpl implements RouteService {
             return List.of();
         return buildPathAirlineList(origin, destination, limit,
                 excludeAirportCodes, excludeRouteIds, excludeFlightNumbers);
+    }
+
+    @Override
+    public List<Path> getPathList(String origin, String destination, Integer limit,
+                                  Set<String> excludeAirportCodes,
+                                  Set<Integer> excludeRouteIds,
+                                  Set<String> excludeFlightNumbers) {
+        if (airlineRepository.selectAirlinesByIataAndIsActive(origin,true).isEmpty()
+                || airlineRepository.selectAirlinesByIataAndIsActive(destination,true).isEmpty())
+            return List.of();
+        return buildPathList(origin, destination, limit,
+                excludeAirportCodes, excludeRouteIds, excludeFlightNumbers);
+    }
+
+    private List<Path> buildPathList(String origin, String destination, Integer limit,
+                                     Set<String> excludeAirportCodes,
+                                     Set<Integer> excludeRouteIds,
+                                     Set<String> excludeFlightNumbers) {
+        Queue<Tuple2<String,Path>> toSearch = new ArrayDeque<>();
+        toSearch.add(new Tuple2<>(origin,Path.builder().build()));
+        Set<String> visitedAirports = new HashSet<>(excludeAirportCodes);
+        List<Path> pathList = new ArrayList<>();
+        while (!toSearch.isEmpty()) {
+            Tuple2<String,Path> curr = toSearch.poll();
+            String start = curr._1();
+            Path pathSoFar = curr._2();
+            for (RouteEntity routeEntity : routeRepository.findByOrigin(start)) {
+                String routeEnd = routeEntity.getDestination();
+                Integer routeId = routeEntity.getId();
+                if (!visitedAirports.contains(routeEnd) && !excludeRouteIds.contains(routeId)) {
+                    List<Airline> airlineList = flightRepository.selectDistinctAirlineByRouteIdAndIsActive(routeId,true);
+                    if (!airlineList.isEmpty()) {
+                        Path copyPath = Path.builder().path(new ArrayList<>(pathSoFar.getPath())).build();
+                        copyPath.getPath().add(RouteAirline.builder().routeId(routeId).origin(start).destination(routeEnd)
+                                .airlines(airlineList).build());
+                        if (routeEnd.equals(destination)) {
+                            pathList.add(copyPath);
+                            if (pathList.size() == limit) break;
+                        } else {
+                            visitedAirports.add(routeEnd);
+                            toSearch.add(new Tuple2<>(routeEnd,copyPath));
+                        }
+                    }
+                }
+            }
+        }
+        return pathList;
     }
 
     private List<PathAirline> buildPathAirlineListWithAirline(String origin, String destination,

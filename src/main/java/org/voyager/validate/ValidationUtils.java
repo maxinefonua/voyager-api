@@ -29,17 +29,19 @@ import java.util.*;
 import static org.voyager.utils.ConstantsUtils.*;
 
 public class ValidationUtils {
-    public static Option<AirportType> resolveTypeString(String typeString) {
-        Option<AirportType> airportType = Option.none();
-        if (StringUtils.isNotEmpty(typeString)) {
-            try {
-                airportType = Option.of(AirportType.valueOf(typeString.toUpperCase()));
-            } catch (IllegalArgumentException e) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                        MessageConstants.buildInvalidRequestParameterMessage(TYPE_PARAM_NAME, typeString));
+    public static List<AirportType> resolveTypeList(List<String> typeList) {
+        List<AirportType> airportTypeList = new ArrayList<>();
+        if (typeList != null) {
+            for (String typeString : typeList) {
+                try {
+                    airportTypeList.add(AirportType.valueOf(typeString.toUpperCase()));
+                } catch (IllegalArgumentException e) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            MessageConstants.buildInvalidRequestParameterMessage(TYPE_PARAM_NAME, typeString));
+                }
             }
         }
-        return airportType;
+        return airportTypeList;
     }
 
     public static Option<Airline> resolveAirlineString(String airlineString) {
@@ -53,6 +55,21 @@ public class ValidationUtils {
             }
         }
         return airline;
+    }
+
+    public static List<Airline> resolveAirlineStringList(List<String> airlineStringList) {
+        List<Airline> airlineList = new ArrayList<>();
+        if (airlineStringList != null) {
+            for (String airlineString : airlineStringList) {
+                try {
+                    airlineList.add(Airline.valueOf(airlineString.toUpperCase()));
+                } catch (IllegalArgumentException e) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            MessageConstants.buildInvalidRequestParameterMessage(TYPE_PARAM_NAME,airlineString));
+                }
+            }
+        }
+        return airlineList;
     }
 
     public static Source validateAndGetSource(String sourceString) {

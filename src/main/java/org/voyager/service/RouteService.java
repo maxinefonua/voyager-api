@@ -23,4 +23,6 @@ public interface RouteService {
                                          Set<String> excludeAirportCodes,
                                          Set<Integer> excludeRouteIds,
                                          Set<String> excludeFlightNumbers);
+
+    List<Path> getPathList(String origin, String destination, Integer limit, Set<String> excludeAirportCodes, Set<Integer> excludeRouteIds, Set<String> excludeFlightNumbers);
 }

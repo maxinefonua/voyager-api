@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.voyager.config.nominatim.NominatimConfig;
 import org.voyager.error.ExternalExceptions;
+import org.voyager.model.location.Location;
 import org.voyager.model.location.Source;
 import org.voyager.model.location.Status;
 import org.voyager.model.result.LookupAttribution;
@@ -17,8 +18,10 @@ import org.voyager.model.response.SearchResult;
 import org.voyager.model.external.nominatim.Address;
 import org.voyager.model.external.nominatim.Properties;
 import org.voyager.model.external.nominatim.SearchResponseNominatim;
+import org.voyager.model.result.ResultSearchFull;
 import org.voyager.service.LocationService;
 import org.voyager.service.SearchLocationService;
+
 import java.util.List;
 import java.util.Map;
 
@@ -53,11 +56,15 @@ public class NominatimImpl implements SearchLocationService {
                             .name(props.getName()).subdivision(adminNameVal)
                             .countryCode(address.getCountryCode().toUpperCase())
                             .countryName(address.getCountry()).type(type)
-                            .bounds(feature.getBbox()).latitude(coordinates[1])
                             .longitude(coordinates[0]).build();
                 })
                 .toList();
         return SearchResult.<ResultSearch>builder().results(resultSearchList).resultCount(resultSearchList.size()).build();
+    }
+
+    @Override
+    public ResultSearchFull fetchResultSearch(String sourceId) {
+        return null;
     }
 
     @Override

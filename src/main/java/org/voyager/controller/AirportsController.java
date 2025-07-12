@@ -5,7 +5,6 @@ import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.voyager.model.Airline;
@@ -28,20 +27,20 @@ public class AirportsController {
     private static final Logger LOGGER = LoggerFactory.getLogger(AirportsController.class);
 
     @GetMapping("/iata")
-    public List<String> getIataCodes(@RequestParam(name = TYPE_PARAM_NAME, required = false) String typeString) {
-        Option<AirportType> typeOptional = ValidationUtils.resolveTypeString(typeString);
-        if (typeOptional.isEmpty()) return airportsService.getIata();
-        return airportsService.getIataByType(typeOptional.get());
+    public List<String> getIataCodes(@RequestParam(name = TYPE_PARAM_NAME, required = false) List<String> typeList) {
+        List<AirportType> airportTypeList = ValidationUtils.resolveTypeList(typeList);
+        if (airportTypeList.isEmpty()) return airportsService.getIata();
+        return airportsService.getIataByTypeIn(airportTypeList);
     }
 
     @GetMapping("/airports")
     public List<Airport> getAirports(@RequestParam(name = COUNTRY_CODE_PARAM_NAME, required = false) String countryCodeString,
-                                            @RequestParam(name = TYPE_PARAM_NAME, required = false) String typeString,
+                                            @RequestParam(name = TYPE_PARAM_NAME, required = false) List<String> typeList,
                                             @RequestParam(name = AIRLINE_PARAM_NAME, required = false) String airlineString) {
         if (countryCodeString != null) countryCodeString = ValidationUtils.validateAndGetCountryCode(countryCodeString);
-        Option<AirportType> airportType = ValidationUtils.resolveTypeString(typeString);
+        List<AirportType> airportTypeList = ValidationUtils.resolveTypeList(typeList);
         Option<Airline> airline = ValidationUtils.resolveAirlineString(airlineString);
-        return airportsService.getAll(Option.of(countryCodeString),airportType,airline);
+        return airportsService.getAll(Option.of(countryCodeString),airportTypeList,airline);
     }
 
     @GetMapping("/airports/{iata}")
@@ -63,10 +62,10 @@ public class AirportsController {
     public List<Airport> nearbyAirports(@RequestParam(LATITUDE_PARAM_NAME) Double latitude,
                                         @RequestParam(LONGITUDE_PARAM_NAME) Double longitude,
                                         @RequestParam(name = LIMIT_PARAM_NAME,defaultValue = "5") Integer limit,
-                                        @RequestParam(name = TYPE_PARAM_NAME, required = false) String typeString,
-                                        @RequestParam(name = AIRLINE_PARAM_NAME, required = false) String airlineString) {
-        Option<AirportType> airportType = ValidationUtils.resolveTypeString(typeString);
-        Option<Airline> airline = ValidationUtils.resolveAirlineString(airlineString);
-        return airportsService.getByDistance(latitude,longitude,limit,airportType,airline);
+                                        @RequestParam(name = TYPE_PARAM_NAME, required = false) List<String> typeList,
+                                        @RequestParam(name = AIRLINE_PARAM_NAME, required = false) List<String> airlineStringList) {
+        List<AirportType> airportTypeList = ValidationUtils.resolveTypeList(typeList);
+        List<Airline> airlineList = ValidationUtils.resolveAirlineStringList(airlineStringList);
+        return airportsService.getByDistance(latitude,longitude,limit,airportTypeList,airlineList);
     }
 }
