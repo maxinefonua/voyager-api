@@ -264,7 +264,7 @@ public class RouteServiceImpl implements RouteService {
                                         .responseList(pathAirlineList)
                                         .build();
                         } else
-                            toSearch.add(newPathAirline);
+                            nextLevel.add(newPathAirline);
                     }
                 }
             }
