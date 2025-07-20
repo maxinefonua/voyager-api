@@ -11,6 +11,9 @@ public interface AirlineRepository extends JpaRepository<AirlineAirportEntity,St
     @Query("SELECT a.airline FROM AirlineAirportEntity a WHERE a.iata = ?1 AND a.isActive = ?2")
     List<Airline> selectAirlinesByIataAndIsActive(String iata, Boolean isActive);
 
+    @Query("SELECT DISTINCT a.airline FROM AirlineAirportEntity a WHERE a.iata IN ?1 AND a.isActive = ?2")
+    List<Airline> selectDistinctAirlinesByIataInAndIsActive(List<String> iataList, Boolean isActive);
+
     @Query("SELECT a.iata FROM AirlineAirportEntity a WHERE a.airline = ?1 AND a.isActive = ?2")
     List<String> selectIataCodesByAirlineAndIsActive(Airline airline, Boolean isActive);
 

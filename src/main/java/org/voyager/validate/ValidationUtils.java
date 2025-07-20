@@ -1,6 +1,7 @@
 package org.voyager.validate;
 
 import io.vavr.control.Option;
+import jakarta.validation.Valid;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.BindingResult;
@@ -19,6 +20,7 @@ import org.voyager.model.location.LocationForm;
 import org.voyager.model.location.Status;
 import org.voyager.model.route.Route;
 import org.voyager.model.route.RouteForm;
+import org.voyager.model.route.RoutePatch;
 import org.voyager.model.validate.ValidEnum;
 import org.voyager.service.AirportsService;
 import org.voyager.service.RouteService;
@@ -90,6 +92,28 @@ public class ValidationUtils {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     MessageConstants.buildInvalidRequestParameterMessage(LOCATION_STATUS_PARAM_NAME, statusString));
         }
+    }
+
+    public static Set<String> validateIataCodeSet(String paramName, Set<String> iataCodeList, AirportsService airportsService) {
+        if (iataCodeList.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    MessageConstants.buildInvalidRequestParameterMessage(paramName,""));
+        }
+        Set<String> validatedSet = new HashSet<>();
+        iataCodeList.forEach(iata -> validatedSet.add(
+                validateIataToUpperCase(iata,airportsService,paramName,true)));
+        return validatedSet;
+    }
+
+    public static List<String> validateIataCodeList(String paramName, Set<String> iataCodeList, AirportsService airportsService) {
+        if (iataCodeList.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    MessageConstants.buildInvalidRequestParameterMessage(paramName,""));
+        }
+        List<String> validatedList = new ArrayList<>();
+        iataCodeList.forEach(iata -> validatedList.add(
+                validateIataToUpperCase(iata,airportsService,paramName,true)));
+        return validatedList;
     }
 
     public static String validateIataToUpperCase(String iata, AirportsService airportsService, String varName, boolean isParam) {
@@ -217,8 +241,7 @@ public class ValidationUtils {
                 fieldError.getField(),valueJoiner,fieldError.getRejectedValue()));
     }
 
-    public static Option<Integer> resolveRouteId(String routeIdString, RouteService routeService) {
-        if (StringUtils.isBlank(routeIdString)) return Option.none();
+    public static Integer resolveRouteId(String routeIdString, RouteService routeService) {
         try {
             Integer routeId = Integer.valueOf(routeIdString);
             Option<Route> routeOption = routeService.getRouteById(routeId);
@@ -226,10 +249,14 @@ public class ValidationUtils {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                         MessageConstants.buildResourceNotFoundForParameterMessage(ROUTE_ID_PARAM_NAME,routeIdString));
             }
-            return Option.of(routeId);
+            return routeId;
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     MessageConstants.buildInvalidRequestParameterMessage(ROUTE_ID_PARAM_NAME, routeIdString));
         }
+    }
+
+    public static void validateRoutePatch(RoutePatch routePatch, BindingResult bindingResult) {
+        processRequestBodyBindingErrors(routePatch,bindingResult);
     }
 }

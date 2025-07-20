@@ -24,4 +24,7 @@ public class RouteEntity {
 
     @Column(name = "dstn",length = 3,columnDefinition = "bpchar")
     String destination;
+
+    @Column(name = "dist", columnDefinition = "numeric")
+    private Double distanceKm;
 }

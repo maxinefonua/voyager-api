@@ -9,6 +9,7 @@ import org.voyager.model.flight.FlightPatch;
 import org.voyager.model.location.*;
 import org.voyager.model.route.Route;
 import org.voyager.model.route.RouteForm;
+
 import java.time.*;
 import java.util.*;
 
@@ -78,6 +79,7 @@ public class MapperUtils {
                 .id(routeEntity.getId())
                 .origin(routeEntity.getOrigin())
                 .destination(routeEntity.getDestination())
+                .distanceKm(routeEntity.getDistanceKm())
                 .build();
     }
 
@@ -85,6 +87,7 @@ public class MapperUtils {
         return RouteEntity.builder()
                 .origin(routeForm.getOrigin())
                 .destination(routeForm.getDestination())
+                .distanceKm(routeForm.getDistanceKm())
                 .build();
     }
 

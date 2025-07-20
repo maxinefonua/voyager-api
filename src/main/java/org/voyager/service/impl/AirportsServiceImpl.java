@@ -107,23 +107,23 @@ public class AirportsServiceImpl implements AirportsService {
             if (airportTypeList.isEmpty() && airlineList.isEmpty()) {
                 LOGGER.debug(String.format("fetching uncached get nearby airports for latitude: %f, longitude: %f, with limit: %d", latitude, longitude, limit));
                 return airportRepository.findByTypeInOrderByIataAsc(List.of(AirportType.CIVIL, AirportType.MILITARY)).stream().map(airportEntity -> MapperUtils.entityToAirport(airportEntity,
-                                Airport.calculateDistance(latitude, longitude, airportEntity.getLatitude(), airportEntity.getLongitude())))
+                                Airport.calculateDistanceKm(latitude, longitude, airportEntity.getLatitude(), airportEntity.getLongitude())))
                         .sorted(Comparator.comparingDouble(Airport::getDistance)).limit(limit).toList();
             } else if (airlineList.isEmpty()) {
                 LOGGER.debug(String.format("fetching uncached get nearby airports for type: %s, latitude: %f, longitude: %f, with limit: %d", airportTypeList, latitude, longitude, limit));
                 return airportRepository.findByTypeInOrderByIataAsc(airportTypeList).stream().map(airportEntity -> MapperUtils.entityToAirport(airportEntity,
-                                Airport.calculateDistance(latitude, longitude, airportEntity.getLatitude(), airportEntity.getLongitude())))
+                                Airport.calculateDistanceKm(latitude, longitude, airportEntity.getLatitude(), airportEntity.getLongitude())))
                         .sorted(Comparator.comparingDouble(Airport::getDistance)).limit(limit).toList();
             } else if (airportTypeList.isEmpty()) {
                 LOGGER.debug(String.format("fetching uncached get nearby airports for airlines: %s, latitude: %f, longitude: %f, with limit: %d", airlineList, latitude, longitude, limit));
                 return airportRepository.findByIataInOrderByIataAsc(getDistinctIataCodesForAirlineList(airlineList)).stream().map(airportEntity -> MapperUtils.entityToAirport(airportEntity,
-                                Airport.calculateDistance(latitude, longitude, airportEntity.getLatitude(), airportEntity.getLongitude())))
+                                Airport.calculateDistanceKm(latitude, longitude, airportEntity.getLatitude(), airportEntity.getLongitude())))
                         .sorted(Comparator.comparingDouble(Airport::getDistance)).limit(limit).toList();
             }
 
             LOGGER.debug(String.format("fetching uncached get nearby airports for type: %s, airline: %s, latitude: %f, longitude: %f, with limit: %d", airportTypeList, airlineList, latitude, longitude, limit));
             return airportRepository.findByIataInOrderByIataAsc(getDistinctIataCodesForAirlineList(airlineList)).stream().map(airportEntity -> MapperUtils.entityToAirport(airportEntity,
-                            Airport.calculateDistance(latitude, longitude, airportEntity.getLatitude(), airportEntity.getLongitude())))
+                            Airport.calculateDistanceKm(latitude, longitude, airportEntity.getLatitude(), airportEntity.getLongitude())))
                     .sorted(Comparator.comparingDouble(Airport::getDistance)).limit(limit).toList();
         });
     }
@@ -161,6 +161,11 @@ public class AirportsServiceImpl implements AirportsService {
                     e);
         }
         return MapperUtils.entityToAirport(existing);
+    }
+
+    @Override
+    public List<Airline> getAirlines(List<String> iataList) {
+        return airlineRepository.selectDistinctAirlinesByIataInAndIsActive(iataList,true);
     }
 
     private List<String> getActiveAirlineCodes(Airline airline) {

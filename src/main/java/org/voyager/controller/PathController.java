@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.voyager.model.Airline;
 import org.voyager.model.route.Path;
 import org.voyager.model.route.PathAirline;
+import org.voyager.model.route.PathResponse;
 import org.voyager.service.AirportsService;
 import org.voyager.service.RouteService;
 import org.voyager.validate.ValidationUtils;
@@ -26,46 +27,49 @@ public class PathController {
     @Autowired
     AirportsService airportService;
 
-    @GetMapping("/path-airline/{origin}/to/{destination}")
-    public List<PathAirline> getPathAirlineList(@PathVariable(name = ORIGIN_PARAM_NAME) String origin,
-                                       @PathVariable(name = DESTINATION_PARAM_NAME) String destination,
-                                       @RequestParam(name = AIRLINE_PARAM_NAME, required = false) String airlineString,
-                                       @RequestParam(name = EXCLUDE_PARAM_NAME, required = false) List<String> excludeAirportCodeList,
-                                       @RequestParam(name = EXCLUDE_ROUTE_PARAM_NAME,required = false) List<String> excludeRouteIdList,
-                                       @RequestParam(name = EXCLUDE_FLIGHT_PARAM_NAME,required = false) List<String> excludeFlightNumberList,
-                                       @RequestParam(name = LIMIT_PARAM_NAME,defaultValue = "5") String limitString) {
+    @GetMapping("/path-airline")
+    public PathResponse<PathAirline> getPathAirlineList(@RequestParam(name = ORIGIN_PARAM_NAME) List<String> originList,
+                                                        @RequestParam(name = DESTINATION_PARAM_NAME) List<String> destinationList,
+                                                        @RequestParam(name = AIRLINE_PARAM_NAME, required = false) String airlineString,
+                                                        @RequestParam(name = EXCLUDE_PARAM_NAME, required = false) List<String> excludeAirportCodeList,
+                                                        @RequestParam(name = EXCLUDE_ROUTE_PARAM_NAME,required = false) List<String> excludeRouteIdList,
+                                                        @RequestParam(name = EXCLUDE_FLIGHT_PARAM_NAME,required = false) List<String> excludeFlightNumberList,
+                                                        @RequestParam(name = LIMIT_PARAM_NAME, defaultValue = "5") String limitString) {
+
         Integer limit = ValidationUtils.validateAndGetInteger(LIMIT_PARAM_NAME,limitString,true);
-        origin = ValidationUtils.validateIataToUpperCase(origin,airportService,ORIGIN_PARAM_NAME,false);
-        destination = ValidationUtils.validateIataToUpperCase(destination,airportService,DESTINATION_PARAM_NAME,false);
+        Set<String> originSet = ValidationUtils.validateIataCodeSet(ORIGIN_PARAM_NAME,Set.copyOf(originList),airportService);
+        Set<String> destinationSet = ValidationUtils.validateIataCodeSet(DESTINATION_PARAM_NAME,Set.copyOf(destinationList),airportService);
         Option<Airline> airlineOption = ValidationUtils.resolveAirlineString(airlineString);
         Set<String> excludeAirportCodes = Set.of();
-        Set<Integer> excludeRouteIds = Set.of();
-        Set<String> excludeFlightNumbers = Set.of();
         if (excludeAirportCodeList != null) {
             excludeAirportCodeList.replaceAll(iata -> ValidationUtils.validateIataToUpperCase(iata,airportService,EXCLUDE_PARAM_NAME, true));
             excludeAirportCodes = Set.copyOf(excludeAirportCodeList);
         }
+
+        Set<Integer> excludeRouteIds = Set.of();
         if (excludeRouteIdList != null) {
             excludeRouteIds = excludeRouteIdList.stream()
                     .map(routeIdString -> ValidationUtils.validateAndGetInteger(EXCLUDE_ROUTE_PARAM_NAME,routeIdString, true))
                     .collect(Collectors.toSet());
         }
+
+        Set<String> excludeFlightNumbers = Set.of();
         if (excludeFlightNumberList != null) {
             excludeFlightNumbers = Set.copyOf(excludeFlightNumberList);
         }
-        return routeService.getAirlinePathList(origin,destination,airlineOption,limit,excludeAirportCodes,excludeRouteIds,excludeFlightNumbers);
+        return routeService.getAirlinePathList(originSet,destinationSet,airlineOption,limit,excludeAirportCodes,excludeRouteIds,excludeFlightNumbers);
     }
 
-    @GetMapping("/path/{origin}/to/{destination}")
-    public List<Path> getPathList(@PathVariable(name = ORIGIN_PARAM_NAME) String origin,
-                                  @PathVariable(name = DESTINATION_PARAM_NAME) String destination,
+    @GetMapping("/path")
+    public List<Path> getPathList(@RequestParam(name = ORIGIN_PARAM_NAME) List<String> originList,
+                                  @RequestParam(name = DESTINATION_PARAM_NAME) List<String> destinationList,
                                   @RequestParam(name = EXCLUDE_PARAM_NAME, required = false) List<String> excludeAirportCodeList,
                                   @RequestParam(name = EXCLUDE_ROUTE_PARAM_NAME,required = false) List<String> excludeRouteIdList,
                                   @RequestParam(name = EXCLUDE_FLIGHT_PARAM_NAME,required = false) List<String> excludeFlightNumberList,
                                   @RequestParam(name = LIMIT_PARAM_NAME,defaultValue = "5") String limitString) {
         Integer limit = ValidationUtils.validateAndGetInteger(LIMIT_PARAM_NAME,limitString,true);
-        origin = ValidationUtils.validateIataToUpperCase(origin,airportService,ORIGIN_PARAM_NAME,false);
-        destination = ValidationUtils.validateIataToUpperCase(destination,airportService,DESTINATION_PARAM_NAME,false);
+        Set<String> originSet = ValidationUtils.validateIataCodeSet(ORIGIN_PARAM_NAME,Set.copyOf(originList),airportService);
+        Set<String> destinationSet = ValidationUtils.validateIataCodeSet(DESTINATION_PARAM_NAME,Set.copyOf(destinationList),airportService);
         Set<String> excludeAirportCodes = Set.of();
         Set<Integer> excludeRouteIds = Set.of();
         Set<String> excludeFlightNumbers = Set.of();
@@ -81,6 +85,6 @@ public class PathController {
         if (excludeFlightNumberList != null) {
             excludeFlightNumbers = Set.copyOf(excludeFlightNumberList);
         }
-        return routeService.getPathList(origin,destination,limit,excludeAirportCodes,excludeRouteIds,excludeFlightNumbers);
+        return routeService.getPathList(originSet,destinationSet,limit,excludeAirportCodes,excludeRouteIds,excludeFlightNumbers);
     }
 }

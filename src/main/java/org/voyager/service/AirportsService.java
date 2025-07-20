@@ -18,4 +18,5 @@ public interface AirportsService {
     public List<Airport> getByDistance(double latitude, double longitude, int limit, List<AirportType> airportTypeList, List<Airline> airline);
     Airport getByIata(String iata);
     Airport patch(String iata, AirportPatch airportPatch);
+    List<Airline> getAirlines(List<String> iataList);
 }

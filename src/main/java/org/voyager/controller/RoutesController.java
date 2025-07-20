@@ -10,8 +10,10 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.voyager.error.MessageConstants;
 import org.voyager.model.Airline;
+import org.voyager.model.location.LocationPatch;
 import org.voyager.model.route.Route;
 import org.voyager.model.route.RouteForm;
+import org.voyager.model.route.RoutePatch;
 import org.voyager.service.AirportsService;
 import org.voyager.service.RouteService;
 import org.voyager.validate.ValidationUtils;
@@ -50,11 +52,21 @@ public class RoutesController {
     }
 
     @GetMapping("/routes/{id}")
-    public Route getRouteById(@PathVariable(name = "id") String idString) {
+    public Route getRouteById(@PathVariable(name = ID_PATH_VAR_NAME) String idString) {
         Integer id = ValidationUtils.validateAndGetInteger(ID_PATH_VAR_NAME,idString,false);
         Option<Route> routeOption = routeService.getRouteById(id);
         if (routeOption.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND,
                 MessageConstants.buildResourceNotFoundForPathVariableMessage(ID_PATH_VAR_NAME,String.valueOf(id)));
         return routeOption.get();
+    }
+
+    @PatchMapping("/routes/{id}")
+    public Route patchRouteById(@PathVariable(name = ID_PATH_VAR_NAME) String idString, @RequestBody(required = false) @Valid RoutePatch routePatch, BindingResult bindingResult) {
+        Integer id = ValidationUtils.validateAndGetInteger(ID_PATH_VAR_NAME,idString,false);
+        ValidationUtils.validateRoutePatch(routePatch,bindingResult);
+        Option<Route> routeOption = routeService.getRouteById(id);
+        if (routeOption.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                MessageConstants.buildResourceNotFoundForPathVariableMessage(ID_PATH_VAR_NAME,String.valueOf(id)));
+        return routeService.patchRoute(id,routePatch);
     }
 }

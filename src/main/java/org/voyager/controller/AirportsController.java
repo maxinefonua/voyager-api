@@ -15,6 +15,7 @@ import org.voyager.service.AirportsService;
 import org.voyager.validate.ValidationUtils;
 
 import java.util.List;
+import java.util.Set;
 
 import static org.voyager.utils.ConstantsUtils.*;
 import static org.voyager.utils.ConstantsUtils.AIRLINE_PARAM_NAME;
@@ -41,6 +42,12 @@ public class AirportsController {
         List<AirportType> airportTypeList = ValidationUtils.resolveTypeList(typeList);
         Option<Airline> airline = ValidationUtils.resolveAirlineString(airlineString);
         return airportsService.getAll(Option.of(countryCodeString),airportTypeList,airline);
+    }
+
+    @GetMapping("/airport-airlines")
+    public List<Airline> getAirlines(@RequestParam(name = IATA_PARAM_NAME) List<String> iataList) {
+        iataList = ValidationUtils.validateIataCodeList(ORIGIN_PARAM_NAME,Set.copyOf(iataList),airportsService);
+        return airportsService.getAirlines(iataList);
     }
 
     @GetMapping("/airports/{iata}")

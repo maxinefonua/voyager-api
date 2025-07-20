@@ -12,5 +12,5 @@ public interface FlightService {
     Option<Flight> getById(Integer id);
     Flight save(FlightForm flightForm);
     Flight patch(Flight flight, FlightPatch flightPatch);
-    List<Flight> getFlights(Option<Integer> routeIdOption, Option<String> flightNumberOption, Option<Airline> airlineOption, Option<Boolean> isActiveOption);
+    List<Flight> getFlights(List<Integer> routeIdList, Option<String> flightNumberOption, Option<Airline> airlineOption, Option<Boolean> isActiveOption);
 }

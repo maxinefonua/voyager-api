@@ -1,6 +1,5 @@
 package org.voyager.service.impl;
 
-import io.vavr.Tuple2;
 import io.vavr.control.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,10 +43,17 @@ public class RouteServiceImpl implements RouteService {
     }
 
     @Override
+    public Route patchRoute(Integer id, RoutePatch routePatch) {
+        RouteEntity routeEntity = routeRepository.findById(id).get();
+        routeEntity.setDistanceKm(routePatch.getDistanceKm());
+        return MapperUtils.entityToRoute(routeRepository.save(routeEntity));
+    }
+
+    @Override
     public Option<Route> getRouteById(Integer id) {
-        Optional<RouteEntity> route = routeRepository.findById(id);
-        if (route.isEmpty()) return Option.none();
-        return Option.of(MapperUtils.entityToRoute(route.get()));
+        Optional<RouteEntity> routeEntity = routeRepository.findById(id);
+        if (routeEntity.isEmpty()) return Option.none();
+        return Option.of(MapperUtils.entityToRoute(routeEntity.get()));
     }
 
     @Override
@@ -76,32 +82,6 @@ public class RouteServiceImpl implements RouteService {
         }
     }
 
-    private List<Route> getRoutesByOriginAndAirlineAndIsActive(String origin, Airline airline, boolean isActive) {
-        List<RouteEntity> airlineRouteEntities = new ArrayList<>();
-        List<Integer> airlineRouteIds = flightRepository.selectDistinctRouteIdByAirlineAndIsActive(airline,isActive);
-        routeRepository.findByOrigin(origin).forEach(routeEntity -> {
-            if (airlineRouteIds.contains(routeEntity.getId()))
-                airlineRouteEntities.add(routeEntity);
-        });
-        return airlineRouteEntities.stream().map(MapperUtils::entityToRoute).toList();
-    }
-
-    private List<Route> getRoutesByDestinationAndAirlineAndIsActive(String destination,
-                                                                    Airline airline, boolean isActive) {
-        List<RouteEntity> airlineRouteEntities = new ArrayList<>();
-        List<Integer> airlineRouteIds = flightRepository.selectDistinctRouteIdByAirlineAndIsActive(airline,isActive);
-        routeRepository.findByDestination(destination).forEach(routeEntity -> {
-            if (airlineRouteIds.contains(routeEntity.getId()))
-                airlineRouteEntities.add(routeEntity);
-        });
-        return airlineRouteEntities.stream().map(MapperUtils::entityToRoute).toList();
-    }
-
-    private List<Route> getRoutesByAirlineAndIsActive(Airline airline, boolean isActive) {
-        List<Integer> airlineRouteIds = flightRepository.selectDistinctRouteIdByAirlineAndIsActive(airline,isActive);
-        return routeRepository.findByIdIn(airlineRouteIds).stream().map(MapperUtils::entityToRoute).toList();
-    }
-
     @Override
     public Route save(RouteForm routeForm) {
         RouteEntity routeEntity = MapperUtils.formToRouteEntity(routeForm);
@@ -117,168 +97,183 @@ public class RouteServiceImpl implements RouteService {
     }
 
     @Override
-    public List<PathAirline> getAirlinePathList(String origin, String destination,
-                                                Option<Airline> airlineOption, Integer limit,
-                                                Set<String> excludeAirportCodes,
-                                                Set<Integer> excludeRouteIds,
-                                                Set<String> excludeFlightNumbers) {
-        if (airlineOption.isDefined()) {
-            return buildPathAirlineListWithAirline(origin, destination, airlineOption.get(), limit,
-                    excludeAirportCodes, excludeRouteIds, excludeFlightNumbers);
-        }
-        if (airlineRepository.selectAirlinesByIataAndIsActive(origin,true).isEmpty()
-                || airlineRepository.selectAirlinesByIataAndIsActive(destination,true).isEmpty())
+    public List<Path> getPathList(Set<String> originSet, Set<String> destinationSet, Integer limit, Set<String> excludeAirportCodes, Set<Integer> excludeRouteIds, Set<String> excludeFlightNumbers) {
+        if (airlineRepository.selectDistinctAirlinesByIataInAndIsActive(new ArrayList<>(originSet),true).isEmpty()
+                || airlineRepository.selectDistinctAirlinesByIataInAndIsActive(new ArrayList<>(destinationSet),true).isEmpty())
             return List.of();
-        return buildPathAirlineList(origin, destination, limit,
-                excludeAirportCodes, excludeRouteIds, excludeFlightNumbers);
+
+        Queue<Path> toSearch = new PriorityQueue<>(Comparator.comparingDouble(Path::getTotalDistanceKm));
+        Set<String> visitedAirports = new HashSet<>(excludeAirportCodes);
+        visitedAirports.addAll(originSet);
+        List<Path> pathList = new ArrayList<>();
+        originSet.forEach(origin -> {
+            List<RouteEntity> routeEntityList = routeRepository.findByOrigin(origin);
+            routeEntityList.forEach(routeEntity -> {
+                String routeEnd = routeEntity.getDestination();
+                if (excludeRouteIds.contains(routeEntity.getId()) || visitedAirports.contains(routeEnd)
+                        || routeEntity.getDistanceKm() == null) return;
+                List<Airline> routeAirlines = flightRepository.selectDistinctAirlineByRouteIdAndIsActive(
+                        routeEntity.getId(),true);
+                if (routeAirlines.isEmpty()) return;
+                Path path = Path.builder()
+                        .totalDistanceKm(routeEntity.getDistanceKm())
+                        .routeAirlineList(List.of(RouteAirline.builder()
+                                .routeId(routeEntity.getId())
+                                .distanceKm(routeEntity.getDistanceKm())
+                                .origin(routeEntity.getOrigin())
+                                .destination(routeEntity.getDestination())
+                                .airlines(routeAirlines)
+                                .build()))
+                        .build();
+                if (destinationSet.contains(routeEnd))
+                    pathList.add(path);
+                else toSearch.add(path);
+            });
+        });
+        return processQueue(toSearch,pathList,visitedAirports,destinationSet, limit,
+                excludeRouteIds,excludeFlightNumbers);
     }
 
     @Override
-    public List<Path> getPathList(String origin, String destination, Integer limit,
-                                  Set<String> excludeAirportCodes,
-                                  Set<Integer> excludeRouteIds,
-                                  Set<String> excludeFlightNumbers) {
-        if (airlineRepository.selectAirlinesByIataAndIsActive(origin,true).isEmpty()
-                || airlineRepository.selectAirlinesByIataAndIsActive(destination,true).isEmpty())
-            return List.of();
-        return buildPathList(origin, destination, limit,
-                excludeAirportCodes, excludeRouteIds, excludeFlightNumbers);
+    public PathResponse<PathAirline> getAirlinePathList(Set<String> originSet, Set<String> destinationSet, Option<Airline> airlineOption, Integer limit, Set<String> excludeAirportCodes, Set<Integer> excludeRouteIds, Set<String> excludeFlightNumbers) {
+        List<Airline> originAirlines = airlineRepository.selectDistinctAirlinesByIataInAndIsActive(new ArrayList<>(originSet),true);
+        List<Airline> destinationAirlines = airlineRepository.selectDistinctAirlinesByIataInAndIsActive(new ArrayList<>(destinationSet),true);
+        Set<Airline> includeAirlines = new HashSet<>();
+        if (airlineOption.isDefined()) {
+            Airline airline = airlineOption.get();
+            if (!originAirlines.contains(airline) || !destinationAirlines.contains(airline)) return PathResponse.<PathAirline>builder().build();
+            includeAirlines.add(airline);
+        } else {
+            includeAirlines.addAll(originAirlines);
+            for (Airline airline : originAirlines) {
+                if (!destinationAirlines.contains(airline))
+                    includeAirlines.remove(airline);
+            }
+            if (includeAirlines.isEmpty()) return PathResponse.<PathAirline>builder().build();
+        }
+
+        Queue<PathAirline> toSearch = new PriorityQueue<>(Comparator.comparingDouble(PathAirline::getTotalDistanceKm));
+        Set<String> visitedAirports = new HashSet<>(excludeAirportCodes);
+        visitedAirports.addAll(originSet);
+        List<PathAirline> pathAirlineList = new ArrayList<>();
+        originSet.forEach(origin -> {
+            List<RouteEntity> routeEntityList = routeRepository.findByOrigin(origin);
+            routeEntityList.forEach(routeEntity -> {
+                String routeEnd = routeEntity.getDestination();
+                if (excludeRouteIds.contains(routeEntity.getId()) || visitedAirports.contains(routeEnd)
+                        || routeEntity.getDistanceKm() == null) return;
+                List<Airline> routeAirlines = flightRepository.selectDistinctAirlineByRouteIdAndIsActive(
+                        routeEntity.getId(),true);
+                routeAirlines.forEach(airline -> {
+                    if (!includeAirlines.contains(airline)) return;
+                    PathAirline pathAirline = PathAirline.builder()
+                            .airline(airline)
+                            .routeList(List.of(MapperUtils.entityToRoute(routeEntity)))
+                            .totalDistanceKm(routeEntity.getDistanceKm())
+                            .build();
+                    if (destinationSet.contains(routeEnd))
+                        pathAirlineList.add(pathAirline);
+                    else toSearch.add(pathAirline);
+                });
+            });
+        });
+        return processQueue(toSearch,pathAirlineList,visitedAirports,destinationSet,limit,
+                excludeRouteIds,excludeFlightNumbers,includeAirlines);
     }
 
-    private List<Path> buildPathList(String origin, String destination, Integer limit,
-                                     Set<String> excludeAirportCodes,
-                                     Set<Integer> excludeRouteIds,
-                                     Set<String> excludeFlightNumbers) {
-        Queue<Tuple2<String,Path>> toSearch = new ArrayDeque<>();
-        toSearch.add(new Tuple2<>(origin,Path.builder().build()));
-        Set<String> visitedAirports = new HashSet<>(excludeAirportCodes);
-        List<Path> pathList = new ArrayList<>();
+    private List<Path> processQueue(Queue<Path> toSearch, List<Path> pathList,
+                                    Set<String> visitedAirports,
+                                    Set<String> destinationSet, Integer limit,
+                                    Set<Integer> excludeRouteIds, Set<String> excludeFlightNumbers) {
         while (!toSearch.isEmpty()) {
-            Tuple2<String,Path> curr = toSearch.poll();
-            String start = curr._1();
-            Path pathSoFar = curr._2();
-            for (RouteEntity routeEntity : routeRepository.findByOrigin(start)) {
-                String routeEnd = routeEntity.getDestination();
-                Integer routeId = routeEntity.getId();
-                if (!visitedAirports.contains(routeEnd) && !excludeRouteIds.contains(routeId)) {
-                    List<Airline> airlineList = flightRepository.selectDistinctAirlineByRouteIdAndIsActive(routeId,true);
-                    if (!airlineList.isEmpty()) {
-                        Path copyPath = Path.builder().path(new ArrayList<>(pathSoFar.getPath())).build();
-                        copyPath.getPath().add(RouteAirline.builder().routeId(routeId).origin(start).destination(routeEnd)
-                                .airlines(airlineList).build());
-                        if (routeEnd.equals(destination)) {
-                            pathList.add(copyPath);
-                            if (pathList.size() == limit) break;
-                        } else {
-                            visitedAirports.add(routeEnd);
-                            toSearch.add(new Tuple2<>(routeEnd,copyPath));
-                        }
+            // TODO: process entire level first?
+            Queue<Path> nextLevel = new PriorityQueue<>(Comparator.comparingDouble(Path::getTotalDistanceKm));
+            while (!toSearch.isEmpty()) {
+                Path currPath = toSearch.poll();
+                List<RouteAirline> routesSoFar = currPath.getRouteAirlineList();
+                String start = routesSoFar.get(routesSoFar.size() - 1).getDestination();
+                visitedAirports.add(start);
+                List<RouteEntity> routeEntityList = routeRepository.findByOrigin(start);
+                for (RouteEntity routeEntity : routeEntityList) {
+                    String routeEnd = routeEntity.getDestination();
+                    Integer routeId = routeEntity.getId();
+                    Double routeDistance = routeEntity.getDistanceKm();
+                    if (visitedAirports.contains(routeEnd) || excludeRouteIds.contains(routeId) || routeDistance == null)
+                        continue;
+                    List<Airline> airlineList = flightRepository.selectDistinctAirlineByRouteIdAndIsActive(routeId, true);
+                    if (airlineList.isEmpty()) continue;
+                    List<RouteAirline> routeAirlineList = new ArrayList<>(routesSoFar);
+                    routeAirlineList.add(RouteAirline.builder()
+                            .routeId(routeId)
+                            .origin(start)
+                            .destination(routeEnd)
+                            .distanceKm(routeDistance)
+                            .airlines(airlineList)
+                            .build());
+                    Path newPath = Path.builder()
+                            .totalDistanceKm(currPath.getTotalDistanceKm() + routeDistance)
+                            .routeAirlineList(routeAirlineList)
+                            .build();
+                    if (destinationSet.contains(routeEnd)) {
+                        pathList.add(newPath);
+                        if (pathList.size() >= limit) return pathList;
+                    } else {
+                        nextLevel.add(newPath);
                     }
                 }
             }
+            toSearch = nextLevel;
         }
         return pathList;
     }
 
-    private List<PathAirline> buildPathAirlineListWithAirline(String origin, String destination,
-                                                              Airline airline, Integer limit,
-                                                              Set<String> excludeAirportCodes,
-                                                              Set<Integer> excludeRouteIds,
-                                                              Set<String> excludeFlightNumbers) {
-        if (notActiveAirlineAirport(origin,airline) || notActiveAirlineAirport(destination,airline))
-            return List.of();
-        List<PathAirline> pathAirlineList = new ArrayList<>();
-        Queue<Tuple2<String,PathAirline>> toSearch = new ArrayDeque<>();
-        Set<String> visitedAirports = new HashSet<>(excludeAirportCodes);
-        toSearch.add(new Tuple2<>(origin,PathAirline.builder().build()));
-        processQueue(toSearch,airline,visitedAirports,excludeRouteIds,excludeFlightNumbers,destination,limit,pathAirlineList);
-        return pathAirlineList;
-    }
-
-    private List<PathAirline> buildPathAirlineList(String origin, String destination,
-                                                   Integer limit,
-                                                   Set<String> excludeAirportCodes,
-                                                   Set<Integer> excludeRouteIds,
-                                                   Set<String> excludeFlightNumbers) {
-        List<PathAirline> pathAirlineList = new ArrayList<>();
-        Queue<Tuple2<String,PathAirline>> toSearch = new ArrayDeque<>();
-        toSearch.add(new Tuple2<>(origin, PathAirline.builder().build()));
-        Set<String> visitedAirports = new HashSet<>(excludeAirportCodes);
+    private PathResponse<PathAirline> processQueue(Queue<PathAirline> toSearch,
+                                           List<PathAirline> pathAirlineList,
+                                           Set<String> visitedAirports,
+                                           Set<String> destinationSet, Integer limit,
+                                           Set<Integer> excludeRouteIds, Set<String> excludeFlightNumbers,
+                                           Set<Airline> includeAirlines) {
         while (!toSearch.isEmpty()) {
-            Tuple2<String,PathAirline> curr = toSearch.poll();
-            String start = curr._1();;
-            visitedAirports.add(start);
-            PathAirline pathAirline = curr._2();
-            List<RouteEntity> routeEntityList = routeRepository.findByOrigin(start);
-            for (RouteEntity routeEntity : routeEntityList) {
-                String routeEnd = routeEntity.getDestination();
-                if (!excludeRouteIds.contains(routeEntity.getId()) && !visitedAirports.contains(routeEnd)) {
+            Queue<PathAirline> nextLevel = new PriorityQueue<>(Comparator.comparingDouble(PathAirline::getTotalDistanceKm));
+            while (!toSearch.isEmpty()) {
+                PathAirline pathAirline = toSearch.poll();
+                List<Route> routeListSoFar = pathAirline.getRouteList();
+                String start = routeListSoFar.get(routeListSoFar.size() - 1).getDestination();
+                visitedAirports.add(start);
+                List<RouteEntity> routeEntityList = routeRepository.findByOrigin(start);
+                for (RouteEntity routeEntity : routeEntityList) {
+                    String routeEnd = routeEntity.getDestination();
+                    if (excludeRouteIds.contains(routeEntity.getId()) || visitedAirports.contains(routeEnd)
+                            || routeEntity.getDistanceKm() == null) continue;
                     List<Airline> routeAirlines = flightRepository.selectDistinctAirlineByRouteIdAndIsActive(routeEntity.getId(), true);
-                    if (pathAirline.getAirline() != null) {
-                        if (routeAirlines.contains(pathAirline.getAirline())) {
-                            List<Route> routeList = new ArrayList<>(pathAirline.getRouteList());
-                            routeList.add(MapperUtils.entityToRoute(routeEntity));
-                            PathAirline newPathAirline = PathAirline.builder()
-                                    .airline(pathAirline.getAirline())
-                                    .routeList(routeList)
-                                    .build();
-                            if (routeEnd.equals(destination))
-                                pathAirlineList.add(newPathAirline);
-                            else toSearch.add(new Tuple2<>(routeEnd, newPathAirline));
-                        }
-                    } else {
-                        routeAirlines.forEach(routeAirline -> {
-                            List<Route> copyRouteList = new ArrayList<>(pathAirline.getRouteList());
-                            copyRouteList.add(MapperUtils.entityToRoute(routeEntity));
-                            PathAirline newPathAirline = PathAirline.builder()
-                                    .airline(routeAirline)
-                                    .routeList(copyRouteList)
-                                    .build();
-                            if (routeEnd.equals(destination))
-                                pathAirlineList.add(newPathAirline);
-                            else toSearch.add(new Tuple2<>(routeEnd,newPathAirline));
-                        });
+                    for (Airline routeAirline : routeAirlines) {
+                        if (!includeAirlines.contains(routeAirline)) continue;
+                        List<Route> copyRouteList = new ArrayList<>(pathAirline.getRouteList());
+                        copyRouteList.add(MapperUtils.entityToRoute(routeEntity));
+                        PathAirline newPathAirline = PathAirline.builder()
+                                .airline(routeAirline)
+                                .totalDistanceKm(pathAirline.getTotalDistanceKm() + routeEntity.getDistanceKm())
+                                .routeList(copyRouteList)
+                                .build();
+                        if (destinationSet.contains(routeEnd)) {
+                            pathAirlineList.add(newPathAirline);
+                            if (pathAirlineList.size() >= limit)
+                                return PathResponse.<PathAirline>builder()
+                                        .count(pathAirlineList.size())
+                                        .airlines(includeAirlines.stream().toList())
+                                        .responseList(pathAirlineList)
+                                        .build();
+                        } else
+                            toSearch.add(newPathAirline);
                     }
                 }
             }
-            if (pathAirlineList.size() >= limit) break;
+            toSearch = nextLevel;
         }
-        return pathAirlineList;
-    }
-
-    private void processQueue(Queue<Tuple2<String,PathAirline>> toSearch,
-                              Airline airline, Set<String> visitedAirports,
-                              Set<Integer> excludeRouteIds,
-                              Set<String> excludeFlightNumbers,
-                              String destination, int limit,
-                              List<PathAirline> pathAirlineList) {
-        while (!toSearch.isEmpty()) {
-            Tuple2<String,PathAirline> curr = toSearch.poll();
-            String start = curr._1();;
-            visitedAirports.add(start);
-            PathAirline pathAirline = curr._2();
-            List<RouteEntity> routeEntityList = routeRepository.findByOrigin(start);
-            for (RouteEntity routeEntity : routeEntityList) {
-                String routeEnd = routeEntity.getDestination();
-                if (notActiveAirlineAirport(routeEnd,airline)) continue;
-                if (!excludeRouteIds.contains(routeEntity.getId()) && !visitedAirports.contains(routeEnd)) {
-                    List<Route> routeList = new ArrayList<>(pathAirline.getRouteList());
-                    routeList.add(MapperUtils.entityToRoute(routeEntity));
-                    PathAirline newPathAirline = PathAirline.builder()
-                            .airline(airline)
-                            .routeList(routeList)
-                            .build();
-                    if (routeEnd.equals(destination)) {
-                        pathAirlineList.add(newPathAirline);
-                        if (pathAirlineList.size() >= limit) return;
-                    } else toSearch.add(new Tuple2<>(routeEnd, newPathAirline));
-                }
-            }
-        }
-    }
-
-    private boolean notActiveAirlineAirport(String iata, Airline airline) {
-        List<Airline> activeAirlines = airlineRepository.selectAirlinesByIataAndIsActive(iata,true);
-        return !activeAirlines.contains(airline);
+        return PathResponse.<PathAirline>builder()
+                .count(pathAirlineList.size())
+                .airlines(includeAirlines.stream().toList())
+                .responseList(pathAirlineList)
+                .build();
     }
 }

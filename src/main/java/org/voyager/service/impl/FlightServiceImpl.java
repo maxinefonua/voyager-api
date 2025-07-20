@@ -54,57 +54,57 @@ public class FlightServiceImpl implements FlightService {
     }
 
     @Override
-    public List<Flight> getFlights(Option<Integer> routeIdOption,
+    public List<Flight> getFlights(List<Integer> routeIdList,
                                    Option<String> flightNumberOption,
                                    Option<Airline> airlineOption,
                                    Option<Boolean> isActiveOption) {
-        if (routeIdOption.isEmpty() && flightNumberOption.isEmpty() && airlineOption.isEmpty()
+        if (routeIdList.isEmpty() && flightNumberOption.isEmpty() && airlineOption.isEmpty()
                 && isActiveOption.isEmpty())
             return flightRepository.findAll().stream().map(MapperUtils::entityToFlight).toList();
 
-        if (routeIdOption.isEmpty() && flightNumberOption.isEmpty() && airlineOption.isEmpty())
+        if (routeIdList.isEmpty() && flightNumberOption.isEmpty() && airlineOption.isEmpty())
             return flightRepository.findByIsActive(isActiveOption.get())
                     .stream().map(MapperUtils::entityToFlight).toList();
 
-        if (routeIdOption.isEmpty() && flightNumberOption.isEmpty() && isActiveOption.isEmpty())
+        if (routeIdList.isEmpty() && flightNumberOption.isEmpty() && isActiveOption.isEmpty())
             return flightRepository.findByAirline(airlineOption.get())
                     .stream().map(MapperUtils::entityToFlight).toList();
 
-        if (routeIdOption.isEmpty() && airlineOption.isEmpty() && isActiveOption.isEmpty())
+        if (routeIdList.isEmpty() && airlineOption.isEmpty() && isActiveOption.isEmpty())
             return flightRepository.findByFlightNumber(flightNumberOption.get())
                     .stream().map(MapperUtils::entityToFlight).toList();
 
         if (airlineOption.isEmpty() && flightNumberOption.isEmpty() && isActiveOption.isEmpty())
-            return flightRepository.findByRouteId(routeIdOption.get())
+            return flightRepository.findByRouteIdIn(routeIdList)
                     .stream().map(MapperUtils::entityToFlight).toList();
 
-        if (routeIdOption.isEmpty() && flightNumberOption.isEmpty())
+        if (routeIdList.isEmpty() && flightNumberOption.isEmpty())
             return flightRepository.findByAirlineAndIsActive(airlineOption.get(),isActiveOption.get())
                     .stream().map(MapperUtils::entityToFlight).toList();
 
-        if (routeIdOption.isEmpty() && airlineOption.isEmpty())
+        if (routeIdList.isEmpty() && airlineOption.isEmpty())
             return flightRepository.findByFlightNumberAndIsActive(flightNumberOption.get(),isActiveOption.get())
                     .stream().map(MapperUtils::entityToFlight).toList();
 
         if (airlineOption.isEmpty() && flightNumberOption.isEmpty())
-            return flightRepository.findByRouteIdAndIsActive(routeIdOption.get(),isActiveOption.get())
+            return flightRepository.findByRouteIdInAndIsActive(routeIdList,isActiveOption.get())
                     .stream().map(MapperUtils::entityToFlight).toList();
 
         if (airlineOption.isEmpty() && isActiveOption.isEmpty())
-            return flightRepository.findByRouteIdAndFlightNumber(routeIdOption.get(),flightNumberOption.get())
+            return flightRepository.findByRouteIdInAndFlightNumber(routeIdList,flightNumberOption.get())
                     .stream().map(MapperUtils::entityToFlight).toList();
 
         if (flightNumberOption.isEmpty() && isActiveOption.isEmpty())
-            return flightRepository.findByRouteIdAndAirline(routeIdOption.get(),airlineOption.get())
+            return flightRepository.findByRouteIdInAndAirline(routeIdList,airlineOption.get())
                     .stream().map(MapperUtils::entityToFlight).toList();
 
         if (flightNumberOption.isEmpty())
-            return flightRepository.findByRouteIdAndAirlineAndIsActive(
-                            routeIdOption.get(),airlineOption.get(),isActiveOption.get())
+            return flightRepository.findByRouteIdInAndAirlineAndIsActive(
+                            routeIdList,airlineOption.get(),isActiveOption.get())
                     .stream().map(MapperUtils::entityToFlight).toList();
 
-        return flightRepository.findByRouteIdAndFlightNumberAndIsActive(
-                routeIdOption.get(),flightNumberOption.get(),isActiveOption.get())
+        return flightRepository.findByRouteIdInAndFlightNumberAndIsActive(
+                routeIdList,flightNumberOption.get(),isActiveOption.get())
                 .stream().map(MapperUtils::entityToFlight).toList();
     }
 }

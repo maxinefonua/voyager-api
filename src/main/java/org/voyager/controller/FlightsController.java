@@ -17,6 +17,7 @@ import org.voyager.service.FlightService;
 import org.voyager.service.RouteService;
 import org.voyager.validate.ValidationUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.voyager.utils.ConstantsUtils.*;
@@ -29,15 +30,20 @@ public class FlightsController {
     RouteService routeService;
 
     @GetMapping("/flights")
-    public List<Flight> getFlights(@RequestParam(required = false,name = ROUTE_ID_PARAM_NAME) String routeIdString,
+    public List<Flight> getFlights(@RequestParam(required = false,name = ROUTE_ID_PARAM_NAME) List<String> routeIdStringList,
                                    @RequestParam(required = false, name = FLIGHT_NUMBER_PARAM_NAME) String flightNumberString,
                                    @RequestParam(required = false, name = AIRLINE_PARAM_NAME) String airlineString,
                                    @RequestParam(required = false,name = IS_ACTIVE_PARAM_NAME) Boolean isActiveString) {
-        Option<Integer> routeIdOption = ValidationUtils.resolveRouteId(routeIdString,routeService);
+        List<Integer> routeIdList = new ArrayList<>();
+        if (routeIdStringList != null) {
+            routeIdStringList.forEach(routeIdString ->
+                    routeIdList.add(ValidationUtils.resolveRouteId(routeIdString,routeService))
+            );
+        }
         Option<Airline> airlineOption = ValidationUtils.resolveAirlineString(airlineString);
         Option<String> flightNumberOption = Option.of(flightNumberString);
         Option<Boolean> isActiveOption = Option.of(isActiveString);
-        return flightService.getFlights(routeIdOption,flightNumberOption,airlineOption,isActiveOption);
+        return flightService.getFlights(routeIdList,flightNumberOption,airlineOption,isActiveOption);
     }
 
     @PatchMapping("/flights/{id}")
