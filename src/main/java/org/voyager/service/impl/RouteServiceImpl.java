@@ -239,6 +239,7 @@ public class RouteServiceImpl implements RouteService {
                 PathAirline pathAirline = toSearch.poll();
                 List<Route> routeListSoFar = pathAirline.getRouteList();
                 String start = routeListSoFar.get(routeListSoFar.size() - 1).getDestination();
+                Airline airline = pathAirline.getAirline();
                 visitedAirports.add(start);
                 List<RouteEntity> routeEntityList = routeRepository.findByOrigin(start);
                 for (RouteEntity routeEntity : routeEntityList) {
@@ -246,26 +247,23 @@ public class RouteServiceImpl implements RouteService {
                     if (excludeRouteIds.contains(routeEntity.getId()) || visitedAirports.contains(routeEnd)
                             || routeEntity.getDistanceKm() == null) continue;
                     List<Airline> routeAirlines = flightRepository.selectDistinctAirlineByRouteIdAndIsActive(routeEntity.getId(), true);
-                    for (Airline routeAirline : routeAirlines) {
-                        if (!includeAirlines.contains(routeAirline)) continue;
-                        List<Route> copyRouteList = new ArrayList<>(pathAirline.getRouteList());
-                        copyRouteList.add(MapperUtils.entityToRoute(routeEntity));
-                        PathAirline newPathAirline = PathAirline.builder()
-                                .airline(routeAirline)
-                                .totalDistanceKm(pathAirline.getTotalDistanceKm() + routeEntity.getDistanceKm())
-                                .routeList(copyRouteList)
-                                .build();
-                        if (destinationSet.contains(routeEnd)) {
-                            pathAirlineList.add(newPathAirline);
-                            if (pathAirlineList.size() >= limit)
-                                return PathResponse.<PathAirline>builder()
-                                        .count(pathAirlineList.size())
-                                        .airlines(includeAirlines.stream().toList())
-                                        .responseList(pathAirlineList)
-                                        .build();
-                        } else
-                            nextLevel.add(newPathAirline);
-                    }
+                    if (!routeAirlines.contains(airline)) continue;
+                    List<Route> copyRouteList = new ArrayList<>(pathAirline.getRouteList());
+                    copyRouteList.add(MapperUtils.entityToRoute(routeEntity));
+                    PathAirline newPathAirline = PathAirline.builder()
+                            .airline(airline)
+                            .totalDistanceKm(pathAirline.getTotalDistanceKm() + routeEntity.getDistanceKm())
+                            .routeList(copyRouteList)
+                            .build();
+                    if (destinationSet.contains(routeEnd)) {
+                        pathAirlineList.add(newPathAirline);
+                        if (pathAirlineList.size() >= limit)
+                            return PathResponse.<PathAirline>builder()
+                                    .count(pathAirlineList.size())
+                                    .airlines(includeAirlines.stream().toList())
+                                    .responseList(pathAirlineList)
+                                    .build();
+                    } else nextLevel.add(newPathAirline);
                 }
             }
             toSearch = nextLevel;
