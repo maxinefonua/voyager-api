@@ -15,7 +15,7 @@ public class ExternalExceptions {
             sb.append("Received non-200 status code or null response body from external API endpoint: ");
             sb.append(requestURL);
             if (responseEntity.hasBody()) {
-                sb.append("r\n");
+                sb.append("\n");
                 sb.append("Response: ");
                 sb.append(responseEntity.getBody());
             }

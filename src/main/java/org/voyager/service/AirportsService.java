@@ -13,8 +13,10 @@ public interface AirportsService {
     Boolean ifIataExists(String iata);
     public List<String> getIata();
     public List<String> getIataByType(AirportType type);
-    public List<Airport> getAll(Option<String> countryCode, Option<AirportType> type, Option<Airline> airline);
-    public List<Airport> getByDistance(double latitude, double longitude, int limit, Option<AirportType> type, Option<Airline> airline);
+    public List<String> getIataByTypeIn(List<AirportType> typeList);
+    public List<Airport> getAll(Option<String> countryCode, List<AirportType> airportTypeList, Option<Airline> airline);
+    public List<Airport> getByDistance(double latitude, double longitude, int limit, List<AirportType> airportTypeList, List<Airline> airline);
     Airport getByIata(String iata);
     Airport patch(String iata, AirportPatch airportPatch);
+    List<Airline> getAirlines(List<String> iataList);
 }

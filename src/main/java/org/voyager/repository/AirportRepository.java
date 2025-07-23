@@ -14,9 +14,11 @@ public interface AirportRepository extends JpaRepository<AirportEntity,String> {
     @Query("SELECT a.iata FROM AirportEntity a WHERE type = ?1 ORDER BY iata")
     List<String> selectIataByType(AirportType type);
 
+    @Query("SELECT a.iata FROM AirportEntity a WHERE type IN ?1 ORDER BY iata")
+    List<String> selectIataByTypeIn(List<AirportType> typeList);
+
     List<AirportEntity> findByIataInOrderByIataAsc(List<String> iataList);
     List<AirportEntity> findByCountryCodeOrderByIataAsc(String countryCode);
-    List<AirportEntity> findByCountryCodeAndTypeOrderByIataAsc(String countryCode, AirportType type);
-    List<AirportEntity> findByTypeOrderByIataAsc(AirportType airportType);
+    List<AirportEntity> findByCountryCodeAndTypeInOrderByIataAsc(String countryCode, List<AirportType> typeList);
     List<AirportEntity> findByTypeInOrderByIataAsc(List<AirportType> typeList);
 }

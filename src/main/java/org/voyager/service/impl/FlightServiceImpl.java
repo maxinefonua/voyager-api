@@ -28,59 +28,6 @@ public class FlightServiceImpl implements FlightService {
     FlightRepository flightRepository;
 
     @Override
-    public List<Flight> getFlights(Airline airline) {
-        return flightRepository.findByAirline(airline)
-                .stream().map(MapperUtils::entityToFlight).toList();
-    }
-
-    @Override
-    public List<Flight> getFlights(Boolean isActive) {
-        return flightRepository.findByIsActive(isActive)
-                .stream().map(MapperUtils::entityToFlight).toList();
-    }
-
-    @Override
-    public List<Flight> getFlights(Integer routeId) {
-        return flightRepository.findByRouteId(routeId)
-                .stream().map(MapperUtils::entityToFlight).toList();
-    }
-
-    @Override
-    public List<Flight> getFlights(String flightNumber) {
-        return flightRepository.findByFlightNumber(flightNumber)
-                .stream().map(MapperUtils::entityToFlight).toList();
-    }
-
-    @Override
-    public List<Flight> getFlights(Integer routeId, String flightNumber) {
-        return flightRepository.findByRouteIdAndFlightNumber(routeId,flightNumber)
-                .stream().map(MapperUtils::entityToFlight).toList();
-    }
-
-    @Override
-    public List<Flight> getFlights(Integer routeId, Boolean isActive) {
-        return flightRepository.findByRouteIdAndIsActive(routeId,isActive)
-                .stream().map(MapperUtils::entityToFlight).toList();
-    }
-
-    @Override
-    public List<Flight> getFlights(Integer routeId, String flightNumber, Boolean isActive) {
-        return flightRepository.findByRouteIdAndFlightNumberAndIsActive(routeId,flightNumber,isActive)
-                .stream().map(MapperUtils::entityToFlight).toList();
-    }
-
-    @Override
-    public List<Flight> getFlights(String flightNumber, Boolean isActive) {
-        return flightRepository.findByFlightNumberAndIsActive(flightNumber,isActive)
-                .stream().map(MapperUtils::entityToFlight).toList();
-    }
-
-    @Override
-    public List<Flight> getAll() {
-        return flightRepository.findAll().stream().map(MapperUtils::entityToFlight).toList();
-    }
-
-    @Override
     public Option<Flight> getById(Integer id) {
         Optional<FlightEntity> flightEntity = flightRepository.findById(id);
         if (flightEntity.isEmpty()) return Option.none();
@@ -104,5 +51,60 @@ public class FlightServiceImpl implements FlightService {
                     e);
         }
         return MapperUtils.entityToFlight(patched);
+    }
+
+    @Override
+    public List<Flight> getFlights(List<Integer> routeIdList,
+                                   Option<String> flightNumberOption,
+                                   Option<Airline> airlineOption,
+                                   Option<Boolean> isActiveOption) {
+        if (routeIdList.isEmpty() && flightNumberOption.isEmpty() && airlineOption.isEmpty()
+                && isActiveOption.isEmpty())
+            return flightRepository.findAll().stream().map(MapperUtils::entityToFlight).toList();
+
+        if (routeIdList.isEmpty() && flightNumberOption.isEmpty() && airlineOption.isEmpty())
+            return flightRepository.findByIsActive(isActiveOption.get())
+                    .stream().map(MapperUtils::entityToFlight).toList();
+
+        if (routeIdList.isEmpty() && flightNumberOption.isEmpty() && isActiveOption.isEmpty())
+            return flightRepository.findByAirline(airlineOption.get())
+                    .stream().map(MapperUtils::entityToFlight).toList();
+
+        if (routeIdList.isEmpty() && airlineOption.isEmpty() && isActiveOption.isEmpty())
+            return flightRepository.findByFlightNumber(flightNumberOption.get())
+                    .stream().map(MapperUtils::entityToFlight).toList();
+
+        if (airlineOption.isEmpty() && flightNumberOption.isEmpty() && isActiveOption.isEmpty())
+            return flightRepository.findByRouteIdIn(routeIdList)
+                    .stream().map(MapperUtils::entityToFlight).toList();
+
+        if (routeIdList.isEmpty() && flightNumberOption.isEmpty())
+            return flightRepository.findByAirlineAndIsActive(airlineOption.get(),isActiveOption.get())
+                    .stream().map(MapperUtils::entityToFlight).toList();
+
+        if (routeIdList.isEmpty() && airlineOption.isEmpty())
+            return flightRepository.findByFlightNumberAndIsActive(flightNumberOption.get(),isActiveOption.get())
+                    .stream().map(MapperUtils::entityToFlight).toList();
+
+        if (airlineOption.isEmpty() && flightNumberOption.isEmpty())
+            return flightRepository.findByRouteIdInAndIsActive(routeIdList,isActiveOption.get())
+                    .stream().map(MapperUtils::entityToFlight).toList();
+
+        if (airlineOption.isEmpty() && isActiveOption.isEmpty())
+            return flightRepository.findByRouteIdInAndFlightNumber(routeIdList,flightNumberOption.get())
+                    .stream().map(MapperUtils::entityToFlight).toList();
+
+        if (flightNumberOption.isEmpty() && isActiveOption.isEmpty())
+            return flightRepository.findByRouteIdInAndAirline(routeIdList,airlineOption.get())
+                    .stream().map(MapperUtils::entityToFlight).toList();
+
+        if (flightNumberOption.isEmpty())
+            return flightRepository.findByRouteIdInAndAirlineAndIsActive(
+                            routeIdList,airlineOption.get(),isActiveOption.get())
+                    .stream().map(MapperUtils::entityToFlight).toList();
+
+        return flightRepository.findByRouteIdInAndFlightNumberAndIsActive(
+                routeIdList,flightNumberOption.get(),isActiveOption.get())
+                .stream().map(MapperUtils::entityToFlight).toList();
     }
 }

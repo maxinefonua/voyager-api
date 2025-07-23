@@ -25,7 +25,6 @@
         <jdom.version>1.0</jdom.version>
         <vavr.version>0.10.6</vavr.version>
         <apache-commons.version>3.17.0</apache-commons.version>
-        <voyager-migration.version>1.0-SNAPSHOT</voyager-migration.version>
         <voyager-models.version>1.0-SNAPSHOT</voyager-models.version>
     </properties>
     <dependencies>
@@ -85,8 +84,8 @@
         </dependency>
         <dependency>
             <groupId>org.voyager</groupId>
-            <artifactId>voyager-migration</artifactId>
-            <version>${voyager-migration.version}</version>
+            <artifactId>voyager-models</artifactId>
+            <version>${voyager-models.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>com.fasterxml.jackson.core</groupId>

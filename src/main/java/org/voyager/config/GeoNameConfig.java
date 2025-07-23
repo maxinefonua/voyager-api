@@ -24,6 +24,7 @@ public class GeoNameConfig {
     String username;
     Boolean isNameRequired;
     FeatureClass featureClass;
+    FeatureClass featureClassAdmin;
 
     @PostConstruct
     public void validate() {
@@ -36,6 +37,7 @@ public class GeoNameConfig {
                 .queryParam(FEATURE_CLASS_KEY,featureClass)
                 .queryParam(MAX_ROWS_KEY,maxRows)
                 .queryParam(USERNAME_KEY,username);
+
         getUriBuilder = UriComponentsBuilder
                 .newInstance().scheme(protocol)
                 .host(host)
@@ -52,13 +54,24 @@ public class GeoNameConfig {
     private static final String FEATURE_CLASS_KEY = "featureClass";
 
     private UriComponentsBuilder searchUriBuilder;
+    private UriComponentsBuilder searchAdminUriBuilder;
     private UriComponentsBuilder getUriBuilder;
 
-    public String buildSearchURL(String encodedQuery, Integer startRow) {
-
+    public String buildSearchURL(String encodedQuery, Integer startRow, int limit) {
         return searchUriBuilder
                 .replaceQueryParam(QUERY_KEY,encodedQuery)
                 .replaceQueryParam(START_ROW_KEY,startRow)
+                .replaceQueryParam(FEATURE_CLASS_KEY,featureClass)
+                .replaceQueryParam(MAX_ROWS_KEY,limit)
+                .toUriString();
+    }
+
+    public String buildSearchAdminURL(String encodedQuery, Integer startRow, int limit) {
+        return searchUriBuilder
+                .replaceQueryParam(QUERY_KEY,encodedQuery)
+                .replaceQueryParam(START_ROW_KEY,startRow)
+                .replaceQueryParam(FEATURE_CLASS_KEY,featureClassAdmin)
+                .replaceQueryParam(MAX_ROWS_KEY,limit)
                 .toUriString();
     }
 

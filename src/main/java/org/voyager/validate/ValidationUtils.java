@@ -12,19 +12,18 @@ import org.voyager.error.MessageConstants;
 import org.voyager.model.Airline;
 import org.voyager.model.airport.AirportPatch;
 import org.voyager.model.airport.AirportType;
-import org.voyager.model.delta.DeltaForm;
-import org.voyager.model.delta.DeltaPatch;
-import org.voyager.model.delta.DeltaStatus;
 import org.voyager.model.flight.FlightForm;
 import org.voyager.model.flight.FlightPatch;
 import org.voyager.model.location.LocationPatch;
 import org.voyager.model.location.Source;
 import org.voyager.model.location.LocationForm;
 import org.voyager.model.location.Status;
+import org.voyager.model.route.Route;
 import org.voyager.model.route.RouteForm;
 import org.voyager.model.route.RoutePatch;
 import org.voyager.model.validate.ValidEnum;
 import org.voyager.service.AirportsService;
+import org.voyager.service.RouteService;
 
 import java.lang.reflect.Field;
 import java.util.*;
@@ -32,17 +31,19 @@ import java.util.*;
 import static org.voyager.utils.ConstantsUtils.*;
 
 public class ValidationUtils {
-    public static Option<AirportType> resolveTypeString(String typeString) {
-        Option<AirportType> airportType = Option.none();
-        if (StringUtils.isNotEmpty(typeString)) {
-            try {
-                airportType = Option.of(AirportType.valueOf(typeString.toUpperCase()));
-            } catch (IllegalArgumentException e) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                        MessageConstants.buildInvalidRequestParameterMessage(TYPE_PARAM_NAME, typeString));
+    public static List<AirportType> resolveTypeList(List<String> typeList) {
+        List<AirportType> airportTypeList = new ArrayList<>();
+        if (typeList != null) {
+            for (String typeString : typeList) {
+                try {
+                    airportTypeList.add(AirportType.valueOf(typeString.toUpperCase()));
+                } catch (IllegalArgumentException e) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            MessageConstants.buildInvalidRequestParameterMessage(TYPE_PARAM_NAME, typeString));
+                }
             }
         }
-        return airportType;
+        return airportTypeList;
     }
 
     public static Option<Airline> resolveAirlineString(String airlineString) {
@@ -56,6 +57,21 @@ public class ValidationUtils {
             }
         }
         return airline;
+    }
+
+    public static List<Airline> resolveAirlineStringList(List<String> airlineStringList) {
+        List<Airline> airlineList = new ArrayList<>();
+        if (airlineStringList != null) {
+            for (String airlineString : airlineStringList) {
+                try {
+                    airlineList.add(Airline.valueOf(airlineString.toUpperCase()));
+                } catch (IllegalArgumentException e) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            MessageConstants.buildInvalidRequestParameterMessage(TYPE_PARAM_NAME,airlineString));
+                }
+            }
+        }
+        return airlineList;
     }
 
     public static Source validateAndGetSource(String sourceString) {
@@ -76,6 +92,28 @@ public class ValidationUtils {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     MessageConstants.buildInvalidRequestParameterMessage(LOCATION_STATUS_PARAM_NAME, statusString));
         }
+    }
+
+    public static Set<String> validateIataCodeSet(String paramName, Set<String> iataCodeList, AirportsService airportsService) {
+        if (iataCodeList.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    MessageConstants.buildInvalidRequestParameterMessage(paramName,""));
+        }
+        Set<String> validatedSet = new HashSet<>();
+        iataCodeList.forEach(iata -> validatedSet.add(
+                validateIataToUpperCase(iata,airportsService,paramName,true)));
+        return validatedSet;
+    }
+
+    public static List<String> validateIataCodeList(String paramName, Set<String> iataCodeList, AirportsService airportsService) {
+        if (iataCodeList.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    MessageConstants.buildInvalidRequestParameterMessage(paramName,""));
+        }
+        List<String> validatedList = new ArrayList<>();
+        iataCodeList.forEach(iata -> validatedList.add(
+                validateIataToUpperCase(iata,airportsService,paramName,true)));
+        return validatedList;
     }
 
     public static String validateIataToUpperCase(String iata, AirportsService airportsService, String varName, boolean isParam) {
@@ -102,12 +140,14 @@ public class ValidationUtils {
                     MessageConstants.buildInvalidPathVariableMessage(varName, varVal));
         }
         try {
+            // TODO: return max value of 10, min value of 1
             return Integer.valueOf(varVal);
         } catch (IllegalArgumentException e) {
             if (isParam) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     MessageConstants.buildInvalidRequestParameterMessage(varName, varVal));
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    MessageConstants.buildInvalidPathVariableMessage(varName, varVal));        }
+                    MessageConstants.buildInvalidPathVariableMessage(varName, varVal));
+        }
     }
 
     public static String validateAndGetCountryCode(String countryCodeString) {
@@ -124,17 +164,6 @@ public class ValidationUtils {
         locationForm.setCountryCode(locationForm.getCountryCode().toUpperCase());
     }
 
-    public static void validateDeltaForm(DeltaForm deltaForm, BindingResult bindingResult) {
-        processRequestBodyBindingErrors(deltaForm,bindingResult);
-        deltaForm.setIata(deltaForm.getIata().toUpperCase());
-        deltaForm.setStatus(deltaForm.getStatus().toUpperCase());
-        try {
-            DeltaStatus.valueOf(deltaForm.getStatus());
-        } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, MessageConstants.buildInvalidRequestBodyPropertyMessage(DELTA_STATUS_PARAM_NAME,deltaForm.getStatus()));
-        }
-    }
-
     public static void validateRouteForm(RouteForm routeForm, BindingResult bindingResult) {
         processRequestBodyBindingErrors(routeForm,bindingResult);
         routeForm.setOrigin(routeForm.getOrigin().toUpperCase());
@@ -148,10 +177,6 @@ public class ValidationUtils {
 
     public static void validateFlightPatch(FlightPatch flightPatch, BindingResult bindingResult) {
         processRequestBodyBindingErrors(flightPatch,bindingResult);
-    }
-
-    public static void validateRoutePatch(RoutePatch routePatch, BindingResult bindingResult) {
-        processRequestBodyBindingErrors(routePatch,bindingResult);
     }
 
     public static void validateLocationPatch(LocationPatch locationPatch, BindingResult bindingResult, AirportsService airportsService) {
@@ -174,22 +199,6 @@ public class ValidationUtils {
             if (!unique.contains(iata)) unique.add(iata.toUpperCase());
         }
         return unique;
-    }
-
-    public static void validateDeltaPatch(DeltaPatch deltaPatch, BindingResult bindingResult) {
-        processRequestBodyBindingErrors(deltaPatch,bindingResult);
-    }
-
-    public static List<DeltaStatus> resolveDeltaStatusList(List<String> statusStringList) {
-        List<DeltaStatus> statusList = new ArrayList<>();
-        statusStringList.forEach(statusString -> {
-            try {
-                statusList.add(DeltaStatus.valueOf(statusString.toUpperCase()));
-            } catch (IllegalArgumentException e) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, MessageConstants.buildInvalidRequestParameterMessage(DELTA_STATUS_PARAM_NAME,statusString));
-            }
-        });
-        return statusList;
     }
 
     private static void processRequestBodyBindingErrors(Object requestBody, BindingResult bindingResult){
@@ -230,5 +239,24 @@ public class ValidationUtils {
         });
         return (String.format("'%s' accepts values [%s] but has invalid value '%s'",
                 fieldError.getField(),valueJoiner,fieldError.getRejectedValue()));
+    }
+
+    public static Integer resolveRouteId(String routeIdString, RouteService routeService) {
+        try {
+            Integer routeId = Integer.valueOf(routeIdString);
+            Option<Route> routeOption = routeService.getRouteById(routeId);
+            if (routeOption.isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        MessageConstants.buildResourceNotFoundForParameterMessage(ROUTE_ID_PARAM_NAME,routeIdString));
+            }
+            return routeId;
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    MessageConstants.buildInvalidRequestParameterMessage(ROUTE_ID_PARAM_NAME, routeIdString));
+        }
+    }
+
+    public static void validateRoutePatch(RoutePatch routePatch, BindingResult bindingResult) {
+        processRequestBodyBindingErrors(routePatch,bindingResult);
     }
 }
