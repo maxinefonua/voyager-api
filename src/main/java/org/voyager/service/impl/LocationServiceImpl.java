@@ -8,9 +8,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import org.voyager.error.MessageConstants;
+import org.voyager.model.country.Continent;
 import org.voyager.model.entity.LocationEntity;
-import org.voyager.model.entity.RouteEntity;
 import org.voyager.model.location.*;
+import org.voyager.repository.CountryRepository;
 import org.voyager.repository.LocationRepository;
 import org.voyager.service.LocationService;
 import org.voyager.service.utils.MapperUtils;
@@ -22,6 +23,8 @@ import java.util.stream.Collectors;
 public class LocationServiceImpl implements LocationService {
     @Autowired
     LocationRepository locationRepository;
+    @Autowired
+    CountryRepository countryRepository;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LocationServiceImpl.class);
 
@@ -37,41 +40,6 @@ public class LocationServiceImpl implements LocationService {
                     e);
         }
         return MapperUtils.entityToLocation(locationEntity);
-    }
-
-    @Override
-    public List<Location> getLocations() {
-        return locationRepository.findAll().stream().map(MapperUtils::entityToLocation).toList();
-    }
-
-    @Override
-    public List<Location> getLocationsByStatus(Status status) {
-        return locationRepository.findByStatus(status).stream().map(MapperUtils::entityToLocation).toList();
-    }
-
-    @Override
-    public List<Location> getLocationsBySourceAndSourceId(Source source, String sourceId) {
-        return locationRepository.findBySourceAndSourceId(source,sourceId).stream().map(MapperUtils::entityToLocation).toList();
-    }
-
-    @Override
-    public List<Location> getLocationsBySourceAndSourceIdAndStatus(Source source, String sourceId, Status status) {
-        return locationRepository.findBySourceAndSourceIdAndStatus(source,sourceId,status).stream().map(MapperUtils::entityToLocation).toList();
-    }
-
-    @Override
-    public List<Location> getLocationsBySourceAndStatus(Source source, Status status) {
-        return locationRepository.findBySourceAndStatus(source,status).stream().map(MapperUtils::entityToLocation).toList();
-    }
-
-    @Override
-    public List<Location> getLocationsBySourceAndSourceIdList(Source source, List<String> sourceIdList) {
-        return locationRepository.findBySourceAndSourceIdIn(source,sourceIdList).stream().map(MapperUtils::entityToLocation).toList();
-    }
-
-    @Override
-    public List<Location> getLocationsBySource(Source source) {
-        return locationRepository.findBySource(source).stream().map(MapperUtils::entityToLocation).toList();
     }
 
     @Override
@@ -116,5 +84,45 @@ public class LocationServiceImpl implements LocationService {
                             "location",String.valueOf(location.getId())),
                     e);
         }
+    }
+
+    @Override
+    public List<Location> getLocations(Option<Source> sourceOption, Option<String> sourceIdOption,
+                                       List<String> countryCodeList, Option<Status> statusOption,
+                                       List<Continent> continentList) {
+        if (!continentList.isEmpty())
+            countryCodeList = countryRepository.selectCountryCodesByContinentIn(continentList);
+
+        if (sourceOption.isEmpty() && countryCodeList.isEmpty() && statusOption.isEmpty())
+            return locationRepository.findAll().stream().map(MapperUtils::entityToLocation).toList();
+        if (sourceOption.isEmpty() && countryCodeList.isEmpty())
+            return locationRepository.findByStatus(statusOption.get())
+                    .stream().map(MapperUtils::entityToLocation).toList();
+        if (sourceOption.isEmpty() && statusOption.isEmpty())
+            return locationRepository.findByCountryCodeIn(countryCodeList)
+                    .stream().map(MapperUtils::entityToLocation).toList();
+        if (countryCodeList.isEmpty() && statusOption.isEmpty() && sourceIdOption.isEmpty())
+            return locationRepository.findBySource(sourceOption.get())
+                    .stream().map(MapperUtils::entityToLocation).toList();
+        if (countryCodeList.isEmpty() && sourceIdOption.isEmpty())
+            return locationRepository.findBySourceAndStatus(sourceOption.get(),statusOption.get())
+                    .stream().map(MapperUtils::entityToLocation).toList();
+        if (statusOption.isEmpty() && sourceIdOption.isEmpty())
+            return locationRepository.findBySourceAndCountryCodeIn(sourceOption.get(),countryCodeList)
+                    .stream().map(MapperUtils::entityToLocation).toList();
+        if (countryCodeList.isEmpty() && statusOption.isEmpty())
+            return locationRepository.findBySourceAndSourceId(sourceOption.get(),sourceIdOption.get())
+                    .stream().map(MapperUtils::entityToLocation).toList();
+        if (sourceOption.isEmpty())
+            return locationRepository.findByStatusAndCountryCodeIn(statusOption.get(),countryCodeList)
+                    .stream().map(MapperUtils::entityToLocation).toList();
+        if (countryCodeList.isEmpty())
+            return locationRepository.findBySourceAndSourceIdAndStatus(sourceOption.get(),sourceIdOption.get(),
+                            statusOption.get()).stream().map(MapperUtils::entityToLocation).toList();
+        if (statusOption.isEmpty())
+            return locationRepository.findBySourceAndSourceIdAndCountryCodeIn(sourceOption.get(),sourceIdOption.get(),
+                            countryCodeList).stream().map(MapperUtils::entityToLocation).toList();
+        return locationRepository.findBySourceAndSourceIdAndStatusAndCountryCodeIn(sourceOption.get(),
+                        sourceIdOption.get(),statusOption.get(),countryCodeList).stream().map(MapperUtils::entityToLocation).toList();
     }
 }

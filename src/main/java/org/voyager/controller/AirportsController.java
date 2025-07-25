@@ -12,6 +12,7 @@ import org.voyager.model.airport.Airport;
 import org.voyager.model.airport.AirportPatch;
 import org.voyager.model.airport.AirportType;
 import org.voyager.service.AirportsService;
+import org.voyager.service.CountryService;
 import org.voyager.validate.ValidationUtils;
 
 import java.util.List;
@@ -25,6 +26,9 @@ public class AirportsController {
     @Autowired
     private AirportsService airportsService;
 
+    @Autowired
+    private CountryService countryService;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(AirportsController.class);
 
     @GetMapping("/iata")
@@ -36,9 +40,9 @@ public class AirportsController {
 
     @GetMapping("/airports")
     public List<Airport> getAirports(@RequestParam(name = COUNTRY_CODE_PARAM_NAME, required = false) String countryCodeString,
-                                            @RequestParam(name = TYPE_PARAM_NAME, required = false) List<String> typeList,
-                                            @RequestParam(name = AIRLINE_PARAM_NAME, required = false) String airlineString) {
-        if (countryCodeString != null) countryCodeString = ValidationUtils.validateAndGetCountryCode(countryCodeString);
+                                     @RequestParam(name = TYPE_PARAM_NAME, required = false) List<String> typeList,
+                                     @RequestParam(name = AIRLINE_PARAM_NAME, required = false) String airlineString) {
+        if (countryCodeString != null) countryCodeString = ValidationUtils.validateAndGetCountryCode(true,countryCodeString, countryService);
         List<AirportType> airportTypeList = ValidationUtils.resolveTypeList(typeList);
         Option<Airline> airline = ValidationUtils.resolveAirlineString(airlineString);
         return airportsService.getAll(Option.of(countryCodeString),airportTypeList,airline);

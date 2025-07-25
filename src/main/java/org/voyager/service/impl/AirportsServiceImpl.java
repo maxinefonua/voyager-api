@@ -24,6 +24,8 @@ import org.voyager.service.utils.MapperUtils;
 import java.util.*;
 import java.util.function.Supplier;
 
+import static org.voyager.service.utils.ServiceUtils.handleJPAExceptions;
+
 @Service
 public class AirportsServiceImpl implements AirportsService {
     @Autowired
@@ -176,14 +178,5 @@ public class AirportsServiceImpl implements AirportsService {
     private List<String> getDistinctIataCodesForAirlineList(List<Airline> airlineList) {
         return handleJPAExceptions(() ->
                 airlineRepository.selectDistinctIataCodesByAirlineInAndIsActive(airlineList,true));
-    }
-
-    private <T> T handleJPAExceptions(Supplier<T> repositoryFunction) {
-        try {
-            return repositoryFunction.get();
-        } catch (DataAccessException dataAccessException) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                    "An internal service error has occured. Alerting yet to be implemented.");
-        }
     }
 }

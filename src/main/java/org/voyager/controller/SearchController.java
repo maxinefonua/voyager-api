@@ -22,8 +22,8 @@ class SearchController {
 
     @GetMapping("/search")
     public SearchResult<ResultSearch> search(@RequestParam(QUERY_PARAM_NAME) String q,
-                                                    @RequestParam(name = SKIP_ROW_PARAM_NAME,defaultValue = "0") Integer skipRowCount,
-                                                    @RequestParam(name = LIMIT_PARAM_NAME,defaultValue = "10") Integer limit) {
+                                             @RequestParam(name = SKIP_ROW_PARAM_NAME,defaultValue = "0") Integer skipRowCount,
+                                             @RequestParam(name = LIMIT_PARAM_NAME,defaultValue = "10") Integer limit) {
         SearchResult<ResultSearch> cachedResults = searchLocationService.search(q,skipRowCount,limit);
         return SearchResult.<ResultSearch>builder()
                 .results(searchLocationService.augmentLocationStatus(cachedResults.getResults()))

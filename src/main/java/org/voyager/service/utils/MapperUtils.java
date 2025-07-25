@@ -1,6 +1,9 @@
 package org.voyager.service.utils;
 
 import org.voyager.model.airport.Airport;
+import org.voyager.model.country.Continent;
+import org.voyager.model.country.Country;
+import org.voyager.model.country.CountryForm;
 import org.voyager.model.entity.*;
 import org.voyager.model.Airline;
 import org.voyager.model.flight.Flight;
@@ -144,5 +147,37 @@ public class MapperUtils {
                 .zonedDateTimeDeparture(zonedDateTimeDeparture)
                 .isActive(flightPatch.getIsActive() != null ? flightPatch.getIsActive() : flight.getIsActive())
                 .build();
+    }
+
+    public static Country entityToCountry(CountryEntity countryEntity) {
+        return Country.builder()
+                .code(countryEntity.getCode())
+                .name(countryEntity.getName())
+                .capitalCity(countryEntity.getCapitalCity())
+                .languages(Arrays.asList(countryEntity.getLanguages()))
+                .population(countryEntity.getPopulation())
+                .areaInSqKm(countryEntity.getAreaSqKm())
+                .continent(countryEntity.getContinent())
+                .currencyCode(countryEntity.getCurrencyCode())
+                .bounds(countryEntity.getBounds())
+                .build();
+    }
+
+    public static CountryEntity formToCountryEntity(CountryForm countryForm) {
+        return CountryEntity.builder()
+                .code(countryForm.getCountryCode())
+                .name(countryForm.getCountryName())
+                .capitalCity(countryForm.getCapitalCity())
+                .languages(countryForm.getLanguages().toArray(new String[0]))
+                .population(countryForm.getPopulation())
+                .areaSqKm(countryForm.getAreaInSqKm())
+                .continent(Continent.valueOf(countryForm.getContinent()))
+                .currencyCode(countryForm.getCurrencyCode())
+                .bounds(new Double[]{
+                        countryForm.getWest(),
+                        countryForm.getSouth(),
+                        countryForm.getEast(),
+                        countryForm.getNorth()
+                }).build();
     }
 }

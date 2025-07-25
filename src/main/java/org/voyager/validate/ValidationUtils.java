@@ -1,8 +1,9 @@
 package org.voyager.validate;
 
 import io.vavr.control.Option;
-import jakarta.validation.Valid;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
@@ -12,6 +13,8 @@ import org.voyager.error.MessageConstants;
 import org.voyager.model.Airline;
 import org.voyager.model.airport.AirportPatch;
 import org.voyager.model.airport.AirportType;
+import org.voyager.model.country.Continent;
+import org.voyager.model.country.CountryForm;
 import org.voyager.model.flight.FlightForm;
 import org.voyager.model.flight.FlightPatch;
 import org.voyager.model.location.LocationPatch;
@@ -23,14 +26,19 @@ import org.voyager.model.route.RouteForm;
 import org.voyager.model.route.RoutePatch;
 import org.voyager.model.validate.ValidEnum;
 import org.voyager.service.AirportsService;
+import org.voyager.service.CountryService;
 import org.voyager.service.RouteService;
 
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.function.Supplier;
 
 import static org.voyager.utils.ConstantsUtils.*;
 
 public class ValidationUtils {
+    private static Logger LOGGER = LoggerFactory.getLogger(ValidationUtils.class);
+
+
     public static List<AirportType> resolveTypeList(List<String> typeList) {
         List<AirportType> airportTypeList = new ArrayList<>();
         if (typeList != null) {
@@ -72,6 +80,16 @@ public class ValidationUtils {
             }
         }
         return airlineList;
+    }
+
+    public static Option<Source> resolveSourceString(String sourceString) {
+        if (StringUtils.isEmpty(sourceString)) return Option.none();
+        try {
+            return Option.of(Source.valueOf(sourceString.toUpperCase()));
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    MessageConstants.buildInvalidRequestParameterMessage(SOURCE_PROPERTY_NAME, sourceString));
+        }
     }
 
     public static Source validateAndGetSource(String sourceString) {
@@ -150,10 +168,23 @@ public class ValidationUtils {
         }
     }
 
-    public static String validateAndGetCountryCode(String countryCodeString) {
+    public static List<String> validateAndGetCountryCodeList(List<String> countryCodeList, CountryService countryService) {
+        if (countryCodeList == null) return List.of();
+        countryCodeList.replaceAll(countryCode -> validateAndGetCountryCode(true,countryCode,countryService));
+        return countryCodeList;
+    }
+
+    public static String validateAndGetCountryCode(boolean isParam, String countryCodeString, CountryService countryService) {
         if (!countryCodeString.matches(COUNTRY_CODE_REGEX)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     MessageConstants.buildInvalidRequestParameterMessage(COUNTRY_CODE_PARAM_NAME, countryCodeString));
+        }
+        if (!countryService.countryCodeExists(countryCodeString.toUpperCase())) {
+            if (isParam)
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    MessageConstants.buildInvalidRequestParameterMessage(COUNTRY_CODE_PARAM_NAME, countryCodeString));
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    MessageConstants.buildInvalidPathVariableMessage(COUNTRY_CODE_PARAM_NAME, countryCodeString));
         }
         return countryCodeString.toUpperCase();
     }
@@ -173,6 +204,14 @@ public class ValidationUtils {
     public static void validateFlightForm(FlightForm flightForm, BindingResult bindingResult) {
         processRequestBodyBindingErrors(flightForm,bindingResult);
         flightForm.setAirline(flightForm.getAirline().toUpperCase());
+    }
+
+    public static void validateCountryForm(CountryForm countryForm, BindingResult bindingResult,
+                                           CountryService countryService) {
+        processRequestBodyBindingErrors(countryForm,bindingResult);
+        if (countryService.countryCodeExists(countryForm.getCountryCode()))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,String.format("%s country code already exists",
+                    countryForm.getCountryCode()));
     }
 
     public static void validateFlightPatch(FlightPatch flightPatch, BindingResult bindingResult) {
@@ -256,7 +295,47 @@ public class ValidationUtils {
         }
     }
 
+    public static List<Continent> resolveContinentStringList(List<String> continentStringList) {
+        return handleNullPointerExceptions(() -> {
+            if (continentStringList == null) return List.of();
+            Set<Continent> continentSet = new HashSet<>();
+            for (String continentString : continentStringList) {
+                try {
+                    continentSet.add(Continent.valueOf(continentString.toUpperCase()));
+                } catch (IllegalArgumentException e) {
+                    try {
+                        continentSet.add(Continent.fromDisplayText(continentString));
+                    } catch (IllegalArgumentException illegalArgumentException) {
+                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                                MessageConstants.buildInvalidRequestParameterMessage(CONTINENT_PARAM_NAME,continentString));
+                    }
+                }
+            }
+            return new ArrayList<>(continentSet);
+        });
+    }
+
     public static void validateRoutePatch(RoutePatch routePatch, BindingResult bindingResult) {
         processRequestBodyBindingErrors(routePatch,bindingResult);
+    }
+
+    public static <T> T handleNullPointerExceptions(Supplier<T> repositoryFunction) {
+        try {
+            return repositoryFunction.get();
+        } catch (NullPointerException nullPointerException) {
+            LOGGER.error(nullPointerException.getMessage());
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "An internal service error has occured. Alerting yet to be implemented.");
+        }
+    }
+
+    public static Option<Status> resolveStatusString(String statusString) {
+        if (StringUtils.isBlank(statusString)) return Option.none();
+        try {
+            return Option.of(Status.valueOf(statusString.toUpperCase()));
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    MessageConstants.buildInvalidRequestParameterMessage(LOCATION_STATUS_PARAM_NAME, statusString));
+        }
     }
 }

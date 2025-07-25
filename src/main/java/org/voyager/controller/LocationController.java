@@ -11,8 +11,10 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.voyager.error.MessageConstants;
+import org.voyager.model.country.Continent;
 import org.voyager.model.location.*;
 import org.voyager.service.AirportsService;
+import org.voyager.service.CountryService;
 import org.voyager.service.LocationService;
 import org.voyager.validate.ValidationUtils;
 
@@ -26,24 +28,25 @@ public class LocationController {
     private LocationService locationService;
     @Autowired
     private AirportsService airportsService;
+    @Autowired
+    CountryService countryService;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LocationController.class);
 
     @GetMapping("/locations")
     public List<Location> getLocations(@RequestParam(name = SOURCE_PROPERTY_NAME,required = false) String sourceString,
                                        @RequestParam(name = SOURCE_ID_PARAM_NAME, required = false) String sourceId,
-                                       @RequestParam(name = LOCATION_STATUS_PARAM_NAME, required = false) String statusString) {
-        if (StringUtils.isEmpty(sourceString) && StringUtils.isEmpty(sourceId) && StringUtils.isEmpty(statusString)) return locationService.getLocations();
-        if (StringUtils.isEmpty(sourceString) && StringUtils.isEmpty(sourceId)) {
-            Status status = ValidationUtils.validateAndGetLocationStatus(statusString);
-            return locationService.getLocationsByStatus(status);
-        }
-        Source source = ValidationUtils.validateAndGetSource(sourceString);
-        if (StringUtils.isEmpty(sourceId) && StringUtils.isEmpty(statusString)) return locationService.getLocationsBySource(source);
-        if (StringUtils.isEmpty(statusString)) return locationService.getLocationsBySourceAndSourceId(source,sourceId);
-        Status status = ValidationUtils.validateAndGetLocationStatus(statusString);
-        if (StringUtils.isEmpty(sourceId)) return locationService.getLocationsBySourceAndStatus(source,status);
-        return locationService.getLocationsBySourceAndSourceIdAndStatus(source,sourceId,status);
+                                       @RequestParam(name = COUNTRY_CODE_PARAM_NAME, required = false) List<String> countryCodeList,
+                                       @RequestParam(name = LOCATION_STATUS_PARAM_NAME, required = false) String statusString,
+                                       @RequestParam(name = CONTINENT_PARAM_NAME, required = false) List<String> continentStringList) {
+        Option<String> sourceIdOption = StringUtils.isBlank(sourceId) ? Option.none() : Option.of(sourceId);
+        Option<Source> sourceOption = sourceIdOption.isEmpty() ? Option.none() : Option.of(ValidationUtils.validateAndGetSource(sourceString));
+        List<Continent> continentList = ValidationUtils.resolveContinentStringList(continentStringList);
+        if (continentList.isEmpty())
+            countryCodeList = ValidationUtils.validateAndGetCountryCodeList(countryCodeList,countryService);
+        else countryCodeList = List.of();
+        Option<Status> statusOption = ValidationUtils.resolveStatusString(statusString);
+        return locationService.getLocations(sourceOption,sourceIdOption,countryCodeList,statusOption,continentList);
     }
 
     @GetMapping("/locations/{id}")

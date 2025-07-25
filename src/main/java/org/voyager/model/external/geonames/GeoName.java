@@ -5,7 +5,10 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.util.List;
 import java.util.Map;
+import org.voyager.model.geoname.BoundingBox;
+import org.voyager.model.geoname.NameMap;
 
 @Setter @Getter
 @ToString(includeFieldNames = false)
@@ -14,7 +17,7 @@ public class GeoName {
     @JsonProperty("bbox")
     BoundingBox boundingBox;
 
-    AlternativeName[] alternateNames;
+    List<NameMap> alternateNames;
     String asciiName;
     String wikipediaURL;
     Long geonameId;
