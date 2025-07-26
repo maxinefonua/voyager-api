@@ -10,12 +10,11 @@ import java.util.Map;
 import java.util.Set;
 
 public interface LocationService {
-    public Location save(LocationForm locationForm);
-    Option<Location> getLocationById(Integer id);
-    public Set<String> getLocationIdsBySource(Source source);
-    public Map<String,Status> getSourceIdsToStatusBySource(Source source);
-    public Map<String,Status> getSourceIdsToStatusMap(Source source, List<String> sourceIdList);
-    public List<Location> getLocationsByStatusList(List<Status> statusList);
-    Location patch(Location location, @Valid LocationPatch locationPatch);
-    List<Location> getLocations(Option<Source> sourceOption, Option<String> sourceIdOption, List<String> countryCodeList, Option<Status> statusOption, List<Continent> continentList);
+    Boolean existsById(Integer id);
+    void deleteById(Integer id);
+    Location save(LocationForm locationForm);
+    Location getLocationById(Integer id);
+    Map<String,Status> getSourceIdsToStatusMap(Source source, List<String> sourceIdList);
+    Location patch(Integer id, @Valid LocationPatch locationPatch);
+    List<Location> getLocations(Option<Source> sourceOption, Option<String> sourceIdOption, List<String> countryCodeList, List<Status> statusList, List<Continent> continentList);
 }

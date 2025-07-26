@@ -15,4 +15,13 @@ public class ServiceUtils {
                     "An internal service error has occured. Alerting yet to be implemented.");
         }
     }
+
+    public static void handleJPAExceptions(Runnable runnable) {
+        try {
+            runnable.run();
+        } catch (DataAccessException dataAccessException) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "An internal service error has occured. Alerting yet to be implemented.");
+        }
+    }
 }

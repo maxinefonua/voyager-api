@@ -338,4 +338,20 @@ public class ValidationUtils {
                     MessageConstants.buildInvalidRequestParameterMessage(LOCATION_STATUS_PARAM_NAME, statusString));
         }
     }
+
+    public static List<Status> resolveStatusStringList(List<String> statusStringList) {
+        return handleNullPointerExceptions(()->{
+            if (statusStringList == null) return List.of();
+            List<Status> statusList = new ArrayList<>();
+            for (String statusString : statusStringList) {
+                try {
+                    statusList.add(Status.valueOf(statusString.toUpperCase()));
+                } catch (IllegalArgumentException e) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            MessageConstants.buildInvalidRequestParameterMessage(LOCATION_STATUS_PARAM_NAME, statusString));
+                }
+            }
+            return statusList;
+        });
+    }
 }
