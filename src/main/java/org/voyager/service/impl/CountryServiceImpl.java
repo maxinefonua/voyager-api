@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.voyager.model.country.Continent;
 import org.voyager.model.country.Country;
 import org.voyager.model.country.CountryForm;
+import org.voyager.model.entity.CountryEntity;
 import org.voyager.repository.CountryRepository;
 import org.voyager.service.CountryService;
 import org.voyager.service.utils.MapperUtils;
@@ -22,9 +23,10 @@ public class CountryServiceImpl implements CountryService {
     @Override
     public List<Country> getAll(List<Continent> continentList) {
         return handleJPAExceptions(() -> {
-            if (continentList.isEmpty())
-                return countryRepository.findAll().stream().map(MapperUtils::entityToCountry).toList();
-            return countryRepository.findByContinentIn(continentList).stream().map(MapperUtils::entityToCountry).toList();
+            List<CountryEntity> countryEntities;
+            if (continentList.isEmpty()) countryEntities = countryRepository.findAllByOrderByNameAsc();
+            else countryEntities = countryRepository.findByContinentInOrderByNameAsc(continentList);
+            return countryEntities.stream().map(MapperUtils::entityToCountry).toList();
         });
     }
 

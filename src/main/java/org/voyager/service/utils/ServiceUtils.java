@@ -6,13 +6,15 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.function.Supplier;
 
+import static org.voyager.error.MessageConstants.INTERNAL_SERVICE_ERROR_GENERIC_MESSAGE;
+
 public class ServiceUtils {
     public static <T> T handleJPAExceptions(Supplier<T> repositoryFunction) {
         try {
             return repositoryFunction.get();
         } catch (DataAccessException dataAccessException) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                    "An internal service error has occured. Alerting yet to be implemented.");
+                    INTERNAL_SERVICE_ERROR_GENERIC_MESSAGE);
         }
     }
 
@@ -21,7 +23,7 @@ public class ServiceUtils {
             runnable.run();
         } catch (DataAccessException dataAccessException) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                    "An internal service error has occured. Alerting yet to be implemented.");
+                    INTERNAL_SERVICE_ERROR_GENERIC_MESSAGE);
         }
     }
 }

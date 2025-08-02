@@ -14,6 +14,7 @@ public class MessageConstants {
     private static final String RESOURCE_NOT_FOUND_FOR_PATH_VAR = "Resource not found for path variable '%s' with value '%s'. %s";
     private static final String RESOURCE_NOT_FOUND_FOR_PATH_VAR_NO_MESSAGE = "Resource not found for path variable '%s' with value '%s'";
     private static final String RESOURCE_NOT_FOUND_FOR_PARAM = "Resource not found for parameter '%s' with value '%s'. %s";
+    private static final String RESOURCE_NOT_FOUND_FOR_MULTI_PARAM = "Resource not found for parameter '%s' with value '%s' and parameter '%s' with value '%s'. %s";
     private static final String INVALID_PATH_VAR = "Invalid path variable '%s' with value '%s'. %s";
 
     private static final String GET_GEONAMEID_ERROR = "Error fetching feature details for query result '%s' with geonameId '%s'.";
@@ -22,6 +23,7 @@ public class MessageConstants {
     private static final String REPOSITORY_SAVE_WITH_IATA_ERROR = "Internal error occured attempting to save %s with '%s'. Please consult with API docs to ensure request body is valid.";
     private static final String REPOSITORY_PATCH_ERROR = "Internal error occured attempting to patch %s at '%s'. Alerting has yet to be implemented.";
 
+    public static final String INTERNAL_SERVICE_ERROR_GENERIC_MESSAGE = "An internal service error has occured. Alerting yet to be implemented.";
 
     public static String buildRespositorySaveErrorMessage(String entityName){
         return String.format(REPOSITORY_SAVE_ERROR,entityName);
@@ -63,6 +65,12 @@ public class MessageConstants {
         return String.format(RESOURCE_NOT_FOUND_FOR_PARAM,paramName,varValue,NOT_FOUND_MAP.get(paramName));
     }
 
+    public static String buildResourceNotFoundForMultiParameterMessage(String paramName1, String varValue1, String paramName2, String varValue2){
+        return String.format(RESOURCE_NOT_FOUND_FOR_MULTI_PARAM,paramName1,varValue1,paramName2,varValue2,
+                "Valid values required for both parameters.");
+    }
+
+
     public static String buildMissingRequestParameterMessage(String paramName){
         return String.format(MISSING_REQUEST_PARAM,paramName,MISSING_SOURCE_CONSTRAINT);
     }
@@ -90,6 +98,7 @@ public class MessageConstants {
     private static final String VALID_SOURCE_ID_CONSTRAINT = "Valid source id required";
     private static final String VALID_AIRPORTS_PROPERTY_CONSTRAINT = "Valid airports are existing three-letter IATA codes";
     private static final String VALID_CONTINENT_CONSTRAINT = "Must be a valid continent name or two-letter continent code";
+    private static final String VALID_LIMIT_CONSTRAINT = "Must be a valid integer greater than 0";
 
     private static final String IATA_RESOURCE_NOT_FOUND = "Information on given IATA code is currently unavailable";
 
@@ -113,7 +122,8 @@ public class MessageConstants {
             Map.entry(DESTINATION_PARAM_NAME,VALID_IATA_CONSTRAINT),
             Map.entry(EXCLUDE_PARAM_NAME,VALID_IATA_CONSTRAINT),
             Map.entry(AIRPORTS_PROPERTY_NAME,VALID_AIRPORTS_PROPERTY_CONSTRAINT),
-            Map.entry(CONTINENT_PARAM_NAME,VALID_CONTINENT_CONSTRAINT)
+            Map.entry(CONTINENT_PARAM_NAME,VALID_CONTINENT_CONSTRAINT),
+            Map.entry(LIMIT_PARAM_NAME,VALID_LIMIT_CONSTRAINT)
     );
 
     private static final Map<String,String> REQUEST_BODY_PROPERTY_TO_CONSTRAINT_MAP = Map.ofEntries(

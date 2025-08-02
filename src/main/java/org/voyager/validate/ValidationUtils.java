@@ -33,6 +33,7 @@ import java.lang.reflect.Field;
 import java.util.*;
 import java.util.function.Supplier;
 
+import static org.voyager.error.MessageConstants.INTERNAL_SERVICE_ERROR_GENERIC_MESSAGE;
 import static org.voyager.utils.ConstantsUtils.*;
 
 public class ValidationUtils {
@@ -158,7 +159,6 @@ public class ValidationUtils {
                     MessageConstants.buildInvalidPathVariableMessage(varName, varVal));
         }
         try {
-            // TODO: return max value of 10, min value of 1
             return Integer.valueOf(varVal);
         } catch (IllegalArgumentException e) {
             if (isParam) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -325,7 +325,7 @@ public class ValidationUtils {
         } catch (NullPointerException nullPointerException) {
             LOGGER.error(nullPointerException.getMessage());
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                    "An internal service error has occured. Alerting yet to be implemented.");
+                    INTERNAL_SERVICE_ERROR_GENERIC_MESSAGE);
         }
     }
 
@@ -353,5 +353,17 @@ public class ValidationUtils {
             }
             return statusList;
         });
+    }
+
+    public static Option<Integer> resolveLimitString(String limitString, Boolean isParam) {
+        if (limitString == null) return Option.none();
+        Integer limit = validateAndGetInteger(LIMIT_PARAM_NAME,limitString,isParam);
+        if (limit < 1) {
+            if (isParam) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    MessageConstants.buildInvalidRequestParameterMessage(LIMIT_PARAM_NAME, limitString));
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    MessageConstants.buildInvalidPathVariableMessage(LIMIT_PARAM_NAME, limitString));
+        }
+        return Option.of(limit);
     }
 }

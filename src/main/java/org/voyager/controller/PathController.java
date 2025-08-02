@@ -28,6 +28,7 @@ public class PathController {
     AirportsService airportService;
 
     @GetMapping("/path-airline")
+    @Cacheable("pathAirlineCache")
     public PathResponse<PathAirline> getPathAirlineList(@RequestParam(name = ORIGIN_PARAM_NAME) List<String> originList,
                                                         @RequestParam(name = DESTINATION_PARAM_NAME) List<String> destinationList,
                                                         @RequestParam(name = AIRLINE_PARAM_NAME, required = false) String airlineString,

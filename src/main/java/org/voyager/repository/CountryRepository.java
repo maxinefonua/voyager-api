@@ -11,5 +11,7 @@ public interface CountryRepository extends JpaRepository<CountryEntity,String> {
     @Query("SELECT c.code FROM CountryEntity c WHERE c.continent IN ?1")
     List<String> selectCountryCodesByContinentIn(List<Continent> continentList);
 
-    List<CountryEntity> findByContinentIn(List<Continent> continentList);
+    List<CountryEntity> findAllByOrderByNameAsc();
+
+    List<CountryEntity> findByContinentInOrderByNameAsc(List<Continent> continentList);
 }

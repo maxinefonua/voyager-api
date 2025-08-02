@@ -7,7 +7,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -36,18 +35,25 @@ public class LocationController {
 
     @GetMapping("/locations")
     public List<Location> getLocations(@RequestParam(name = SOURCE_PROPERTY_NAME,required = false) String sourceString,
-                                       @RequestParam(name = SOURCE_ID_PARAM_NAME, required = false) String sourceId,
+                                       @RequestParam(name = LIMIT_PARAM_NAME,required = false) String limitString,
                                        @RequestParam(name = COUNTRY_CODE_PARAM_NAME, required = false) List<String> countryCodeList,
                                        @RequestParam(name = LOCATION_STATUS_PARAM_NAME, required = false) List<String> statusStringList,
                                        @RequestParam(name = CONTINENT_PARAM_NAME, required = false) List<String> continentStringList) {
-        Option<String> sourceIdOption = StringUtils.isBlank(sourceId) ? Option.none() : Option.of(sourceId);
-        Option<Source> sourceOption = sourceIdOption.isEmpty() ? Option.none() : Option.of(ValidationUtils.validateAndGetSource(sourceString));
+        Option<Source> sourceOption = ValidationUtils.resolveSourceString(sourceString);
+        Option<Integer> limitOption = ValidationUtils.resolveLimitString(limitString,true);
         List<Continent> continentList = ValidationUtils.resolveContinentStringList(continentStringList);
         List<Status> statusList = ValidationUtils.resolveStatusStringList(statusStringList);
         if (continentList.isEmpty())
             countryCodeList = ValidationUtils.validateAndGetCountryCodeList(countryCodeList,countryService);
         else countryCodeList = List.of();
-        return locationService.getLocations(sourceOption,sourceIdOption,countryCodeList,statusList,continentList);
+        return locationService.getLocations(sourceOption,countryCodeList,statusList,continentList,limitOption);
+    }
+
+    @GetMapping("/location")
+    public Location getLocation(@RequestParam(name = SOURCE_PROPERTY_NAME) String sourceString,
+                                @RequestParam(name = SOURCE_ID_PARAM_NAME) String sourceId) {
+        Source source = ValidationUtils.validateAndGetSource(sourceString);
+        return locationService.getLocation(source,sourceId);
     }
 
     @GetMapping("/locations/{id}")
