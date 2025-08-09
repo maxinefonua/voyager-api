@@ -21,11 +21,13 @@ public class CountryServiceImpl implements CountryService {
     CountryRepository countryRepository;
 
     @Override
-    public List<Country> getAll(List<Continent> continentList) {
+    public List<Country> getAll(List<Continent> continentList, Option<String> currencyCodeOption) {
         return handleJPAExceptions(() -> {
             List<CountryEntity> countryEntities;
-            if (continentList.isEmpty()) countryEntities = countryRepository.findAllByOrderByNameAsc();
-            else countryEntities = countryRepository.findByContinentInOrderByNameAsc(continentList);
+            if (continentList.isEmpty() && currencyCodeOption.isEmpty()) countryEntities = countryRepository.findAllByOrderByNameAsc();
+            else if (currencyCodeOption.isEmpty()) countryEntities = countryRepository.findByContinentInOrderByNameAsc(continentList);
+            else if (continentList.isEmpty()) countryEntities = countryRepository.findByCurrencyCodeOrderByNameAsc(currencyCodeOption.get());
+            else countryEntities = countryRepository.findByCurrencyCodeAndContinentInOrderByNameAsc(currencyCodeOption.get(),continentList);
             return countryEntities.stream().map(MapperUtils::entityToCountry).toList();
         });
     }

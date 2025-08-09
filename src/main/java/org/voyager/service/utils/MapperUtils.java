@@ -4,11 +4,15 @@ import org.voyager.model.airport.Airport;
 import org.voyager.model.country.Continent;
 import org.voyager.model.country.Country;
 import org.voyager.model.country.CountryForm;
+import org.voyager.model.currency.Currency;
+import org.voyager.model.currency.CurrencyForm;
 import org.voyager.model.entity.*;
 import org.voyager.model.Airline;
 import org.voyager.model.flight.Flight;
 import org.voyager.model.flight.FlightForm;
 import org.voyager.model.flight.FlightPatch;
+import org.voyager.model.language.Language;
+import org.voyager.model.language.LanguageForm;
 import org.voyager.model.location.*;
 import org.voyager.model.route.Route;
 import org.voyager.model.route.RouteForm;
@@ -179,5 +183,43 @@ public class MapperUtils {
                         countryForm.getEast(),
                         countryForm.getNorth()
                 }).build();
+    }
+
+    public static Currency entityToCurrency(CurrencyEntity currencyEntity) {
+        return Currency.builder()
+                .code(currencyEntity.getCode())
+                .name(currencyEntity.getName())
+                .symbol(currencyEntity.getSymbol())
+                .usdRate(currencyEntity.getUsdRate())
+                .isActive(currencyEntity.getIsActive())
+                .build();
+    }
+
+    public static CurrencyEntity formToCurrencyEntity(CurrencyForm currencyForm) {
+        return CurrencyEntity.builder()
+                .code(currencyForm.getCode())
+                .name(currencyForm.getName())
+                .symbol(currencyForm.getSymbol())
+                .usdRate(currencyForm.getUsdRate())
+                .isActive(currencyForm.getIsActive())
+                .build();
+    }
+
+    public static Language entityToLanguage(LanguageEntity languageEntity) {
+        return Language.builder()
+                .name(languageEntity.getName())
+                .iso6391(languageEntity.getIso6391())
+                .iso6392(languageEntity.getIso6392())
+                .iso6393(languageEntity.getIso6393())
+                .build();
+    }
+
+    public static LanguageEntity formToLanguageEntity(LanguageForm languageForm) {
+        return LanguageEntity.builder()
+                .name(languageForm.getName())
+                .iso6391(languageForm.getIso6391())
+                .iso6392(languageForm.getIso6392())
+                .iso6393(languageForm.getIso6393())
+                .build();
     }
 }

@@ -9,7 +9,7 @@ import org.voyager.model.country.CountryForm;
 import java.util.List;
 
 public interface CountryService {
-    List<Country> getAll(List<Continent> continentList);
+    List<Country> getAll(List<Continent> continentList, Option<String> currencyCodeOption);
 
     Country addCountry(@Valid CountryForm countryForm);
 

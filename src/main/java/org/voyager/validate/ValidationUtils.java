@@ -1,6 +1,7 @@
 package org.voyager.validate;
 
 import io.vavr.control.Option;
+import jakarta.validation.Valid;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,8 +16,11 @@ import org.voyager.model.airport.AirportPatch;
 import org.voyager.model.airport.AirportType;
 import org.voyager.model.country.Continent;
 import org.voyager.model.country.CountryForm;
+import org.voyager.model.currency.CurrencyForm;
+import org.voyager.model.currency.CurrencyPatch;
 import org.voyager.model.flight.FlightForm;
 import org.voyager.model.flight.FlightPatch;
+import org.voyager.model.language.LanguageForm;
 import org.voyager.model.location.LocationPatch;
 import org.voyager.model.location.Source;
 import org.voyager.model.location.LocationForm;
@@ -27,6 +31,7 @@ import org.voyager.model.route.RoutePatch;
 import org.voyager.model.validate.ValidEnum;
 import org.voyager.service.AirportsService;
 import org.voyager.service.CountryService;
+import org.voyager.service.CurrencyService;
 import org.voyager.service.RouteService;
 
 import java.lang.reflect.Field;
@@ -136,7 +141,7 @@ public class ValidationUtils {
     }
 
     public static String validateIataToUpperCase(String iata, AirportsService airportsService, String varName, boolean isParam) {
-        if (!iata.matches(IATA_CODE_REGEX)) {
+        if (!iata.matches(ALPHA3_CODE_REGEX)) {
             if (isParam) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     MessageConstants.buildInvalidRequestParameterMessage(varName,iata));
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -175,7 +180,7 @@ public class ValidationUtils {
     }
 
     public static String validateAndGetCountryCode(boolean isParam, String countryCodeString, CountryService countryService) {
-        if (!countryCodeString.matches(COUNTRY_CODE_REGEX)) {
+        if (!countryCodeString.matches(ALPHA2_CODE_REGEX)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     MessageConstants.buildInvalidRequestParameterMessage(COUNTRY_CODE_PARAM_NAME, countryCodeString));
         }
@@ -231,7 +236,7 @@ public class ValidationUtils {
     private static List<String>  getValidatedLocationAirports(List<String> airports, AirportsService airportsService) {
         List<String> unique = new ArrayList<>();
         for (String iata : airports) {
-            if (iata == null || !iata.matches(IATA_CODE_REGEX)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+            if (iata == null || !iata.matches(ALPHA3_CODE_REGEX)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     MessageConstants.buildInvalidRequestBodyPropertyMessage(AIRPORTS_PROPERTY_NAME,iata));
             if (!airportsService.ifIataExists(iata.toUpperCase())) throw new ResponseStatusException(HttpStatus.NOT_FOUND,
                     MessageConstants.buildResourceNotFoundForPathVariableMessage(AIRPORTS_PROPERTY_NAME,iata));
@@ -365,5 +370,57 @@ public class ValidationUtils {
                     MessageConstants.buildInvalidPathVariableMessage(LIMIT_PARAM_NAME, limitString));
         }
         return Option.of(limit);
+    }
+
+    public static String validateAndGetCurrencyCode(String currencyCodeString, CurrencyService currencyService,Boolean isParam) {
+        if (!currencyCodeString.matches(ALPHA3_CODE_REGEX)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    MessageConstants.buildInvalidRequestParameterMessage(CURRENCY_CODE_PARAM_NAME, currencyCodeString));
+        }
+        if (!currencyService.codeExists(currencyCodeString.toUpperCase())) {
+            if (isParam)
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        MessageConstants.buildInvalidRequestParameterMessage(CURRENCY_CODE_PARAM_NAME, currencyCodeString));
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    MessageConstants.buildInvalidPathVariableMessage(CURRENCY_CODE_PARAM_NAME, currencyCodeString));
+        }
+        return currencyCodeString.toUpperCase();
+    }
+
+    public static void validateCurrencyForm(@Valid CurrencyForm currencyForm, BindingResult bindingResult) {
+        processRequestBodyBindingErrors(currencyForm,bindingResult);
+        currencyForm.setCode(currencyForm.getCode().toUpperCase());
+    }
+
+    public static void validateCurrencyPatch(@Valid CurrencyPatch currencyPatch, BindingResult bindingResult) {
+        processRequestBodyBindingErrors(currencyPatch,bindingResult);
+    }
+
+    public static void validateLanguageForm(@Valid LanguageForm languageForm, BindingResult bindingResult) {
+        processRequestBodyBindingErrors(languageForm,bindingResult);
+    }
+
+    public static void validateGetLanguageParams(String iso6391, String iso6392, String iso6393) {
+        if (iso6391 == null && iso6392 == null && iso6393 == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    MessageConstants.buildMissingRequestParameterMessage(LANGUAGE_ISO6391_PARAM_NAME));
+        } else if (iso6392 == null && iso6393 == null) {
+            if (!iso6391.matches(ALPHA2_CODE_REGEX)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        MessageConstants.buildInvalidRequestParameterMessage(LANGUAGE_ISO6391_PARAM_NAME,iso6391));
+            }
+        } else if (iso6391 == null && iso6393 == null) {
+            if (!iso6392.matches(ALPHA3_CODE_REGEX)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        MessageConstants.buildInvalidRequestParameterMessage(LANGUAGE_ISO6392_PARAM_NAME,iso6392));
+            }
+        } else if (iso6391 == null && iso6392 == null) {
+            if (!iso6393.matches(ALPHA3_CODE_REGEX)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        MessageConstants.buildInvalidRequestParameterMessage(LANGUAGE_ISO6393_PARAM_NAME,iso6393));
+            }
+        } else {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Multiple request parameters passed when endpoint requires a maximum of one.");
+        }
     }
 }

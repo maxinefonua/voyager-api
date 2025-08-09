@@ -45,6 +45,14 @@ public class RoutesController {
         return routeService.getRoutes(originOption,destinationOption,airlineOption);
     }
 
+    @GetMapping("/route")
+    public Route getRoute(@RequestParam(name = ORIGIN_PARAM_NAME) String origin,
+                                 @RequestParam(name = DESTINATION_PARAM_NAME) String destination) {
+        origin = ValidationUtils.validateIataToUpperCase(origin,airportService,ORIGIN_PARAM_NAME,true);
+        destination = ValidationUtils.validateIataToUpperCase(destination,airportService,DESTINATION_PARAM_NAME,true);
+        return routeService.getRoute(origin,destination);
+    }
+
     @PostMapping("/routes")
     public Route addRoute(@RequestBody(required = false) @Valid RouteForm routeForm, BindingResult bindingResult) {
         ValidationUtils.validateRouteForm(routeForm, bindingResult);
@@ -52,7 +60,7 @@ public class RoutesController {
     }
 
     @GetMapping("/routes/{id}")
-    public Route getRouteById(@PathVariable(name = ID_PATH_VAR_NAME) String idString) {
+    public Route getRoute(@PathVariable(name = ID_PATH_VAR_NAME) String idString) {
         Integer id = ValidationUtils.validateAndGetInteger(ID_PATH_VAR_NAME,idString,false);
         Option<Route> routeOption = routeService.getRouteById(id);
         if (routeOption.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND,

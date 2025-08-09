@@ -27,4 +27,5 @@ public interface RouteService {
                                     Set<Integer> excludeRouteIds,
                                     Set<String> excludeFlightNumbers);
 
+    Route getRoute(String origin, String destination);
 }

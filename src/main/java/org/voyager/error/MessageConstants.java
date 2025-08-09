@@ -6,7 +6,7 @@ import static org.voyager.utils.ConstantsUtils.*;
 
 public class MessageConstants {
     private static final String INVALID_REQUEST_PARAM = "Invalid request parameter '%s' with value '%s'. %s";
-    private static final String MISSING_REQUEST_PARAM = "Missing request parameter '%s'. %s";
+    private static final String MISSING_REQUEST_PARAM = "Missing required request parameter '%s'. %s";
     private static final String INVALID_REQUEST_BODY_PATCH = "Invalid request body for '%s'. A valid PATCH has at least one field set";
     private static final String INVALID_REQUEST_BODY_PROPERTY = "Invalid request body property '%s' with value '%s'. %s";
     private static final String INVALID_REQUEST_BODY_PROPERTY_NO_MESSAGE = "Invalid request body property '%s' with value '%s'";
@@ -72,7 +72,7 @@ public class MessageConstants {
 
 
     public static String buildMissingRequestParameterMessage(String paramName){
-        return String.format(MISSING_REQUEST_PARAM,paramName,MISSING_SOURCE_CONSTRAINT);
+        return String.format(MISSING_REQUEST_PARAM,paramName,MISSING_PARAMETER_MAP.get(paramName));
     }
 
     public static String buildInvalidRequestBodyPatch(String requestBodyEntity){
@@ -91,9 +91,9 @@ public class MessageConstants {
     public static final String VALID_IATA_CONSTRAINT = "Must be a valid three-letter IATA code";
     public static final String VALID_ID_CONSTRAINT = "Must be a valid integer value";
     private static final String VALID_COUNTRY_CODE_CONSTRAINT = "Must be a valid two-letter ISO 3166-1 alpha-2 country code";
+    private static final String VALID_CURRENCY_CODE_CONSTRAINT = "Must be a valid three-letter ISO 4217 alpha-3 currency code";
     private static final String VALID_TYPE_CONSTRAINT = "Valid airport types are: 'civil', 'military', 'historical', 'other'";
     private static final String VALID_AIRLINE_CONSTRAINT = "Currently available airlines are: 'delta'";
-    private static final String MISSING_SOURCE_CONSTRAINT = "Must also include 'source' parameter when providing a 'sourceId'";
     private static final String VALID_SOURCE_PROPERTY_CONSTRAINT = "Valid sources are: 'GEONAMES','NOMINATIM','PHOTON','MANUAL'";
     private static final String VALID_SOURCE_ID_CONSTRAINT = "Valid source id required";
     private static final String VALID_AIRPORTS_PROPERTY_CONSTRAINT = "Valid airports are existing three-letter IATA codes";
@@ -102,16 +102,25 @@ public class MessageConstants {
 
     private static final String IATA_RESOURCE_NOT_FOUND = "Information on given IATA code is currently unavailable";
 
+    private static final String MISSING_SOURCE_CONSTRAINT = "Must also include 'source' parameter when providing a 'sourceId'";
+
+    private static final Map<String,String> MISSING_PARAMETER_MAP = Map.ofEntries(
+            Map.entry(SOURCE_PROPERTY_NAME,MISSING_SOURCE_CONSTRAINT),
+            Map.entry(LANGUAGE_ISO6391_PARAM_NAME, LANGUAGE_ISO639_1_CONSTRAINT)
+    );
+
     private static final Map<String,String> NOT_FOUND_MAP = Map.ofEntries(
             Map.entry(IATA_PARAM_NAME,IATA_RESOURCE_NOT_FOUND),
             Map.entry(ORIGIN_PARAM_NAME,IATA_RESOURCE_NOT_FOUND),
             Map.entry(DESTINATION_PARAM_NAME,IATA_RESOURCE_NOT_FOUND),
             Map.entry(EXCLUDE_PARAM_NAME,IATA_RESOURCE_NOT_FOUND),
-            Map.entry(AIRPORTS_PROPERTY_NAME,IATA_RESOURCE_NOT_FOUND)
+            Map.entry(AIRPORTS_PROPERTY_NAME,IATA_RESOURCE_NOT_FOUND),
+            Map.entry(LANGUAGE_ISO6391_PARAM_NAME, LANGUAGE_ISO639_1_CONSTRAINT)
             );
 
     private static final Map<String,String> CONSTRAINT_MAP = Map.ofEntries(
             Map.entry(COUNTRY_CODE_PARAM_NAME,VALID_COUNTRY_CODE_CONSTRAINT),
+            Map.entry(CURRENCY_CODE_PARAM_NAME,VALID_CURRENCY_CODE_CONSTRAINT),
             Map.entry(AIRLINE_PARAM_NAME,VALID_AIRLINE_CONSTRAINT),
             Map.entry(TYPE_PARAM_NAME,VALID_TYPE_CONSTRAINT),
             Map.entry(SOURCE_PROPERTY_NAME,VALID_SOURCE_PROPERTY_CONSTRAINT),
@@ -123,7 +132,10 @@ public class MessageConstants {
             Map.entry(EXCLUDE_PARAM_NAME,VALID_IATA_CONSTRAINT),
             Map.entry(AIRPORTS_PROPERTY_NAME,VALID_AIRPORTS_PROPERTY_CONSTRAINT),
             Map.entry(CONTINENT_PARAM_NAME,VALID_CONTINENT_CONSTRAINT),
-            Map.entry(LIMIT_PARAM_NAME,VALID_LIMIT_CONSTRAINT)
+            Map.entry(LIMIT_PARAM_NAME,VALID_LIMIT_CONSTRAINT),
+            Map.entry(LANGUAGE_ISO6391_PARAM_NAME, LANGUAGE_ISO639_1_CONSTRAINT),
+            Map.entry(LANGUAGE_ISO6392_PARAM_NAME,LANGUAGE_ISO639_2_CONSTRAINT),
+            Map.entry(LANGUAGE_ISO6393_PARAM_NAME,LANGUAGE_ISO639_3_CONSTRAINT)
     );
 
     private static final Map<String,String> REQUEST_BODY_PROPERTY_TO_CONSTRAINT_MAP = Map.ofEntries(

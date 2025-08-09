@@ -12,6 +12,7 @@ public interface CountryRepository extends JpaRepository<CountryEntity,String> {
     List<String> selectCountryCodesByContinentIn(List<Continent> continentList);
 
     List<CountryEntity> findAllByOrderByNameAsc();
-
     List<CountryEntity> findByContinentInOrderByNameAsc(List<Continent> continentList);
+    List<CountryEntity> findByCurrencyCodeOrderByNameAsc(String currencyCode);
+    List<CountryEntity> findByCurrencyCodeAndContinentInOrderByNameAsc(String currencyCode,List<Continent> continentList);
 }

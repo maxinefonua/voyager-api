@@ -1,5 +1,6 @@
 package org.voyager.controller;
 
+import io.vavr.control.Option;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.BindingResult;
@@ -8,24 +9,30 @@ import org.voyager.model.country.Continent;
 import org.voyager.model.country.Country;
 import org.voyager.model.country.CountryForm;
 import org.voyager.service.CountryService;
+import org.voyager.service.CurrencyService;
 import org.voyager.validate.ValidationUtils;
 
 import java.util.List;
 
-import static org.voyager.utils.ConstantsUtils.CONTINENT_PARAM_NAME;
-import static org.voyager.utils.ConstantsUtils.COUNTRY_CODE_PARAM_NAME;
+import static org.voyager.utils.ConstantsUtils.*;
 
 
 @RestController
-public class CountryCountroller {
+public class CountryController {
     @Autowired
     CountryService countryService;
 
+    @Autowired
+    CurrencyService currencyService;
+
     @GetMapping("/countries")
     public List<Country> getCountries(
-            @RequestParam(name = CONTINENT_PARAM_NAME, required = false) List<String> continentStringList) {
+            @RequestParam(name = CONTINENT_PARAM_NAME, required = false) List<String> continentStringList,
+            @RequestParam(name = CURRENCY_CODE_PARAM_NAME,required = false) String currencyCode) {
         List<Continent> continentList = ValidationUtils.resolveContinentStringList(continentStringList);
-        return countryService.getAll(continentList);
+        Option<String> currencyCodeOption = currencyCode == null ? Option.none() :
+                Option.of(ValidationUtils.validateAndGetCurrencyCode(currencyCode,currencyService,true));
+        return countryService.getAll(continentList,currencyCodeOption);
     }
 
     @GetMapping("/countries/{countryCode}")

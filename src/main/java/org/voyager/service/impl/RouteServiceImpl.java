@@ -19,6 +19,8 @@ import org.voyager.service.utils.MapperUtils;
 
 import java.util.*;
 
+import static org.voyager.error.MessageConstants.INTERNAL_SERVICE_ERROR_GENERIC_MESSAGE;
+
 @Service
 public class RouteServiceImpl implements RouteService {
     @Autowired
@@ -179,6 +181,18 @@ public class RouteServiceImpl implements RouteService {
         });
         return processQueue(toSearch,pathAirlineList,visitedAirports,destinationSet,limit,
                 excludeRouteIds,excludeFlightNumbers,includeAirlines);
+    }
+
+    @Override
+    public Route getRoute(String origin, String destination) {
+        List<RouteEntity> routeEntityList = routeRepository.findByOriginAndDestination(origin,destination);
+        if (routeEntityList.isEmpty()) return null;
+        if (routeEntityList.size() > 1) {
+            String message = "getRoute by origin '%s' and destination '%s' returned multiple entities; requires investiation";
+            LOGGER.error(String.format(message,origin,destination));
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,INTERNAL_SERVICE_ERROR_GENERIC_MESSAGE);
+        }
+        return MapperUtils.entityToRoute(routeEntityList.get(0));
     }
 
     private List<Path> processQueue(Queue<Path> toSearch, List<Path> pathList,
