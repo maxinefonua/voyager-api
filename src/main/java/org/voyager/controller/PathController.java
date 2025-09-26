@@ -20,7 +20,6 @@ import java.util.stream.Collectors;
 import static org.voyager.utils.ConstantsUtils.*;
 import static org.voyager.utils.ConstantsUtils.EXCLUDE_PARAM_NAME;
 
-@RestController
 public class PathController {
     @Autowired
     RouteService routeService;

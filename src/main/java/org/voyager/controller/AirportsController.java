@@ -21,7 +21,6 @@ import java.util.Set;
 import static org.voyager.utils.ConstantsUtils.*;
 import static org.voyager.utils.ConstantsUtils.AIRLINE_PARAM_NAME;
 
-@RestController
 public class AirportsController {
     @Autowired
     private AirportsService airportsService;

@@ -13,7 +13,6 @@ import org.voyager.service.*;
 
 import static org.voyager.utils.ConstantsUtils.*;
 
-@RestController
 class SearchController {
     @Autowired
     private SearchLocationService searchLocationService;

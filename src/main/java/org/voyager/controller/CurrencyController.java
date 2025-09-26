@@ -15,7 +15,6 @@ import java.util.List;
 import static org.voyager.utils.ConstantsUtils.CURRENCY_CODE_PARAM_NAME;
 import static org.voyager.utils.ConstantsUtils.IS_ACTIVE_PARAM_NAME;
 
-@RestController
 public class CurrencyController {
     @Autowired
     CurrencyService currencyService;

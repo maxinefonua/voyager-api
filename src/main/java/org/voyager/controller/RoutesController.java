@@ -26,7 +26,6 @@ import static org.voyager.utils.ConstantsUtils.*;
 import static org.voyager.utils.ConstantsUtils.ID_PATH_VAR_NAME;
 
 
-@RestController
 public class RoutesController {
     @Autowired
     RouteService routeService;

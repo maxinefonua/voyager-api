@@ -17,7 +17,6 @@ import java.util.List;
 import static org.voyager.utils.ConstantsUtils.*;
 
 
-@RestController
 public class CountryController {
     @Autowired
     CountryService countryService;
