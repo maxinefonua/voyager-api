@@ -37,9 +37,12 @@ public class AirportsController {
     @GetMapping("/iata")
     @Cacheable("iataCache")
     public List<String> getIataCodes(@RequestParam(name = TYPE_PARAM_NAME, required = false) List<String> typeList) {
+        LOGGER.info(String.format("GET /iata called with typeList: '%s'", typeList));
         List<AirportType> airportTypeList = ValidationUtils.resolveTypeList(typeList);
         if (airportTypeList.isEmpty()) return airportsService.getIata();
-        return airportsService.getIataByTypeIn(airportTypeList);
+        List<String> response = airportsService.getIataByTypeIn(airportTypeList);
+        LOGGER.debug(String.format("response: '%s'",response));
+        return response;
     }
 
     @GetMapping("/airports")
@@ -53,7 +56,7 @@ public class AirportsController {
         List<AirportType> airportTypeList = ValidationUtils.resolveTypeList(typeList);
         Option<Airline> airline = ValidationUtils.resolveAirlineString(airlineString);
         List<Airport> response = airportsService.getAll(Option.of(countryCodeString),airportTypeList,airline);
-        LOGGER.info(String.format("response: '%s'",response));
+        LOGGER.debug(String.format("response: '%s'",response));
         return response;
     }
 
@@ -63,7 +66,7 @@ public class AirportsController {
         LOGGER.info("GET /airport-airlines");
         iataList = ValidationUtils.validateIataCodeList(ORIGIN_PARAM_NAME,Set.copyOf(iataList),airportsService);
         List<Airline> response = airportsService.getAirlines(iataList);
-        LOGGER.info(String.format("response: '%s'",response));
+        LOGGER.debug(String.format("response: '%s'",response));
         return response;
     }
 
@@ -73,7 +76,7 @@ public class AirportsController {
         LOGGER.info(String.format("GET /airports/%s",iata));
         iata = ValidationUtils.validateIataToUpperCase(iata,airportsService,IATA_PARAM_NAME,false);
         Airport response = airportsService.getByIata(iata);
-        LOGGER.info(String.format("response: '%s'",response));
+        LOGGER.debug(String.format("response: '%s'",response));
         return response;
     }
 
@@ -105,7 +108,7 @@ public class AirportsController {
         List<AirportType> airportTypeList = ValidationUtils.resolveTypeList(typeList);
         List<Airline> airlineList = ValidationUtils.resolveAirlineStringList(airlineStringList);
         List<Airport> response = airportsService.getByDistance(latitude,longitude,limit,airportTypeList,airlineList);
-        LOGGER.info(String.format("response: '%s'",response));
+        LOGGER.debug(String.format("response: '%s'",response));
         return response;
     }
 }
