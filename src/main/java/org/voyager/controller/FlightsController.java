@@ -3,6 +3,8 @@ package org.voyager.controller;
 import io.vavr.control.Option;
 import jakarta.validation.Valid;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.BindingResult;
@@ -22,17 +24,23 @@ import java.util.List;
 
 import static org.voyager.utils.ConstantsUtils.*;
 
+@RestController
 public class FlightsController {
     @Autowired
     FlightService flightService;
     @Autowired
     RouteService routeService;
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(FlightsController.class);
+
     @GetMapping("/flights")
     public List<Flight> getFlights(@RequestParam(required = false,name = ROUTE_ID_PARAM_NAME) List<String> routeIdStringList,
                                    @RequestParam(required = false, name = FLIGHT_NUMBER_PARAM_NAME) String flightNumberString,
                                    @RequestParam(required = false, name = AIRLINE_PARAM_NAME) String airlineString,
                                    @RequestParam(required = false,name = IS_ACTIVE_PARAM_NAME) Boolean isActiveString) {
+        LOGGER.info(String.format("GET /flights with routeIdStringList: '%s', flightNumberString: '%s', " +
+                "airlineString: '%s', isActiveString: '%s'", routeIdStringList, flightNumberString,
+                airlineString, isActiveString));
         List<Integer> routeIdList = new ArrayList<>();
         if (routeIdStringList != null) {
             routeIdStringList.forEach(routeIdString ->
@@ -42,7 +50,9 @@ public class FlightsController {
         Option<Airline> airlineOption = ValidationUtils.resolveAirlineString(airlineString);
         Option<String> flightNumberOption = Option.of(flightNumberString);
         Option<Boolean> isActiveOption = Option.of(isActiveString);
-        return flightService.getFlights(routeIdList,flightNumberOption,airlineOption,isActiveOption);
+        List<Flight> response = flightService.getFlights(routeIdList,flightNumberOption,airlineOption,isActiveOption);
+        LOGGER.info(String.format("response: '%s'",response));
+        return response;
     }
 
     @PatchMapping("/flights/{id}")

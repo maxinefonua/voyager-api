@@ -21,6 +21,7 @@ import java.util.Set;
 import static org.voyager.utils.ConstantsUtils.*;
 import static org.voyager.utils.ConstantsUtils.AIRLINE_PARAM_NAME;
 
+@RestController
 public class AirportsController {
     @Autowired
     private AirportsService airportsService;
@@ -30,7 +31,6 @@ public class AirportsController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AirportsController.class);
 
-    @GetMapping("/iata")
     public List<String> getIataCodes(@RequestParam(name = TYPE_PARAM_NAME, required = false) List<String> typeList) {
         List<AirportType> airportTypeList = ValidationUtils.resolveTypeList(typeList);
         if (airportTypeList.isEmpty()) return airportsService.getIata();
@@ -41,31 +41,44 @@ public class AirportsController {
     public List<Airport> getAirports(@RequestParam(name = COUNTRY_CODE_PARAM_NAME, required = false) String countryCodeString,
                                      @RequestParam(name = TYPE_PARAM_NAME, required = false) List<String> typeList,
                                      @RequestParam(name = AIRLINE_PARAM_NAME, required = false) String airlineString) {
+        LOGGER.info(String.format("GET /airports called with countryCodeString: '%s', typeList: '%s', airlineString: '%s'",
+                countryCodeString,typeList,airlineString));
         if (countryCodeString != null) countryCodeString = ValidationUtils.validateAndGetCountryCode(true,countryCodeString, countryService);
         List<AirportType> airportTypeList = ValidationUtils.resolveTypeList(typeList);
         Option<Airline> airline = ValidationUtils.resolveAirlineString(airlineString);
-        return airportsService.getAll(Option.of(countryCodeString),airportTypeList,airline);
+        List<Airport> response = airportsService.getAll(Option.of(countryCodeString),airportTypeList,airline);
+        LOGGER.info(String.format("response: '%s'",response));
+        return response;
     }
 
     @GetMapping("/airport-airlines")
     public List<Airline> getAirlines(@RequestParam(name = IATA_PARAM_NAME) List<String> iataList) {
+        LOGGER.info("GET /airport-airlines");
         iataList = ValidationUtils.validateIataCodeList(ORIGIN_PARAM_NAME,Set.copyOf(iataList),airportsService);
-        return airportsService.getAirlines(iataList);
+        List<Airline> response = airportsService.getAirlines(iataList);
+        LOGGER.info(String.format("response: '%s'",response));
+        return response;
     }
 
     @GetMapping("/airports/{iata}")
     public Airport getAirportByIata(@PathVariable(IATA_PARAM_NAME) String iata) {
-        LOGGER.debug(String.format("fetching uncached airport by iata code: %s",iata));
+        LOGGER.info(String.format("GET /airports/%s",iata));
         iata = ValidationUtils.validateIataToUpperCase(iata,airportsService,IATA_PARAM_NAME,false);
-        return airportsService.getByIata(iata);
+        Airport response = airportsService.getByIata(iata);
+        LOGGER.info(String.format("response: '%s'",response));
+        return response;
     }
 
     @PatchMapping("/airports/{iata}")
-    public Airport patchAirportByIata(@PathVariable(IATA_PARAM_NAME) String iata, @RequestBody(required = false) @Valid AirportPatch airportPatch, BindingResult bindingResult) {
+    public Airport patchAirportByIata(@PathVariable(IATA_PARAM_NAME) String iata,
+                                      @RequestBody(required = false) @Valid AirportPatch airportPatch,
+                                      BindingResult bindingResult) {
+        LOGGER.info(String.format("PATCH /airports/%s with airportPatch: '%s'",iata,airportPatch));
         iata = ValidationUtils.validateIataToUpperCase(iata,airportsService,IATA_PARAM_NAME,false);
         ValidationUtils.validateAirportPatch(airportPatch,bindingResult);
-        LOGGER.debug(String.format("patching airport at iata '%s' with patch: %s",iata,airportPatch));
-        return airportsService.patch(iata,airportPatch);
+        Airport response = airportsService.patch(iata,airportPatch);
+        LOGGER.info(String.format("response: '%s'",response));
+        return response;
     }
 
     @GetMapping("/nearby-airports")
@@ -74,8 +87,12 @@ public class AirportsController {
                                         @RequestParam(name = LIMIT_PARAM_NAME,defaultValue = "5") Integer limit,
                                         @RequestParam(name = TYPE_PARAM_NAME, required = false) List<String> typeList,
                                         @RequestParam(name = AIRLINE_PARAM_NAME, required = false) List<String> airlineStringList) {
+        LOGGER.info(String.format("GET /nearby-airports called with latitude: %f, longitude: %f, limit: %d, " +
+                "typeList: '%s', airlineStringList: '%s'",latitude,longitude,limit,typeList,airlineStringList));
         List<AirportType> airportTypeList = ValidationUtils.resolveTypeList(typeList);
         List<Airline> airlineList = ValidationUtils.resolveAirlineStringList(airlineStringList);
-        return airportsService.getByDistance(latitude,longitude,limit,airportTypeList,airlineList);
+        List<Airport> response = airportsService.getByDistance(latitude,longitude,limit,airportTypeList,airlineList);
+        LOGGER.info(String.format("response: '%s'",response));
+        return response;
     }
 }

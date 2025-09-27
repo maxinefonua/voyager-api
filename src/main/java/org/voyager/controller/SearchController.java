@@ -13,6 +13,7 @@ import org.voyager.service.*;
 
 import static org.voyager.utils.ConstantsUtils.*;
 
+@RestController
 class SearchController {
     @Autowired
     private SearchLocationService searchLocationService;
@@ -20,23 +21,33 @@ class SearchController {
     private static final Logger LOGGER = LoggerFactory.getLogger(SearchController.class);
 
     @GetMapping("/search")
-    public SearchResult<ResultSearch> search(@RequestParam(QUERY_PARAM_NAME) String q,
+    public SearchResult<ResultSearch> search(@RequestParam(QUERY_PARAM_NAME) String query,
                                              @RequestParam(name = SKIP_ROW_PARAM_NAME,defaultValue = "0") Integer skipRowCount,
                                              @RequestParam(name = LIMIT_PARAM_NAME,defaultValue = "10") Integer limit) {
-        SearchResult<ResultSearch> cachedResults = searchLocationService.search(q,skipRowCount,limit);
-        return SearchResult.<ResultSearch>builder()
+        LOGGER.info(String.format("GET /search called with query: '%s', skipRowCount: %d, limit: %d",
+                query,skipRowCount,limit));
+        SearchResult<ResultSearch> cachedResults = searchLocationService.search(query,skipRowCount,limit);
+        SearchResult<ResultSearch> response = SearchResult.<ResultSearch>builder()
                 .results(searchLocationService.augmentLocationStatus(cachedResults.getResults()))
                 .resultCount(cachedResults.getResultCount()).build();
+        LOGGER.info(String.format("response: '%s'",response));
+        return response;
     }
 
     @GetMapping("/fetch/{sourceId}")
     public ResultSearchFull fetchResultSearch(@PathVariable(SOURCE_ID_PARAM_NAME) String sourceId) {
-        return searchLocationService.fetchResultSearch(sourceId);
+        LOGGER.info(String.format("GET /fetch/%s called", sourceId));
+        ResultSearchFull response = searchLocationService.fetchResultSearch(sourceId);
+        LOGGER.info(String.format("response: '%s'",response));
+        return response;
     }
 
     @GetMapping("/search-attribution")
     @Cacheable("searchAttributionCache")
     public LookupAttribution attribution(){
-        return searchLocationService.attribution();
+        LOGGER.info("GET /search-attribution called");
+        LookupAttribution response = searchLocationService.attribution();
+        LOGGER.info(String.format("response: '%s'",response));
+        return response;
     }
 }
