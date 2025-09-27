@@ -1,8 +1,38 @@
+spring:
+  config:
+    activate:
+      on-profile: local
+name: local-YAML
+environment: local
+enabled: true
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+name: dev-YAML
+environment: dev
+enabled: true
+---
+spring:
+  profiles:
+    active: dev
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  logging:
+    level:
+      org:
+        springframework:
+          cache: trace
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
 server:
   port: 3000
   error:
     include-message: always
-
 geonames:
   protocol: https
   host: secure.geonames.org
@@ -15,24 +45,7 @@ geonames:
   isNameRequired: true
   featureClass: P
   featureClassAdmin: A
-
 auth:
   approvedTokens:
     - ${VOYAGER_API_KEY}
     - ${TESTS_API_KEY}
-
-spring:
-  profiles:
-    active: local
-  datasource:
-    url: jdbc:postgresql://localhost:5432/postgres
-    username: api_user
-    password: ${POSTGRES_API_USER_PASSWORD}
-  jpa:
-    hibernate:
-      ddl-auto: validate
-  logging:
-    level:
-      org:
-        springframework:
-          cache: trace

@@ -14,3 +14,7 @@ target/
 
 ### Mac OS ###
 .DS_Store
+
+### env variables ###
+.env_dev
+.env_local
