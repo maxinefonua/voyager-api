@@ -2,35 +2,34 @@ package org.voyager.auth;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.AuthorityUtils;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
+import org.voyager.config.AuthConfig;
 import org.voyager.utils.ConstantsUtils;
 import org.voyager.utils.MessageUtils;
+
 import java.util.List;
 
-@Component
-@ConfigurationProperties(prefix = "auth")
+@Service
 public class AuthenticationService {
+    private static AuthConfig authConfig;
 
-    private static String AUTH_TOKEN;
-
-    @Value("${VOYAGER_API_KEY}")
-    public void setAuthToken(String authToken) {
-        AUTH_TOKEN = authToken;
+    @Autowired
+    public AuthenticationService(AuthConfig authConfig) {
+        this.authConfig = authConfig;
     }
 
     @PostConstruct
     public void validate() {
-        ConstantsUtils.validateEnvironVars(List.of(ConstantsUtils.VOYAGER_API_KEY));
+        ConstantsUtils.validateEnvironVars(List.of(ConstantsUtils.VOYAGER_API_KEY,"TESTS_API_KEY"));
     }
 
     public static Authentication getAuthentication(HttpServletRequest request) {
         String apiKey = request.getHeader(ConstantsUtils.AUTH_TOKEN_HEADER_NAME);
-        if (apiKey == null || !apiKey.equals(AUTH_TOKEN)) {
+        if (apiKey == null || !authConfig.getApprovedTokens().contains(apiKey)) {
             throw new BadCredentialsException(MessageUtils.getInvalidApiKeyMessage());
         }
 

@@ -5,6 +5,9 @@ import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.voyager.model.Airline;
@@ -31,6 +34,8 @@ public class AirportsController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AirportsController.class);
 
+    @GetMapping("/iata")
+    @Cacheable("iataCache")
     public List<String> getIataCodes(@RequestParam(name = TYPE_PARAM_NAME, required = false) List<String> typeList) {
         List<AirportType> airportTypeList = ValidationUtils.resolveTypeList(typeList);
         if (airportTypeList.isEmpty()) return airportsService.getIata();
@@ -38,6 +43,7 @@ public class AirportsController {
     }
 
     @GetMapping("/airports")
+    @Cacheable("airportsCache")
     public List<Airport> getAirports(@RequestParam(name = COUNTRY_CODE_PARAM_NAME, required = false) String countryCodeString,
                                      @RequestParam(name = TYPE_PARAM_NAME, required = false) List<String> typeList,
                                      @RequestParam(name = AIRLINE_PARAM_NAME, required = false) String airlineString) {
@@ -52,6 +58,7 @@ public class AirportsController {
     }
 
     @GetMapping("/airport-airlines")
+    @Cacheable("airportAirlinesCache")
     public List<Airline> getAirlines(@RequestParam(name = IATA_PARAM_NAME) List<String> iataList) {
         LOGGER.info("GET /airport-airlines");
         iataList = ValidationUtils.validateIataCodeList(ORIGIN_PARAM_NAME,Set.copyOf(iataList),airportsService);
@@ -61,6 +68,7 @@ public class AirportsController {
     }
 
     @GetMapping("/airports/{iata}")
+    @Cacheable(value = "airportCache", key = "#iata")
     public Airport getAirportByIata(@PathVariable(IATA_PARAM_NAME) String iata) {
         LOGGER.info(String.format("GET /airports/%s",iata));
         iata = ValidationUtils.validateIataToUpperCase(iata,airportsService,IATA_PARAM_NAME,false);
@@ -70,6 +78,10 @@ public class AirportsController {
     }
 
     @PatchMapping("/airports/{iata}")
+    @Caching(evict = {
+            @CacheEvict(value = "airportCache", key = "#iata"),
+            @CacheEvict(value = "airportsCache", allEntries = true)
+    })
     public Airport patchAirportByIata(@PathVariable(IATA_PARAM_NAME) String iata,
                                       @RequestBody(required = false) @Valid AirportPatch airportPatch,
                                       BindingResult bindingResult) {
@@ -82,6 +94,7 @@ public class AirportsController {
     }
 
     @GetMapping("/nearby-airports")
+    @Cacheable("nearbyAirportsCache")
     public List<Airport> nearbyAirports(@RequestParam(LATITUDE_PARAM_NAME) Double latitude,
                                         @RequestParam(LONGITUDE_PARAM_NAME) Double longitude,
                                         @RequestParam(name = LIMIT_PARAM_NAME,defaultValue = "5") Integer limit,

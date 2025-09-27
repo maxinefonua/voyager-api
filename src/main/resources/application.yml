@@ -16,8 +16,14 @@ geonames:
   featureClass: P
   featureClassAdmin: A
 
+required-property:
+  - "${VOYAGER_API_KEY}"
+  - "${TESTS_API_KEY}"
+
 auth:
-  authToken: ${VOYAGER_API_KEY}
+  approvedTokens:
+    - "${VOYAGER_API_KEY}"
+    - "${TESTS_API_KEY}"
 
 spring:
   profiles:
