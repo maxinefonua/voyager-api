@@ -4,13 +4,14 @@ target/
 !**/src/test/**/target/
 
 ### IntelliJ IDEA ###
-.idea/modules.xml
-.idea/jarRepositories.xml
-.idea/compiler.xml
-.idea/libraries/
+.idea/*
 *.iws
 *.iml
 *.ipr
 
 ### Mac OS ###
 .DS_Store
+
+### env variables ###
+.env_dev
+.env_local
