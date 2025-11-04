@@ -16,4 +16,10 @@ public interface RouteRepository extends JpaRepository<RouteEntity,Integer> {
     List<RouteEntity> findByDestination(String destination);
     List<RouteEntity> findByDestinationAndIdIn(String destination, List<Integer> routeIdList);
     List<RouteEntity> findByOriginAndDestinationAndIdIn(String origin, String destination, List<Integer> routeIdList);
+
+    // newly added
+    List<RouteEntity> findByOriginIn(List<String> originList);
+    List<RouteEntity> findByDestinationIn(List<String> originList);
+
+    List<RouteEntity> findByOriginAndDestinationIn(String origin, List<String> destinationList);
 }

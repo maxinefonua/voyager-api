@@ -31,4 +31,8 @@ public interface FlightRepository  extends JpaRepository<FlightEntity,Integer> {
     List<FlightEntity> findByFlightNumber(String flightNumber);
     List<FlightEntity> findByAirline(Airline airline);
     List<FlightEntity> findByIsActive(Boolean isActive);
+
+    // newly added
+    List<FlightEntity> findByRouteIdAndIsActive(Integer routeId, Boolean isActive);
+    List<FlightEntity> findByRouteIdAndAirlineAndIsActive(Integer routeId, Airline airline, Boolean isActive);
 }

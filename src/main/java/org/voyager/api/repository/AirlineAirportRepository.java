@@ -2,6 +2,7 @@ package org.voyager.api.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.voyager.commons.model.airline.Airline;
 import org.voyager.api.model.entity.AirlineAirportEntity;
 import org.voyager.api.model.entity.AirlineAirportId;
@@ -28,4 +29,18 @@ public interface AirlineAirportRepository extends JpaRepository<AirlineAirportEn
     Optional<AirlineAirportEntity> findByIataAndAirline(String iata, Airline airline);
 
     List<AirlineAirportEntity> findByAirline(Airline airline);
+
+    // newly added
+    @Query("SELECT DISTINCT a.airline FROM AirlineAirportEntity a WHERE a.iata IN ?1 AND a.isActive = ?2")
+    List<Airline> selectDistinctAirlinesByIataAndIsActive(String iata, Boolean isActive);
+
+    @Query("SELECT a.airline FROM AirlineAirportEntity a " +
+            "WHERE a.iata IN :iataCodes AND a.isActive = :isActive " +
+            "GROUP BY a.airline " +
+            "HAVING COUNT(DISTINCT a.iata) = :codeCount")
+    List<Airline> selectAirlinesWithAllIataAndIsActive(@Param("iataCodes") List<String> iataCodes,
+                                                       @Param("isActive") Boolean isActive,
+                                                       @Param("codeCount") long codeCount);
+
+    boolean existsByAirlineInAndIata(List<Airline> airlines, String iata);
 }

@@ -5,9 +5,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
+import org.voyager.api.model.path.PathDetailedResponse;
+import org.voyager.api.model.query.PathQuery;
+import org.voyager.api.service.PathService;
 import org.voyager.commons.constants.ParameterNames;
 import org.voyager.commons.constants.Path;
 import org.voyager.commons.model.airline.Airline;
@@ -27,10 +32,40 @@ public class PathController {
     RouteService routeService;
     @Autowired
     AirportsService airportService;
+    @Autowired
+    PathService pathService;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PathController.class);
 
     // TODO: for PATH SERVICE, order routes to search by DISTANCE!!
+
+    @GetMapping("/path")
+    @Cacheable("pathCache")
+    public PathDetailedResponse getPathDetailed(@RequestParam(name = ParameterNames.ORIGIN_PARAM_NAME) List<String> originList,
+                                                              @RequestParam(name = ParameterNames.DESTINATION_PARAM_NAME) List<String> destinationList,
+                                                              @RequestParam(name = ParameterNames.AIRLINE_PARAM_NAME, required = false) String airlineString,
+                                                              @RequestParam(name = "page",required = false,defaultValue = "1") String pageString,
+                                                              @RequestParam(name = "size",required = false,defaultValue = "5") String sizeString) {
+        LOGGER.info(String.format("GET /path called with originList: '%s', destinationList: '%s', " +
+                        "airlineString: '%s', pageString: '%s', sizeString: '%s'", originList,destinationList,
+                airlineString, pageString,sizeString));
+        Integer page = ValidationUtils.validateAndGetInteger("page",pageString);
+        Integer size = ValidationUtils.validateAndGetInteger("size",sizeString);
+        Set<String> originSet = ValidationUtils.validateIataCodeSet(ParameterNames.ORIGIN_PARAM_NAME,
+                Set.copyOf(originList),airportService);
+        Set<String> destinationSet = ValidationUtils.validateIataCodeSet(ParameterNames.DESTINATION_PARAM_NAME,
+                Set.copyOf(destinationList),airportService);
+        Option<Airline> airlineOption = ValidationUtils.resolveAirlineString(airlineString);
+        PathQuery pathQuery = PathQuery.builder().originSet(originSet).destinationSet(destinationSet).page(page)
+                .pageSize(size).airlineOption(airlineOption).build();
+        try {
+            org.voyager.commons.validate.ValidationUtils.validateAndThrow(pathQuery);
+            return pathService.getPathDetailedList(pathQuery);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,e.getMessage(),e);
+        }
+    }
+
 
     @GetMapping(Path.AIRLINE_PATH)
     @Cacheable("pathAirlineCache")
