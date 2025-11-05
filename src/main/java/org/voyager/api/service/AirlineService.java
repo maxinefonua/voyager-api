@@ -1,15 +1,16 @@
 package org.voyager.api.service;
 
+import lombok.NonNull;
 import org.voyager.commons.model.airline.Airline;
 import org.voyager.commons.model.airline.AirlineAirport;
 import org.voyager.commons.model.airline.AirlineBatchUpsert;
-import org.voyager.api.model.query.AirlineQuery;
+import org.voyager.commons.model.airline.AirlineQuery;
 
 import java.util.List;
 
 public interface AirlineService {
     List<Airline> getAirlines();
-    List<Airline> getAirlines(AirlineQuery airlineQuery);
-    List<AirlineAirport> batchUpsert(AirlineBatchUpsert airlineBatchUpsert);
+    List<Airline> getAirlines(@NonNull AirlineQuery airlineQuery);
+    List<AirlineAirport> batchUpsert(@NonNull AirlineBatchUpsert airlineBatchUpsert);
     int batchDelete(Airline airline);
 }

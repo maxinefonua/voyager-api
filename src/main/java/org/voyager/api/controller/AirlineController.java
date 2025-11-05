@@ -1,6 +1,7 @@
 package org.voyager.api.controller;
 
 import jakarta.validation.Valid;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,10 +12,12 @@ import org.voyager.commons.constants.Path;
 import org.voyager.commons.model.airline.Airline;
 import org.voyager.commons.model.airline.AirlineAirport;
 import org.voyager.commons.model.airline.AirlineBatchUpsert;
-import org.voyager.api.model.query.AirlineQuery;
 import org.voyager.api.service.AirlineService;
 import org.voyager.api.service.AirportsService;
 import org.voyager.api.validate.ValidationUtils;
+import org.voyager.commons.model.airline.AirlineQuery;
+import org.voyager.commons.model.geoname.fields.SearchOperator;
+
 import java.util.List;
 import java.util.Set;
 import java.util.StringJoiner;
@@ -30,8 +33,9 @@ public class AirlineController {
 
     @GetMapping(Path.AIRLINES)
     public List<Airline> getAirlines(
-            @RequestParam(name = ParameterNames.IATA_PARAM_NAME, required = false) List<String> iataList) {
-        if (iataList == null) {
+            @RequestParam(name = ParameterNames.IATA_PARAM_NAME, required = false) List<String> iataList,
+            @RequestParam(name = ParameterNames.OPERATOR, required = false) String operatorString) {
+        if (iataList == null || iataList.isEmpty()) {
             LOGGER.info("GET /airlines");
             return airlineService.getAirlines();
         }
@@ -42,7 +46,11 @@ public class AirlineController {
                 ParameterNames.IATA_PARAM_NAME,
                 Set.copyOf(iataList),airportsService);
 
-        AirlineQuery airlineQuery = AirlineQuery.builder().withIataList(iataList).withIsActive(true).build();
+        AirlineQuery airlineQuery = AirlineQuery.builder().withIATAList(iataList).build();
+        if (StringUtils.isNotBlank(operatorString)) {
+            SearchOperator operator = ValidationUtils.validateAndGetOperator(operatorString);
+            airlineQuery.setOperator(operator);
+        }
         List<Airline> response = airlineService.getAirlines(airlineQuery);
         LOGGER.debug(String.format("response: '%s'",response));
         return response;

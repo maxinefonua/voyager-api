@@ -5,16 +5,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+import org.voyager.api.error.MessageConstants;
 import org.voyager.commons.model.airline.Airline;
 import org.voyager.commons.model.airline.AirlineAirport;
 import org.voyager.commons.model.airline.AirlineBatchUpsert;
 import org.voyager.api.model.entity.AirlineAirportEntity;
-import org.voyager.api.model.query.AirlineQuery;
 import org.voyager.api.repository.AirlineAirportRepository;
 import org.voyager.api.repository.AirlineRepository;
 import org.voyager.api.service.AirlineService;
 import org.voyager.api.service.utils.MapperUtils;
+import org.voyager.commons.model.airline.AirlineQuery;
+import org.voyager.commons.model.geoname.fields.SearchOperator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,8 +45,21 @@ public class AirlineServiceImpl implements AirlineService {
 
     @Override
     public List<Airline> getAirlines(@NonNull AirlineQuery airlineQuery) {
-        return handleJPAExceptions(()->airlineAirportRepository
-                .selectDistinctAirlinesByIataInAndIsActive(airlineQuery.getIataList(),airlineQuery.getIsActive()));
+        return handleJPAExceptions(()-> {
+            switch (airlineQuery.getOperator()) {
+                case OR:
+                    return airlineAirportRepository
+                            .selectDistinctAirlinesByIataInAndIsActive(airlineQuery.getIATAList(), true);
+                case AND:
+                    return airlineAirportRepository
+                            .selectAirlinesWithAllAirports(airlineQuery.getIATAList(),
+                                    true,airlineQuery.getIATAList().size());
+                default:
+                    LOGGER.error("getAirlines SearchOperator {} not yet implemented",airlineQuery.getOperator());
+                    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                            MessageConstants.INTERNAL_SERVICE_ERROR_GENERIC_MESSAGE);
+            }
+        });
     }
 
     @Override

@@ -24,6 +24,7 @@ import org.voyager.commons.model.country.CountryForm;
 import org.voyager.commons.model.flight.FlightForm;
 import org.voyager.commons.model.flight.FlightPatch;
 import org.voyager.commons.model.geoname.fields.FeatureClass;
+import org.voyager.commons.model.geoname.fields.SearchOperator;
 import org.voyager.commons.model.location.LocationPatch;
 import org.voyager.commons.model.location.Source;
 import org.voyager.commons.model.location.LocationForm;
@@ -255,6 +256,15 @@ public class ValidationUtils {
         if (countryCodeList == null) return List.of();
         countryCodeList.replaceAll(countryCode -> validateAndGetCountryCode(true,countryCode,countryService));
         return countryCodeList;
+    }
+
+    public static SearchOperator validateAndGetOperator(String operatorString) {
+        try {
+            return SearchOperator.valueOf(operatorString);
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    MessageConstants.buildInvalidRequestParameterMessage(ParameterNames.OPERATOR,operatorString));
+        }
     }
 
     public static String validateAndGetCountryCode(boolean isParam, String countryCodeString, CountryService countryService) {
