@@ -57,6 +57,11 @@ public class AirportsController {
 
     @GetMapping(Path.AIRPORTS)
     @Cacheable("airportsCache")
+    @CrossOrigin(origins = {"http://localhost:58748", "http://localhost:8080", "http://localhost:53217"},
+            allowedHeaders = "*",
+            methods = {RequestMethod.GET, RequestMethod.OPTIONS},
+            allowCredentials = "true",
+            maxAge = 3600)
     public List<Airport> getAirports(@RequestParam(name = ParameterNames.COUNTRY_CODE_PARAM_NAME, required = false) String countryCodeString,
                                      @RequestParam(name = ParameterNames.TYPE_PARAM_NAME, required = false) List<String> typeList,
                                      @RequestParam(name = ParameterNames.AIRLINE_PARAM_NAME, required = false) String airlineString) {

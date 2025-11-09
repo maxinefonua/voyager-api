@@ -11,6 +11,7 @@ import org.springframework.validation.ObjectError;
 import org.springframework.web.server.ResponseStatusException;
 import org.voyager.api.service.AirportsService;
 import org.voyager.api.service.CountryService;
+import org.voyager.api.service.FlightService;
 import org.voyager.api.service.RouteService;
 import org.voyager.commons.constants.ParameterNames;
 import org.voyager.commons.constants.Regex;
@@ -164,10 +165,14 @@ public class ValidationUtils {
         return validatedSet;
     }
 
-    public static List<String> validateIataCodeList(String paramName, Set<String> iataCodeList, AirportsService airportsService) {
+    public static List<String> validateIataCodeList(String paramName, List<String> iataCodeList, AirportsService airportsService) {
+        if (iataCodeList == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    MessageConstants.buildMissingRequestParameterMessage(paramName));
+        }
         if (iataCodeList.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    MessageConstants.buildInvalidRequestParameterMessage(paramName,""));
+                    MessageConstants.buildEmptyRequestParameterList(paramName));
         }
         List<String> validatedList = new ArrayList<>();
         iataCodeList.forEach(iata -> validatedList.add(
@@ -176,7 +181,7 @@ public class ValidationUtils {
     }
 
     public static String validateIataToUpperCase(String iata, AirportsService airportsService, String varName, boolean isParam) {
-        if (!iata.matches(Regex.AIRPORT_CODE)) {
+        if (!iata.matches(Regex.AIRPORT_CODE_CASE_INSENSITIVE)) {
             if (isParam) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     MessageConstants.buildInvalidRequestParameterMessage(varName,iata));
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -260,11 +265,25 @@ public class ValidationUtils {
 
     public static SearchOperator validateAndGetOperator(String operatorString) {
         try {
-            return SearchOperator.valueOf(operatorString);
+            return SearchOperator.valueOf(operatorString.toUpperCase());
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     MessageConstants.buildInvalidRequestParameterMessage(ParameterNames.OPERATOR,operatorString));
         }
+    }
+
+    public static String validateAndGetFlightNumber(String flightNumberString, FlightService flightService) {
+        if (!flightNumberString.matches(Regex.FLIGHT_NUMBER)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    MessageConstants.buildInvalidRequestParameterMessage(ParameterNames.FLIGHT_NUMBER_PARAM_NAME,
+                            flightNumberString));
+        }
+        if (!flightService.existsByFlightNumber(flightNumberString)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    MessageConstants.buildResourceNotFoundForParameterMessage(ParameterNames.FLIGHT_NUMBER_PARAM_NAME,
+                            flightNumberString));
+        }
+        return flightNumberString;
     }
 
     public static String validateAndGetCountryCode(boolean isParam, String countryCodeString, CountryService countryService) {
@@ -383,7 +402,8 @@ public class ValidationUtils {
                 fieldError.getField(),valueJoiner,fieldError.getRejectedValue()));
     }
 
-    public static Integer resolveRouteId(String routeIdString, RouteService routeService) {
+    // TODO: add existsById to RouteService
+    public static Integer validateAndGetRouteId(String routeIdString, RouteService routeService) {
         try {
             Integer routeId = Integer.valueOf(routeIdString);
             Option<Route> routeOption = routeService.getRouteById(routeId);

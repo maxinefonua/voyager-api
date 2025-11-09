@@ -1,9 +1,14 @@
 package org.voyager.api.service;
 
 import io.vavr.control.Option;
+import org.springframework.validation.annotation.Validated;
+import org.voyager.api.model.response.PagedResponse;
 import org.voyager.commons.model.airline.Airline;
+import org.voyager.commons.model.path.airline.PathAirlineQuery;
 import org.voyager.commons.model.route.*;
-
+import org.voyager.commons.model.path.route.RoutePath;
+import org.voyager.commons.model.path.airline.AirlinePath;
+import org.voyager.commons.model.path.PathResponse;
 import java.util.List;
 import java.util.Set;
 
@@ -13,7 +18,8 @@ public interface RouteService {
     Boolean destinationExists(String destination);
     Route patchRoute(Integer id, RoutePatch routePatch);
     Option<Route> getRouteById(Integer id);
-    List<Route> getRoutes(Option<String> origin, Option<String> destination, Option<Airline> airlineOption);
+    List<Route> getRoutes();
+    List<Route> getRoutes(@Validated RouteQuery routeQuery);
     Route save(RouteForm routeForm);
     List<RoutePath> getRoutePathList(Set<String> originSet, Set<String> destinationSet,
                                      Integer limit,
@@ -26,6 +32,7 @@ public interface RouteService {
                                                  Set<String> excludeAirportCodes,
                                                  Set<Integer> excludeRouteIds,
                                                  Set<String> excludeFlightNumbers);
+    PagedResponse<AirlinePath> getAirlinePathList(PathAirlineQuery pathAirlineQuery);
 
     Option<Route> getRoute(String origin, String destination);
 }

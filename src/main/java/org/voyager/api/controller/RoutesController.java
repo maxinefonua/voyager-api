@@ -18,6 +18,8 @@ import org.voyager.commons.model.route.RoutePatch;
 import org.voyager.api.service.AirportsService;
 import org.voyager.api.service.RouteService;
 import org.voyager.api.validate.ValidationUtils;
+import org.voyager.commons.model.route.RouteQuery;
+
 import java.util.List;
 
 @RestController
@@ -31,12 +33,25 @@ public class RoutesController {
     public List<Route> getRoutes(@RequestParam(name = ParameterNames.ORIGIN_PARAM_NAME, required = false) String origin,
                                  @RequestParam(name = ParameterNames.DESTINATION_PARAM_NAME, required = false) String destination,
                                  @RequestParam(name = ParameterNames.AIRLINE_PARAM_NAME, required = false) String airlineString) {
-        Option<String> originOption = Option.none();
-        Option<String> destinationOption = Option.none();
-        Option<Airline> airlineOption = ValidationUtils.resolveAirlineString(airlineString);
-        if (StringUtils.isNotEmpty(origin)) originOption = Option.of(ValidationUtils.validateIataToUpperCase(origin,airportService,ParameterNames.ORIGIN_PARAM_NAME,true));
-        if (StringUtils.isNotEmpty(destination)) destinationOption = Option.of(ValidationUtils.validateIataToUpperCase(destination,airportService,ParameterNames.DESTINATION_PARAM_NAME,true));
-        return routeService.getRoutes(originOption,destinationOption,airlineOption);
+        RouteQuery routeQuery = null;
+        if (StringUtils.isNotBlank(origin)) {
+            origin = ValidationUtils.validateIataToUpperCase(origin,airportService,
+                    ParameterNames.ORIGIN_PARAM_NAME,true);
+            routeQuery = RouteQuery.builder().origin(origin).build();
+        }
+        if (StringUtils.isNotBlank(destination)) {
+            destination = ValidationUtils.validateIataToUpperCase(destination,airportService,
+                    ParameterNames.DESTINATION_PARAM_NAME,true);
+            if (routeQuery == null) routeQuery = RouteQuery.builder().build();
+            routeQuery.setDestination(destination);
+        }
+        if (StringUtils.isNotBlank(airlineString)) {
+            Airline airline = ValidationUtils.validateAndGetAirline(airlineString);
+            if (routeQuery == null) routeQuery = RouteQuery.builder().build();
+            routeQuery.setAirline(airline);
+        }
+        if (routeQuery == null) return routeService.getRoutes();
+        return routeService.getRoutes(routeQuery);
     }
 
     @GetMapping(Path.ROUTE)

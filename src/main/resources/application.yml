@@ -53,3 +53,7 @@ auth:
   adminApiKey: ${ADMIN_API_KEY}
   testsApiKey: ${TESTS_API_KEY}
   userApiKey: ${VOYAGER_API_KEY}
+cors:
+  allowed-origin-patterns:
+    - "http://localhost:*"
+    - "https://localhost:*"

@@ -9,16 +9,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import org.voyager.api.error.MessageConstants;
-import org.voyager.commons.model.airline.Airline;
-import org.voyager.commons.model.airline.AirlineAirport;
-import org.voyager.commons.model.airline.AirlineBatchUpsert;
+import org.voyager.commons.model.airline.*;
 import org.voyager.api.model.entity.AirlineAirportEntity;
 import org.voyager.api.repository.AirlineAirportRepository;
 import org.voyager.api.repository.AirlineRepository;
 import org.voyager.api.service.AirlineService;
 import org.voyager.api.service.utils.MapperUtils;
-import org.voyager.commons.model.airline.AirlineQuery;
-import org.voyager.commons.model.geoname.fields.SearchOperator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,6 +33,12 @@ public class AirlineServiceImpl implements AirlineService {
 
 
     @Override
+    @Cacheable("activeAirlineAirportCache")
+    public boolean isActiveAirport(String iata, Airline airline) {
+        return airlineAirportRepository.existsByAirlineAndIata(airline,iata);
+    }
+
+    @Override
     @Cacheable("airlineCache")
     public List<Airline> getAirlines() {
         return handleJPAExceptions(()-> airlineRepository
@@ -46,18 +48,32 @@ public class AirlineServiceImpl implements AirlineService {
     @Override
     public List<Airline> getAirlines(@NonNull AirlineQuery airlineQuery) {
         return handleJPAExceptions(()-> {
-            switch (airlineQuery.getOperator()) {
-                case OR:
-                    return airlineAirportRepository
-                            .selectDistinctAirlinesByIataInAndIsActive(airlineQuery.getIATAList(), true);
-                case AND:
-                    return airlineAirportRepository
-                            .selectAirlinesWithAllAirports(airlineQuery.getIATAList(),
-                                    true,airlineQuery.getIATAList().size());
-                default:
-                    LOGGER.error("getAirlines SearchOperator {} not yet implemented",airlineQuery.getOperator());
-                    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                            MessageConstants.INTERNAL_SERVICE_ERROR_GENERIC_MESSAGE);
+            if (airlineQuery instanceof AirlineAirportQuery airlineAirportQuery) {
+                switch (airlineAirportQuery.getOperator()) {
+                    case OR:
+                        return airlineAirportRepository
+                                .selectDistinctAirlinesByIataInAndIsActive(airlineAirportQuery.getIatalist(), true);
+                    case AND:
+                        return airlineAirportRepository
+                                .selectAirlinesWithAllAirports(airlineAirportQuery.getIatalist(),
+                                        true, airlineAirportQuery.getIatalist().size());
+                    default:
+                        LOGGER.error("getAirlines SearchOperator {} not yet implemented",
+                                airlineAirportQuery.getOperator());
+                        throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                                MessageConstants.INTERNAL_SERVICE_ERROR_GENERIC_MESSAGE);
+                }
+            } else if (airlineQuery instanceof AirlinePathQuery airlinePathQuery) {
+                List<Airline> originAirlines = airlineAirportRepository
+                        .selectDistinctAirlinesByIataInAndIsActive(airlinePathQuery.getOriginList(), true);
+                List<Airline> destinationAirlines = airlineAirportRepository
+                        .selectDistinctAirlinesByIataInAndIsActive(airlinePathQuery.getDestinationList(), true);
+                return originAirlines.stream().filter(destinationAirlines::contains).sorted().toList();
+            } else {
+                LOGGER.error("handling of AirlineQuery implementation {} not yet implemented",
+                        airlineQuery.getClass().getSimpleName());
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                        MessageConstants.INTERNAL_SERVICE_ERROR_GENERIC_MESSAGE);
             }
         });
     }

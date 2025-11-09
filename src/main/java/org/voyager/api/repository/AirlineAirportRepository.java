@@ -3,6 +3,7 @@ package org.voyager.api.repository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.voyager.api.service.AirlineService;
 import org.voyager.commons.model.airline.Airline;
 import org.voyager.api.model.entity.AirlineAirportEntity;
 import org.voyager.api.model.entity.AirlineAirportId;
@@ -44,4 +45,7 @@ public interface AirlineAirportRepository extends JpaRepository<AirlineAirportEn
                                                    @Param("requiredCount") long requiredCount);
 
     boolean existsByAirlineInAndIata(List<Airline> airlines, String iata);
+
+    //newly newly added
+    boolean existsByAirlineAndIata(Airline airline, String iata);
 }

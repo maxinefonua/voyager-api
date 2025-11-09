@@ -8,6 +8,6 @@ import java.util.List;
 import java.util.Set;
 
 public interface FlightSearchService {
+    List<PathDetailed> findAllFlights(@NotEmpty Set<@ValidAirportCode String> originSet, @NotEmpty Set<@ValidAirportCode String> destinationSet);
     List<PathDetailed> findDirectFlights(@NotEmpty Set<@ValidAirportCode String> originSet, @NotEmpty Set<@ValidAirportCode String> destinationSet);
-    List<PathDetailed> findComplexRoutes(@NotEmpty Set<@ValidAirportCode String> originSet, @NotEmpty Set<@ValidAirportCode String> destinationSet);
 }

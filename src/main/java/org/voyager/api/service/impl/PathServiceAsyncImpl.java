@@ -2,16 +2,20 @@ package org.voyager.api.service.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
+import org.springframework.stereotype.Service;
 import org.voyager.api.model.path.FlightSearchStatus;
 import org.voyager.api.model.path.PathDetailed;
 import org.voyager.api.model.path.PathDetailedResponse;
 import org.voyager.api.model.query.PathQuery;
+import org.voyager.api.model.response.PagedResponse;
 import org.voyager.api.service.FlightSearchService;
 import org.voyager.api.service.PathService;
+import org.voyager.commons.model.airline.Airline;
+import org.voyager.commons.model.path.Path;
+import org.voyager.commons.model.path.airline.AirlinePath;
+import org.voyager.commons.model.path.airline.PathAirlineQuery;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.stream.Collectors;
@@ -48,6 +52,16 @@ public class PathServiceAsyncImpl implements PathService {
         return PathDetailedResponse.builder().flightSearchId(flightSearchId).pathDetailedList(immediateResults)
                 .totalPathCount(immediateResults.size()).page(0).pageSize(pathQuery.getPageSize())
                 .flightSearchStatus(status).build();
+    }
+
+    @Override
+    public PagedResponse<AirlinePath> getAirlinePathList(PathAirlineQuery pathAirlineQuery) {
+        return null;
+    }
+
+    @Override
+    public PagedResponse<Path> getPathList(PathAirlineQuery pathAirlineQuery) {
+        return null;
     }
 
     public PathDetailedResponse getNextPage(String searchId, int page, int size) {

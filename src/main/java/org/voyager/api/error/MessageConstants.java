@@ -5,6 +5,7 @@ import org.voyager.commons.constants.ParameterNames;
 import java.util.Map;
 
 public class MessageConstants {
+    private static final String EMPTY_LIST = "request parameter '%s' cannot be empty";
     private static final String INVALID_REQUEST_PARAM = "Invalid request parameter '%s' with value '%s'. %s";
     private static final String MISSING_REQUEST_PARAM = "Missing required request parameter '%s'. %s";
     private static final String INVALID_REQUEST_BODY_PATCH = "Invalid request body for '%s'. A valid PATCH has at least one field set";
@@ -30,20 +31,16 @@ public class MessageConstants {
         return String.format(REPOSITORY_SAVE_ERROR,entityName);
     }
 
-    public static String buildRespositorySaveErrorMessageWithIata(String entityName,String iata){
-        return String.format(REPOSITORY_SAVE_WITH_IATA_ERROR,entityName,iata);
-    }
-
     public static String buildRespositoryPatchErrorMessage(String entityName, String entityId){
         return String.format(REPOSITORY_PATCH_ERROR,entityName,entityId);
     }
 
-    public static String buildGetGeonameErrorMessage(String geonameName, Long geonameId){
-        return String.format(GET_GEONAMEID_ERROR,geonameName,geonameId);
-    }
-
     public static String buildInvalidRequestParameterMessage(String paramName, String paramValue){
         return String.format(INVALID_REQUEST_PARAM,paramName,paramValue,CONSTRAINT_MAP.get(paramName));
+    }
+
+    public static String buildEmptyRequestParameterList(String paramListName){
+        return String.format(EMPTY_LIST,paramListName);
     }
 
     public static String buildInvalidPathVariableMessage(String varName, String varValue){

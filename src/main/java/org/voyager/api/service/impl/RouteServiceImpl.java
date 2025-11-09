@@ -1,16 +1,33 @@
 package org.voyager.api.service.impl;
 
 import io.vavr.control.Option;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.server.ResponseStatusException;
 import org.voyager.api.error.MessageConstants;
+import org.voyager.api.model.entity.AirlineAirportEntity;
+import org.voyager.api.model.query.IataQuery;
+import org.voyager.api.model.response.PagedResponse;
+import org.voyager.api.service.AirlineService;
+import org.voyager.api.service.AirportsService;
+import org.voyager.api.service.FlightService;
 import org.voyager.commons.model.airline.Airline;
 import org.voyager.api.model.entity.RouteEntity;
+import org.voyager.commons.model.airline.AirlineAirportQuery;
+import org.voyager.commons.model.airline.AirlineQuery;
+import org.voyager.commons.model.airport.Airport;
+import org.voyager.commons.model.airport.AirportType;
+import org.voyager.commons.model.geoname.fields.SearchOperator;
 import org.voyager.commons.model.route.*;
+import org.voyager.commons.model.path.airline.*;
+import org.voyager.commons.model.path.route.*;
+import org.voyager.commons.model.path.PathResponse;
 import org.voyager.api.repository.AirlineAirportRepository;
 import org.voyager.api.repository.FlightRepository;
 import org.voyager.api.repository.RouteRepository;
@@ -29,6 +46,15 @@ public class RouteServiceImpl implements RouteService {
 
     @Autowired
     FlightRepository flightRepository;
+
+    @Autowired
+    AirportsService airportsService;
+
+    @Autowired
+    AirlineService airlineService;
+
+    @Autowired
+    FlightService flightService;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RouteServiceImpl.class);
 
@@ -57,31 +83,84 @@ public class RouteServiceImpl implements RouteService {
     }
 
     @Override
-    public List<Route> getRoutes(Option<String> origin, Option<String> destination, Option<Airline> airlineOption) {
-        if (airlineOption.isEmpty()) {
-            if (origin.isEmpty() && destination.isEmpty()) return routeRepository.findAll().stream()
-                    .map(MapperUtils::entityToRoute).toList();
-            if (origin.isEmpty()) return routeRepository.findByDestination(destination.get()).stream()
-                        .map(MapperUtils::entityToRoute).toList();
-            if (destination.isEmpty()) return routeRepository.findByOrigin(origin.get()).stream()
-                    .map(MapperUtils::entityToRoute).toList();
-            Optional<RouteEntity> optionalRouteEntity = routeRepository.findByOriginAndDestination(origin.get(),
-                    destination.get());
+    public List<Route> getRoutes() {
+        return routeRepository.findAll().stream().map(MapperUtils::entityToRoute).toList();
+    }
+
+    @Override
+    @Cacheable("routeQueryCache")
+    public List<Route> getRoutes(@Validated RouteQuery routeQuery) {
+        String origin = routeQuery.getOrigin();
+        String destination = routeQuery.getDestination();
+        Airline airline = routeQuery.getAirline();
+
+        // TODO: add verification for origin only allows excludeDestination etc
+        Set<String> excludeDestination = routeQuery.getExcludeDestinationSet();
+        Set<Integer> excludeRouteId = routeQuery.getExcludeRouteIdSet();
+
+        if (origin != null && destination != null && airline != null) {
+            if (!airlineService.isActiveAirport(origin,airline)) return List.of();
+            if (!airlineService.isActiveAirport(destination,airline)) return List.of();
+            Optional<RouteEntity> optionalRouteEntity = routeRepository.findByOriginAndDestination(origin,destination);
             return optionalRouteEntity.map(routeEntity -> List.of(MapperUtils.entityToRoute(routeEntity)))
-                    .orElseGet(List::of);
-        } else {
-            List<Integer> airlineRouteIds = flightRepository.selectDistinctRouteIdByAirlineAndIsActive(airlineOption.get(),true);
-            if (origin.isEmpty() && destination.isEmpty()) // find by airline -> check active flights
-                return routeRepository.findByIdIn(airlineRouteIds).stream().map(MapperUtils::entityToRoute).toList();
-            if (origin.isEmpty()) // find by airline with destination
-                return routeRepository.findByDestinationAndIdIn(destination.get(),airlineRouteIds).stream()
-                        .map(MapperUtils::entityToRoute).toList();
-            if (destination.isEmpty()) // find by airline with origin
-                return routeRepository.findByOriginAndIdIn(origin.get(),airlineRouteIds).stream()
-                        .map(MapperUtils::entityToRoute).toList();
-            return routeRepository.findByOriginAndDestinationAndIdIn(origin.get(),destination.get(),airlineRouteIds)
-                    .stream().map(MapperUtils::entityToRoute).toList();
+                    .orElse(List.of());
         }
+        if (origin != null && destination != null) {
+            Optional<RouteEntity> optionalRouteEntity = routeRepository.findByOriginAndDestination(origin,destination);
+            return optionalRouteEntity.map(routeEntity -> List.of(MapperUtils.entityToRoute(routeEntity)))
+                    .orElse(List.of());
+        }
+        if (origin != null && airline != null) {
+            if (!airlineService.isActiveAirport(origin,airline)) return List.of();
+            if (excludeRouteId != null && excludeDestination != null) {
+                return routeRepository.selectByOriginExcludingRoutesAndDestinations(
+                        origin,new ArrayList<>(excludeRouteId),new ArrayList<>(excludeDestination))
+                        .stream().map(MapperUtils::entityToRoute).toList();
+            }
+            if (excludeRouteId != null) {
+                return routeRepository.findByOriginAndIdNotIn(origin,new ArrayList<>(excludeRouteId))
+                        .stream().map(MapperUtils::entityToRoute).toList();
+            }
+            if (excludeDestination != null) {
+                return routeRepository.findByOriginAndDestinationNotIn(origin,new ArrayList<>(excludeDestination))
+                        .stream().map(MapperUtils::entityToRoute).toList();
+            }
+            return routeRepository.findByOrigin(origin).stream().map(MapperUtils::entityToRoute).toList();
+        }
+
+        if (destination != null && airline != null) {
+            if (!airlineService.isActiveAirport(destination,airline)) return List.of();
+            return routeRepository.findByDestination(destination).stream().map(MapperUtils::entityToRoute).toList();
+        }
+
+        if (airline != null) {
+            List<Integer> routeIdList = flightService.getAirlineRouteIds(airline);
+            return routeRepository.findByIdIn(routeIdList).stream().map(MapperUtils::entityToRoute).toList();
+        }
+
+        if (origin != null) {
+            if (excludeRouteId != null && excludeDestination != null) {
+                return routeRepository.selectByOriginExcludingRoutesAndDestinations(
+                                origin,new ArrayList<>(excludeRouteId),new ArrayList<>(excludeDestination))
+                        .stream().map(MapperUtils::entityToRoute).toList();
+            }
+            if (excludeRouteId != null) {
+                return routeRepository.findByOriginAndIdNotIn(origin,new ArrayList<>(excludeRouteId))
+                        .stream().map(MapperUtils::entityToRoute).toList();
+            }
+            if (excludeDestination != null) {
+                return routeRepository.findByOriginAndDestinationNotIn(origin,new ArrayList<>(excludeDestination))
+                        .stream().map(MapperUtils::entityToRoute).toList();
+            }
+            return routeRepository.findByOrigin(origin).stream().map(MapperUtils::entityToRoute).toList();
+        }
+
+        if (destination != null) {
+            return routeRepository.findByDestination(destination).stream().map(MapperUtils::entityToRoute).toList();
+        }
+
+        LOGGER.error("Illegal state, code reached state meaning routeQuery fields all null. Investigation required. routeQuery: {}",routeQuery);
+        throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,MessageConstants.INTERNAL_SERVICE_ERROR_GENERIC_MESSAGE);
     }
 
     @Override
@@ -181,6 +260,11 @@ public class RouteServiceImpl implements RouteService {
         });
         return processQueue(toSearch,pathAirlineList,visitedAirports,destinationSet,limit,
                 excludeRouteIds,excludeFlightNumbers,includeAirlines);
+    }
+
+    @Override
+    public PagedResponse<AirlinePath> getAirlinePathList(PathAirlineQuery pathAirlineQuery) {
+        return null;
     }
 
     @Override
