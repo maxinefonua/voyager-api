@@ -14,10 +14,11 @@ import java.util.List;
 
 public interface AirportsService {
     Boolean ifIataExists(String iata);
-    public List<String> getIata();
-    public List<String> getIata(IataQuery iataQuery);
-    public List<Airport> getAll(Option<String> countryCode, List<AirportType> airportTypeList, Option<Airline> airline);
-    public List<Airport> getByDistance(double latitude, double longitude, int limit, List<AirportType> airportTypeList, List<Airline> airline);
+    List<String> getIata();
+    List<String> getIata(IataQuery iataQuery);
+    List<Airport> getAll(Option<String> countryCode, List<AirportType> airportTypeList, List<Airline> airline);
+    List<Airport> getByDistance(double latitude, double longitude, int limit, List<AirportType> airportTypeList, List<Airline> airline);
+    List<Airport> getNearbyAirport(String iata, int limit, List<AirportType> airportTypeList, List<Airline> airline);
     Airport getByIata(String iata);
     Airport patch(String iata, AirportPatch airportPatch);
     Airport createAirport(@Validated AirportForm airportForm);

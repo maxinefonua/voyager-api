@@ -9,12 +9,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import org.voyager.api.error.MessageConstants;
+import org.voyager.api.model.entity.RouteEntity;
+import org.voyager.api.service.RouteService;
 import org.voyager.commons.model.airline.*;
 import org.voyager.api.model.entity.AirlineAirportEntity;
 import org.voyager.api.repository.AirlineAirportRepository;
 import org.voyager.api.repository.AirlineRepository;
 import org.voyager.api.service.AirlineService;
 import org.voyager.api.service.utils.MapperUtils;
+import org.voyager.commons.model.route.Route;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,6 +49,7 @@ public class AirlineServiceImpl implements AirlineService {
     }
 
     @Override
+    @Cacheable("airportAirlinesCache")
     public List<Airline> getAirlines(@NonNull AirlineQuery airlineQuery) {
         return handleJPAExceptions(()-> {
             if (airlineQuery instanceof AirlineAirportQuery airlineAirportQuery) {
@@ -68,7 +72,7 @@ public class AirlineServiceImpl implements AirlineService {
                         .selectDistinctAirlinesByIataInAndIsActive(airlinePathQuery.getOriginList(), true);
                 List<Airline> destinationAirlines = airlineAirportRepository
                         .selectDistinctAirlinesByIataInAndIsActive(airlinePathQuery.getDestinationList(), true);
-                return originAirlines.stream().filter(destinationAirlines::contains).sorted().toList();
+                return originAirlines.parallelStream().filter(destinationAirlines::contains).sorted().toList();
             } else {
                 LOGGER.error("handling of AirlineQuery implementation {} not yet implemented",
                         airlineQuery.getClass().getSimpleName());
@@ -111,10 +115,30 @@ public class AirlineServiceImpl implements AirlineService {
 
     @Override
     public int batchDelete(Airline airline) {
-        return handleJPAExceptions(()-> {
-            List<AirlineAirportEntity> airlineAirportEntityList = airlineAirportRepository.findByAirline(airline);
-            airlineAirportRepository.deleteAll(airlineAirportEntityList);
-            return airlineAirportEntityList.size();
-        });
+        return handleJPAExceptions(()-> airlineAirportRepository.deleteByAirline(airline));
+    }
+
+    @Override
+    public boolean isActiveAirlineRoute(Route routeEntity, List<Airline> airlineList) {
+        return handleJPAExceptions(()->
+                airlineAirportRepository.existsByAnyAirlineInAndAllAirportsIn(
+                        2,List.of(routeEntity.getOrigin(),routeEntity.getDestination()),
+                        true,airlineList));
+    }
+
+    @Override
+    public boolean hasAnyActiveAirlineForAllAirports(List<Airline> airlineList, List<String> iataList) {
+        return handleJPAExceptions(() ->
+                airlineAirportRepository.existsByAnyAirlineInAndAllAirportsIn(
+                        iataList.size(), iataList,
+                        true, airlineList));
+    }
+
+    @Override
+    public List<Airline> getDistinctAirlinesForAllAirports(List<String> iataList) {
+        return handleJPAExceptions(() ->
+                airlineAirportRepository.selectDistinctAirlinesWithAllAirportsIn(
+                        iataList,
+                        true, iataList.size()));
     }
 }

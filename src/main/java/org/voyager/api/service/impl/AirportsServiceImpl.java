@@ -79,45 +79,45 @@ public class AirportsServiceImpl implements AirportsService {
     }
 
     @Override
-    public List<Airport> getAll(Option<String> countryCode, List<AirportType> airportTypeList, Option<Airline> airline) {
+    public List<Airport> getAll(Option<String> countryCode, List<AirportType> airportTypeList, List<Airline> airlineList) {
         return handleJPAExceptions(() -> {
-            if (countryCode.isEmpty() && airportTypeList.isEmpty() && airline.isEmpty()) {
+            if (countryCode.isEmpty() && airportTypeList.isEmpty() && airlineList.isEmpty()) {
                 LOGGER.debug("fetching uncached get all airports");
                 return airportRepository.findAll(Sort.by(Sort.Direction.ASC, "iata")).stream()
                         .map(MapperUtils::entityToAirport).toList();
             }
             if (countryCode.isEmpty() && airportTypeList.isEmpty()) {
-                LOGGER.debug(String.format("fetching uncached get airports by airline: %s", airline.get()));
+                LOGGER.debug(String.format("fetching uncached get airports by airlineList: %s", airlineList));
                 return airportRepository.findByIataInOrderByIataAsc(
-                        getActiveAirlineCodes(airline.get())).stream().map(MapperUtils::entityToAirport).toList();
+                        getActiveAirlineCodes(airlineList)).stream().map(MapperUtils::entityToAirport).toList();
             }
-            if (countryCode.isEmpty() && airline.isEmpty()) {
+            if (countryCode.isEmpty() && airlineList.isEmpty()) {
                 LOGGER.debug(String.format("fetching uncached get airports by type: %s", airportTypeList));
                 return airportRepository.findByTypeInOrderByIataAsc(airportTypeList).stream().map(MapperUtils::entityToAirport).toList();
             }
-            if (airportTypeList.isEmpty() && airline.isEmpty()) {
+            if (airportTypeList.isEmpty() && airlineList.isEmpty()) {
                 LOGGER.debug(String.format("fetching uncached get airports by country code: %s", countryCode.get()));
                 return airportRepository.findByCountryCodeOrderByIataAsc(countryCode.get()).stream().map(MapperUtils::entityToAirport).toList();
             }
-            if (airline.isEmpty()) {
+            if (airlineList.isEmpty()) {
                 LOGGER.debug(String.format("fetching uncached get airports by type: %s and country code: %s", airportTypeList, countryCode.get()));
                 return airportRepository.findByCountryCodeAndTypeInOrderByIataAsc(countryCode.get(), airportTypeList).stream().map(MapperUtils::entityToAirport).toList();
             }
             if (airportTypeList.isEmpty()) {
-                LOGGER.debug(String.format("fetching uncached get airports by country code: %s and airline: %s", countryCode.get(), airline.get()));
-                List<String> validAirlineAirports = getActiveAirlineCodes(airline.get());
+                LOGGER.debug(String.format("fetching uncached get airports by country code: %s and airlineList: %s", countryCode.get(), airlineList));
+                List<String> validAirlineAirports = getActiveAirlineCodes(airlineList);
                 return airportRepository.findByCountryCodeOrderByIataAsc(countryCode.get()).stream()
                         .filter(airportEntity -> validAirlineAirports.contains(airportEntity.getIata())
                 ).map(MapperUtils::entityToAirport).toList();
             }
             if (countryCode.isEmpty()) {
-                LOGGER.debug(String.format("fetching uncached get airports by type: %s and airline: %s", airportTypeList, airline.get()));
-                List<String> validAirlineAirports = getActiveAirlineCodes(airline.get());
+                LOGGER.debug(String.format("fetching uncached get airports by type: %s and airlineList: %s", airportTypeList, airlineList));
+                List<String> validAirlineAirports = getActiveAirlineCodes(airlineList);
                 return airportRepository.findByTypeInOrderByIataAsc(airportTypeList).stream().filter(
                         airportEntity -> validAirlineAirports.contains(airportEntity.getIata())
                 ).map(MapperUtils::entityToAirport).toList();
             }
-            List<String> validAirlineAirports = getActiveAirlineCodes(airline.get());
+            List<String> validAirlineAirports = getActiveAirlineCodes(airlineList);
             return airportRepository.findByCountryCodeAndTypeInOrderByIataAsc(countryCode.get(), airportTypeList).stream().filter(
                     airportEntity -> validAirlineAirports.contains(airportEntity.getIata())
             ).map(MapperUtils::entityToAirport).toList();
@@ -149,6 +149,16 @@ public class AirportsServiceImpl implements AirportsService {
             return airportRepository.findByIataInOrderByIataAsc(getDistinctIataCodesForAirlineList(airlineList)).stream().map(airportEntity -> MapperUtils.entityToAirport(airportEntity,
                             Airport.calculateDistanceKm(latitude, longitude, airportEntity.getLatitude(), airportEntity.getLongitude())))
                     .sorted(Comparator.comparingDouble(Airport::getDistance)).limit(limit).toList();
+        });
+    }
+
+    @Override
+    public List<Airport> getNearbyAirport(@Validated String iata, int limit,
+                                          List<AirportType> airportTypeList, List<Airline> airlineList) {
+        return handleJPAExceptions(() -> {
+            AirportEntity givenAirport = airportRepository.findById(iata).get();
+            return getByDistance(givenAirport.getLatitude(), givenAirport.getLongitude(),
+                    limit, airportTypeList,airlineList);
         });
     }
 
@@ -201,6 +211,11 @@ public class AirportsServiceImpl implements AirportsService {
     private List<String> getActiveAirlineCodes(Airline airline) {
         return handleJPAExceptions(() ->
                 airlineAirportRepository.selectIataCodesByAirlineAndIsActive(airline,true));
+    }
+
+    private List<String> getActiveAirlineCodes(List<Airline> airlineList) {
+        return handleJPAExceptions(() ->
+                airlineAirportRepository.selectDistinctIataCodesByAirlineInAndIsActive(airlineList,true));
     }
 
     private List<String> getDistinctIataCodesForAirlineList(List<Airline> airlineList) {

@@ -35,6 +35,11 @@ import org.voyager.commons.model.route.RouteForm;
 import org.voyager.commons.model.route.RoutePatch;
 import org.voyager.commons.validate.annotations.ValidEnum;
 import java.lang.reflect.Field;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.function.Supplier;
 
@@ -181,6 +186,10 @@ public class ValidationUtils {
     }
 
     public static String validateIataToUpperCase(String iata, AirportsService airportsService, String varName, boolean isParam) {
+        if (StringUtils.isBlank(iata)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    MessageConstants.buildMissingRequestParameterMessage(varName));
+        }
         if (!iata.matches(Regex.AIRPORT_CODE_CASE_INSENSITIVE)) {
             if (isParam) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     MessageConstants.buildInvalidRequestParameterMessage(varName,iata));
@@ -415,6 +424,16 @@ public class ValidationUtils {
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     MessageConstants.buildInvalidRequestParameterMessage(ParameterNames.ROUTE_ID_PARAM_NAME, routeIdString));
+        }
+    }
+
+    public static ZonedDateTime validateAndGetZDT(String departureString) {
+        try {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXX");
+            return ZonedDateTime.parse(departureString, formatter);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    MessageConstants.buildInvalidRequestParameterMessage(ParameterNames.DEPARTURE_ZDT, departureString));
         }
     }
 

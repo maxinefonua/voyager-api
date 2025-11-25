@@ -18,10 +18,10 @@ spring:
   profiles:
     active: dev
   jpa:
-    show-sql: true
+    show-sql: false
     hibernate:
       ddl-auto: validate
-      format_sql: true
+      format_sql: false
   logging:
     level:
       org:

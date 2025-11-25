@@ -22,7 +22,24 @@ public interface RouteRepository extends JpaRepository<RouteEntity,Integer> {
 
     // newly added
     List<RouteEntity> findByOriginIn(List<String> originList);
+    List<RouteEntity> findByOriginInAndDestinationNotInAndIdNotIn(
+            List<String> originList,
+            List<String> excludeDestinationList,
+            List<Integer> excludeRouteIdList);
+    List<RouteEntity> findByOriginInAndDestinationIn(List<String> originList,List<String> destinationList);
+    List<RouteEntity> findByOriginInAndDestinationInAndDestinationNotInAndIdNotIn(
+            List<String> originList,
+            List<String> destinationList,
+            List<String> excludeDestinationList,
+            List<Integer> excludeRouteIdList);
     List<RouteEntity> findByDestinationIn(List<String> originList);
+    List<RouteEntity> findByDestinationInAndDestinationNotInAndIdNotIn(
+            List<String> originList,
+            List<String> excludeDestinationList,
+            List<Integer> excludeRouteIdList);
+    List<RouteEntity> findByDestinationNotInAndIdNotIn(
+            List<String> excludeDestinationList,
+            List<Integer> excludeRouteIdList);
     List<RouteEntity> findByOriginAndDestinationIn(String origin, List<String> destinationList);
 
     // again newly added
@@ -34,4 +51,15 @@ public interface RouteRepository extends JpaRepository<RouteEntity,Integer> {
             @Param("origin") String origin,
             @Param("excludedRouteIds") List<Integer> excludedRouteIds,
             @Param("excludedDestinations") List<String> excludedDestinations);
+
+    @Query("SELECT r FROM RouteEntity r WHERE " +
+            "(:origins IS NULL OR r.origin IN :origins) AND " +
+            "(:destinations IS NULL OR r.destination IN :destinations) AND " +
+            "(:excludeDestinations IS NULL OR r.destination NOT IN :excludeDestinations) AND " +
+            "(:excludeRouteIds IS NULL OR r.id NOT IN :excludeRouteIds)")
+    List<RouteEntity> findRoutes(
+            @Param("origins") List<String> origins,
+            @Param("destinations") List<String> destinations,
+            @Param("excludeDestinations") List<String> excludeDestinations,
+            @Param("excludeRouteIds") List<Integer> excludeRouteIds);
 }

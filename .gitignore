@@ -15,3 +15,4 @@ target/
 ### env variables ###
 .env_dev
 .env_local
+.env_admin

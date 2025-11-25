@@ -90,77 +90,25 @@ public class RouteServiceImpl implements RouteService {
     @Override
     @Cacheable("routeQueryCache")
     public List<Route> getRoutes(@Validated RouteQuery routeQuery) {
-        String origin = routeQuery.getOrigin();
-        String destination = routeQuery.getDestination();
-        Airline airline = routeQuery.getAirline();
+        List<String> originList = Optional.ofNullable(routeQuery.getOriginList())
+                .orElse(Collections.emptyList());
+        List<String> destinationList = Optional.ofNullable(routeQuery.getDestinationList())
+                .orElse(Collections.emptyList());
+        List<String> excludeDestinationList = new ArrayList<>(
+                Optional.ofNullable(routeQuery.getExcludeDestinationSet())
+                        .orElse(Collections.emptySet()));
+        List<Integer> excludeRouteIdList = new ArrayList<>(
+                Optional.ofNullable(routeQuery.getExcludeRouteIdSet())
+                        .orElse(Collections.emptySet()));
 
-        // TODO: add verification for origin only allows excludeDestination etc
-        Set<String> excludeDestination = routeQuery.getExcludeDestinationSet();
-        Set<Integer> excludeRouteId = routeQuery.getExcludeRouteIdSet();
+        List<RouteEntity> routeEntityList = routeRepository.findRoutes(
+                originList.isEmpty() ? null : originList,
+                destinationList.isEmpty() ? null : destinationList,
+                excludeDestinationList.isEmpty() ? null : excludeDestinationList,
+                excludeRouteIdList.isEmpty() ? null : excludeRouteIdList
+        );
 
-        if (origin != null && destination != null && airline != null) {
-            if (!airlineService.isActiveAirport(origin,airline)) return List.of();
-            if (!airlineService.isActiveAirport(destination,airline)) return List.of();
-            Optional<RouteEntity> optionalRouteEntity = routeRepository.findByOriginAndDestination(origin,destination);
-            return optionalRouteEntity.map(routeEntity -> List.of(MapperUtils.entityToRoute(routeEntity)))
-                    .orElse(List.of());
-        }
-        if (origin != null && destination != null) {
-            Optional<RouteEntity> optionalRouteEntity = routeRepository.findByOriginAndDestination(origin,destination);
-            return optionalRouteEntity.map(routeEntity -> List.of(MapperUtils.entityToRoute(routeEntity)))
-                    .orElse(List.of());
-        }
-        if (origin != null && airline != null) {
-            if (!airlineService.isActiveAirport(origin,airline)) return List.of();
-            if (excludeRouteId != null && excludeDestination != null) {
-                return routeRepository.selectByOriginExcludingRoutesAndDestinations(
-                        origin,new ArrayList<>(excludeRouteId),new ArrayList<>(excludeDestination))
-                        .stream().map(MapperUtils::entityToRoute).toList();
-            }
-            if (excludeRouteId != null) {
-                return routeRepository.findByOriginAndIdNotIn(origin,new ArrayList<>(excludeRouteId))
-                        .stream().map(MapperUtils::entityToRoute).toList();
-            }
-            if (excludeDestination != null) {
-                return routeRepository.findByOriginAndDestinationNotIn(origin,new ArrayList<>(excludeDestination))
-                        .stream().map(MapperUtils::entityToRoute).toList();
-            }
-            return routeRepository.findByOrigin(origin).stream().map(MapperUtils::entityToRoute).toList();
-        }
-
-        if (destination != null && airline != null) {
-            if (!airlineService.isActiveAirport(destination,airline)) return List.of();
-            return routeRepository.findByDestination(destination).stream().map(MapperUtils::entityToRoute).toList();
-        }
-
-        if (airline != null) {
-            List<Integer> routeIdList = flightService.getAirlineRouteIds(airline);
-            return routeRepository.findByIdIn(routeIdList).stream().map(MapperUtils::entityToRoute).toList();
-        }
-
-        if (origin != null) {
-            if (excludeRouteId != null && excludeDestination != null) {
-                return routeRepository.selectByOriginExcludingRoutesAndDestinations(
-                                origin,new ArrayList<>(excludeRouteId),new ArrayList<>(excludeDestination))
-                        .stream().map(MapperUtils::entityToRoute).toList();
-            }
-            if (excludeRouteId != null) {
-                return routeRepository.findByOriginAndIdNotIn(origin,new ArrayList<>(excludeRouteId))
-                        .stream().map(MapperUtils::entityToRoute).toList();
-            }
-            if (excludeDestination != null) {
-                return routeRepository.findByOriginAndDestinationNotIn(origin,new ArrayList<>(excludeDestination))
-                        .stream().map(MapperUtils::entityToRoute).toList();
-            }
-            return routeRepository.findByOrigin(origin).stream().map(MapperUtils::entityToRoute).toList();
-        }
-
-        if (destination != null) {
-            return routeRepository.findByDestination(destination).stream().map(MapperUtils::entityToRoute).toList();
-        }
-
-        LOGGER.error("Illegal state, code reached state meaning routeQuery fields all null. Investigation required. routeQuery: {}",routeQuery);
-        throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,MessageConstants.INTERNAL_SERVICE_ERROR_GENERIC_MESSAGE);
+        return routeEntityList.stream().map(MapperUtils::entityToRoute).toList();
     }
 
     @Override
@@ -216,62 +164,15 @@ public class RouteServiceImpl implements RouteService {
     }
 
     @Override
-    public PathResponse<AirlinePath> getAirlinePathList(Set<String> originSet, Set<String> destinationSet, Option<Airline> airlineOption, Integer limit, Set<String> excludeAirportCodes, Set<Integer> excludeRouteIds, Set<String> excludeFlightNumbers) {
-        List<Airline> originAirlines = airlineAirportRepository.selectDistinctAirlinesByIataInAndIsActive(new ArrayList<>(originSet),true);
-        List<Airline> destinationAirlines = airlineAirportRepository.selectDistinctAirlinesByIataInAndIsActive(new ArrayList<>(destinationSet),true);
-        Set<Airline> includeAirlines = new HashSet<>();
-        if (airlineOption.isDefined()) {
-            Airline airline = airlineOption.get();
-            if (!originAirlines.contains(airline) || !destinationAirlines.contains(airline)) return PathResponse.<AirlinePath>builder().build();
-            includeAirlines.add(airline);
-        } else {
-            includeAirlines.addAll(originAirlines);
-            for (Airline airline : originAirlines) {
-                if (!destinationAirlines.contains(airline))
-                    includeAirlines.remove(airline);
-            }
-            if (includeAirlines.isEmpty()) return PathResponse.<AirlinePath>builder().build();
-        }
-
-        Queue<AirlinePath> toSearch = new PriorityQueue<>(Comparator.comparingDouble(AirlinePath::getTotalDistanceKm));
-        Set<String> visitedAirports = new HashSet<>(excludeAirportCodes);
-        visitedAirports.addAll(originSet);
-        List<AirlinePath> pathAirlineList = new ArrayList<>();
-        originSet.forEach(origin -> {
-            List<RouteEntity> routeEntityList = routeRepository.findByOrigin(origin);
-            routeEntityList.forEach(routeEntity -> {
-                String routeEnd = routeEntity.getDestination();
-                if (excludeRouteIds.contains(routeEntity.getId()) || visitedAirports.contains(routeEnd)
-                        || routeEntity.getDistanceKm() == null) return;
-                List<Airline> routeAirlines = flightRepository.selectDistinctAirlineByRouteIdAndIsActive(
-                        routeEntity.getId(),true);
-                routeAirlines.forEach(airline -> {
-                    if (!includeAirlines.contains(airline)) return;
-                    AirlinePath pathAirline = AirlinePath.builder()
-                            .airline(airline)
-                            .routeList(List.of(MapperUtils.entityToRoute(routeEntity)))
-                            .totalDistanceKm(routeEntity.getDistanceKm())
-                            .build();
-                    if (destinationSet.contains(routeEnd))
-                        pathAirlineList.add(pathAirline);
-                    else toSearch.add(pathAirline);
-                });
-            });
-        });
-        return processQueue(toSearch,pathAirlineList,visitedAirports,destinationSet,limit,
-                excludeRouteIds,excludeFlightNumbers,includeAirlines);
-    }
-
-    @Override
-    public PagedResponse<AirlinePath> getAirlinePathList(PathAirlineQuery pathAirlineQuery) {
-        return null;
-    }
-
-    @Override
     public Option<Route> getRoute(String origin, String destination) {
         Optional<RouteEntity> routeEntity = routeRepository.findByOriginAndDestination(origin,destination);
         if (routeEntity.isEmpty()) return Option.none();
         return Option.of(MapperUtils.entityToRoute(routeEntity.get()));
+    }
+
+    @Override
+    public boolean existsById(Integer routeId) {
+        return routeRepository.existsById(routeId);
     }
 
     private List<RoutePath> processQueue(Queue<RoutePath> toSearch, List<RoutePath> pathList,

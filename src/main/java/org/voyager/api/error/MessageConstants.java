@@ -129,7 +129,8 @@ public class MessageConstants {
             Map.entry(ParameterNames.EXCLUDE_PARAM_NAME,VALID_IATA_CONSTRAINT),
             Map.entry(ParameterNames.AIRPORTS_PROPERTY_NAME,VALID_AIRPORTS_PROPERTY_CONSTRAINT),
             Map.entry(ParameterNames.CONTINENT_PARAM_NAME,VALID_CONTINENT_CONSTRAINT),
-            Map.entry(ParameterNames.LIMIT_PARAM_NAME,VALID_LIMIT_CONSTRAINT)
+            Map.entry(ParameterNames.LIMIT_PARAM_NAME,VALID_LIMIT_CONSTRAINT),
+            Map.entry(ParameterNames.DEPARTURE_ZDT,"Must be in ISO-8601 format (e.g., 2025-07-04T02:30:00Z)")
     );
 
     public static String buildInvalidApiKey(String apiKey) {

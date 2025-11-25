@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import org.voyager.api.model.path.FlightDetailed;
 import org.voyager.api.model.response.PagedResponse;
 import org.voyager.commons.constants.ParameterNames;
 import org.voyager.commons.constants.Path;
@@ -19,7 +20,8 @@ import org.voyager.commons.model.flight.*;
 import org.voyager.api.service.FlightService;
 import org.voyager.api.service.RouteService;
 import org.voyager.api.validate.ValidationUtils;
-import java.util.ArrayList;
+
+import java.time.ZonedDateTime;
 import java.util.List;
 
 @RestController
@@ -37,10 +39,12 @@ public class FlightsController {
                                             @RequestParam(required = false, name = ParameterNames.FLIGHT_NUMBER_PARAM_NAME)
                                                 String flightNumberString,
                                             @RequestParam(required = false, name = ParameterNames.AIRLINE_PARAM_NAME)
-                                                String airlineString,
+                                                List<String> airlineStringList,
                                             @RequestParam(name = ParameterNames.IS_ACTIVE_PARAM_NAME,
                                                     defaultValue = "true")
                                                 String isActiveString,
+                                            @RequestParam(name = ParameterNames.START) String startString,
+                                            @RequestParam(name = ParameterNames.END) String endString,
                                             @RequestParam(name = ParameterNames.PAGE,
                                                     defaultValue = "0")
                                                 String pageString,
@@ -48,10 +52,10 @@ public class FlightsController {
                                                     defaultValue = "100")
                                                 String pageSizeString) {
         LOGGER.info(String.format("GET /flights with routeIdStringList: '%s', flightNumberString: '%s', " +
-                "airlineString: '%s', isActiveString: '%s'", routeIdStringList, flightNumberString,
-                airlineString, isActiveString));
+                "airlineStringList: '%s', isActiveString: '%s'", routeIdStringList, flightNumberString,
+                airlineStringList, isActiveString));
 
-        boolean hasAirlineParam = airlineString != null;
+        boolean hasAirlineParam = airlineStringList != null;
         boolean hasFlightNumberParam = flightNumberString != null;
 
         if (hasAirlineParam && hasFlightNumberParam) {
@@ -70,15 +74,19 @@ public class FlightsController {
                     ValidationUtils.validateAndGetRouteId(routeIdString,routeService)).toList();
         }
 
+        ZonedDateTime startTime = ValidationUtils.validateAndGetZDT(startString);
+        ZonedDateTime endTime = ValidationUtils.validateAndGetZDT(endString);
         Boolean isActive = ValidationUtils.validateAndGetBoolean(ParameterNames.IS_ACTIVE_PARAM_NAME,isActiveString);
-        Integer page = ValidationUtils.validateAndGetInteger(ParameterNames.PAGE,pageString);
-        Integer pageSize = ValidationUtils.validateAndGetInteger(ParameterNames.PAGE_SIZE,pageSizeString);
+        int page = ValidationUtils.validateAndGetInteger(ParameterNames.PAGE,pageString);
+        int pageSize = ValidationUtils.validateAndGetInteger(ParameterNames.PAGE_SIZE,pageSizeString);
 
-        if (hasAirlineParam && StringUtils.isNotBlank(airlineString)) {
-            Airline airline = ValidationUtils.validateAndGetAirline(airlineString);
+        if (hasAirlineParam && !airlineStringList.isEmpty()) {
+            List<Airline> airlineList = airlineStringList.stream()
+                    .map(ValidationUtils::validateAndGetAirline).toList();
 
             FlightAirlineQuery flightAirlineQuery = FlightAirlineQuery.builder().page(page).pageSize(pageSize)
-                    .airline(airline).routeIdList(routeIdList).isActive(isActive).build();
+                    .startTime(startTime).endTime(endTime)
+                    .airlineList(airlineList).routeIdList(routeIdList).isActive(isActive).build();
             return flightService.getPagedFlights(flightAirlineQuery);
         }
 
@@ -86,11 +94,13 @@ public class FlightsController {
             String flightNumber = ValidationUtils.validateAndGetFlightNumber(flightNumberString,flightService);
 
             FlightNumberQuery flightNumberQuery = FlightNumberQuery.builder().page(page).pageSize(pageSize)
+                    .startTime(startTime).endTime(endTime)
                     .flightNumber(flightNumber).routeIdList(routeIdList).isActive(isActive).build();
             return flightService.getPagedFlights(flightNumberQuery);
         }
 
         FlightQuery flightQuery = FlightQuery.builder().page(page).pageSize(pageSize)
+                .startTime(startTime).endTime(endTime)
                 .routeIdList(routeIdList).isActive(isActive).build();
         return flightService.getPagedFlights(flightQuery);
     }
@@ -105,11 +115,33 @@ public class FlightsController {
 
     @GetMapping(Path.FLIGHT)
     public Flight getFlight(@RequestParam(name = ParameterNames.ROUTE_ID_PARAM_NAME) String routeIdString,
-                            @RequestParam(name = ParameterNames.FLIGHT_NUMBER_PARAM_NAME) String flightNumber) {
-        LOGGER.info(String.format("GET /flight with routeId '%s', flightNumber '%s'",
-                                routeIdString, flightNumber));
+                            @RequestParam(name = ParameterNames.FLIGHT_NUMBER_PARAM_NAME) String flightNumber,
+                            @RequestParam(name = ParameterNames.DEPARTURE_BEFORE, required = false) String departureBeforeString,
+                            @RequestParam(name = ParameterNames.ARRIVAL_AFTER, required = false) String arrivalAfterString) {
+        LOGGER.info("GET /flight with routeId: {}, flightNumber: {}, departureBeforeString: {}, arrivalAfterString: {}",
+                                routeIdString, flightNumber,departureBeforeString,arrivalAfterString);
         Integer routeId = ValidationUtils.validateAndGetRouteId(routeIdString,routeService);
-        Option<Flight> flightOption = flightService.getFlight(routeId,flightNumber);
+        ZonedDateTime arrival = null;
+        ZonedDateTime departure = null;
+        if (StringUtils.isNotBlank(departureBeforeString)) {
+            arrival = ValidationUtils.validateAndGetZDT(departureBeforeString);
+        }
+        if (StringUtils.isNotBlank(arrivalAfterString)) {
+            departure = ValidationUtils.validateAndGetZDT(arrivalAfterString);
+        }
+        if ((arrival == null && departure == null) || (arrival != null && departure != null)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    String.format("requires either '%s' or '%s' parameter, but not both, to return a single flight match",
+                            ParameterNames.DEPARTURE_BEFORE,ParameterNames.ARRIVAL_AFTER));
+        }
+        Option<Flight> flightOption = Option.none();
+        if (arrival != null) {
+            flightOption = flightService.getFlightWithDepartureBefore(routeId,flightNumber,arrival);
+        }
+        if (departure != null) {
+            flightOption = flightService.getFlightWithArrivalAfter(routeId,flightNumber,departure);
+        }
+        // TODO: update not found error message
         if (flightOption.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND,
                 MessageConstants.buildResourceNotFoundForMultiParameterMessage(ParameterNames.ROUTE_ID_PARAM_NAME,routeIdString,
                         ParameterNames.FLIGHT_NUMBER_PARAM_NAME,flightNumber));
@@ -117,9 +149,9 @@ public class FlightsController {
     }
 
     @PatchMapping(Path.Admin.FLIGHT_BY_ID)
-    public Flight addFlight(@PathVariable(name = ParameterNames.ID_PATH_VAR_NAME) Integer id,
-                            @Valid @RequestBody(required = false) FlightPatch flightPatch,
-                            BindingResult bindingResult) {
+    public Flight patchFlight(@PathVariable(name = ParameterNames.ID_PATH_VAR_NAME) Integer id,
+                              @Valid @RequestBody(required = false) FlightPatch flightPatch,
+                              BindingResult bindingResult) {
         ValidationUtils.validateFlightPatch(flightPatch, bindingResult);
         Option<Flight> flightOption = flightService.getById(id);
         if (flightOption.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND,
@@ -128,10 +160,10 @@ public class FlightsController {
     }
 
     @PostMapping(Path.Admin.FLIGHTS)
-    public Flight addFlight(@Valid @RequestBody(required = false) FlightForm flightForm,
-                            BindingResult bindingResult) {
-        ValidationUtils.validateFlightForm(flightForm, bindingResult);
-        return flightService.save(flightForm);
+    public FlightBatchUpsertResult upsertFlights(@Valid @RequestBody(required = false) FlightBatchUpsert flightBatchUpsert,
+                                      BindingResult bindingResult) {
+        ValidationUtils.validate(flightBatchUpsert,bindingResult);
+        return flightService.batchUpsert(flightBatchUpsert);
     }
 
     @DeleteMapping(Path.Admin.FLIGHTS)

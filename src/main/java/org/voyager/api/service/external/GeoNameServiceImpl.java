@@ -2,6 +2,8 @@ package org.voyager.api.service.external;
 
 import jakarta.annotation.PostConstruct;
 import lombok.NonNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +23,8 @@ public class GeoNameServiceImpl implements GeoNameService {
     VoyagerGeoNamesConfig voyagerGeoNamesConfig;
     GeoNamesConfig geoNamesConfig;
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(GeoNameServiceImpl.class);
+
     @PostConstruct
     public void setup() {
         geoNamesConfig = new GeoNamesConfig(voyagerGeoNamesConfig.getUsername());
@@ -39,6 +43,7 @@ public class GeoNameServiceImpl implements GeoNameService {
     @Cacheable("timezoneCacheGeoService")
     public ResponseEntity<String> getTimezone(@NonNull GeoTimezoneQuery geoTimezoneQuery) {
         String requestURL = geoNamesConfig.getTimezoneURL(geoTimezoneQuery);
+        LOGGER.info("get timezone at {}",requestURL);
         return handleExternalServiceExceptions(()-> restTemplate.getForEntity(requestURL,String.class));
     }
 

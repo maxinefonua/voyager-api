@@ -67,7 +67,8 @@ public class GeoNamesController {
 
         GeoTimezoneQuery geoTimezoneQuery = GeoTimezoneQuery.builder().latitude(latitude)
                 .longitude(longitude).build();
-        return geoNameService.getTimezone(geoTimezoneQuery);
+        ResponseEntity<String> responseEntity = geoNameService.getTimezone(geoTimezoneQuery);
+        return  responseEntity;
     }
 
     @GetMapping(GeoNames.SEARCH)
