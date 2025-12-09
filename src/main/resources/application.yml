@@ -30,11 +30,11 @@ spring:
       org.hibernate.SQL: DEBUG
       org.hibernate.type.descriptor.sql.BasicBinder: TRACE
   datasource:
-    url: jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
-    username: ${POSTGRES_USER}
-    password: ${POSTGRES_PASSWORD}
+    url: jdbc:postgresql://${POSTGRES_HOST:}:${POSTGRES_PORT:}/${POSTGRES_DB:}
+    username: ${POSTGRES_USER:}
+    password: ${POSTGRES_PASSWORD:}
 server:
-  port: ${SERVER_PORT}
+  port: ${SERVER_PORT:}
   error:
     include-message: always
 geonames:
@@ -50,9 +50,9 @@ geonames:
   featureClass: P
   featureClassAdmin: A
 auth:
-  adminApiKey: ${ADMIN_API_KEY}
-  testsApiKey: ${TESTS_API_KEY}
-  userApiKey: ${VOYAGER_API_KEY}
+  adminApiKey: ${ADMIN_API_KEY:}
+  testsApiKey: ${TESTS_API_KEY:}
+  userApiKey: ${VOYAGER_API_KEY:}
 cors:
   allowed-origin-patterns:
     - "http://localhost:*"
