@@ -4,7 +4,6 @@ import lombok.Getter;
 import lombok.NonNull;
 import org.voyager.commons.model.airline.Airline;
 import org.voyager.commons.model.airport.AirportType;
-
 import java.util.List;
 
 public class IataQuery {

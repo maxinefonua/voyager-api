@@ -9,20 +9,20 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import org.voyager.api.error.MessageConstants;
-import org.voyager.api.model.entity.RouteEntity;
-import org.voyager.api.service.RouteService;
-import org.voyager.commons.model.airline.*;
+import org.voyager.commons.model.airline.Airline;
+import org.voyager.commons.model.airline.AirlineQuery;
+import org.voyager.commons.model.airline.AirlineAirportQuery;
+import org.voyager.commons.model.airline.AirlinePathQuery;
+import org.voyager.commons.model.airline.AirlineBatchUpsert;
+import org.voyager.commons.model.airline.AirlineAirport;
 import org.voyager.api.model.entity.AirlineAirportEntity;
 import org.voyager.api.repository.AirlineAirportRepository;
 import org.voyager.api.repository.AirlineRepository;
 import org.voyager.api.service.AirlineService;
 import org.voyager.api.service.utils.MapperUtils;
-import org.voyager.commons.model.route.Route;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
 import static org.voyager.api.service.utils.ServiceUtils.handleJPAExceptions;
 
 @Service
@@ -36,12 +36,6 @@ public class AirlineServiceImpl implements AirlineService {
 
 
     @Override
-    @Cacheable("activeAirlineAirportCache")
-    public boolean isActiveAirport(String iata, Airline airline) {
-        return airlineAirportRepository.existsByAirlineAndIata(airline,iata);
-    }
-
-    @Override
     @Cacheable("airlineCache")
     public List<Airline> getAirlines() {
         return handleJPAExceptions(()-> airlineRepository
@@ -53,20 +47,13 @@ public class AirlineServiceImpl implements AirlineService {
     public List<Airline> getAirlines(@NonNull AirlineQuery airlineQuery) {
         return handleJPAExceptions(()-> {
             if (airlineQuery instanceof AirlineAirportQuery airlineAirportQuery) {
-                switch (airlineAirportQuery.getOperator()) {
-                    case OR:
-                        return airlineAirportRepository
-                                .selectDistinctAirlinesByIataInAndIsActive(airlineAirportQuery.getIatalist(), true);
-                    case AND:
-                        return airlineAirportRepository
-                                .selectAirlinesWithAllAirports(airlineAirportQuery.getIatalist(),
-                                        true, airlineAirportQuery.getIatalist().size());
-                    default:
-                        LOGGER.error("getAirlines SearchOperator {} not yet implemented",
-                                airlineAirportQuery.getOperator());
-                        throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                                MessageConstants.INTERNAL_SERVICE_ERROR_GENERIC_MESSAGE);
-                }
+                return switch (airlineAirportQuery.getOperator()) {
+                    case OR -> airlineAirportRepository
+                            .selectDistinctAirlinesByIataInAndIsActive(airlineAirportQuery.getIatalist(), true);
+                    case AND -> airlineAirportRepository
+                            .selectAirlinesWithAllAirports(airlineAirportQuery.getIatalist(),
+                                    true, airlineAirportQuery.getIatalist().size());
+                };
             } else if (airlineQuery instanceof AirlinePathQuery airlinePathQuery) {
                 List<Airline> originAirlines = airlineAirportRepository
                         .selectDistinctAirlinesByIataInAndIsActive(airlinePathQuery.getOriginList(), true);
@@ -119,26 +106,10 @@ public class AirlineServiceImpl implements AirlineService {
     }
 
     @Override
-    public boolean isActiveAirlineRoute(Route routeEntity, List<Airline> airlineList) {
-        return handleJPAExceptions(()->
-                airlineAirportRepository.existsByAnyAirlineInAndAllAirportsIn(
-                        2,List.of(routeEntity.getOrigin(),routeEntity.getDestination()),
-                        true,airlineList));
-    }
-
-    @Override
     public boolean hasAnyActiveAirlineForAllAirports(List<Airline> airlineList, List<String> iataList) {
         return handleJPAExceptions(() ->
                 airlineAirportRepository.existsByAnyAirlineInAndAllAirportsIn(
                         iataList.size(), iataList,
                         true, airlineList));
-    }
-
-    @Override
-    public List<Airline> getDistinctAirlinesForAllAirports(List<String> iataList) {
-        return handleJPAExceptions(() ->
-                airlineAirportRepository.selectDistinctAirlinesWithAllAirportsIn(
-                        iataList,
-                        true, iataList.size()));
     }
 }

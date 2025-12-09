@@ -8,9 +8,7 @@ import org.voyager.commons.model.airport.AirportForm;
 import org.voyager.commons.model.airport.AirportPatch;
 import org.voyager.commons.model.airport.AirportType;
 import org.voyager.api.model.query.IataQuery;
-
 import java.util.List;
-
 
 public interface AirportsService {
     Boolean ifIataExists(String iata);

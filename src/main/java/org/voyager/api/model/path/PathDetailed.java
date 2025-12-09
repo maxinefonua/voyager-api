@@ -1,11 +1,7 @@
 package org.voyager.api.model.path;
 
-import lombok.*;
-import org.voyager.api.model.entity.FlightEntity;
-import org.voyager.api.model.entity.RouteEntity;
-import org.voyager.commons.model.airline.Airline;
-import java.time.Duration;
-import java.time.ZonedDateTime;
+import lombok.Getter;
+import lombok.NonNull;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,5 +19,14 @@ public class PathDetailed {
         iataList.add(firstPath.get(0).getOrigin());
         iataList.addAll(firstPath.stream().map(FlightDetailed::getDestination).toList());
         this.flightPathList = flightPathList;
+    }
+
+    private PathDetailed(String origin, String destination){
+        this.iataList = List.of(origin,destination);
+        this.flightPathList = List.of();
+    }
+
+    public static PathDetailed noDirectFlights(String origin, String destination){
+        return new PathDetailed(origin,destination);
     }
 }

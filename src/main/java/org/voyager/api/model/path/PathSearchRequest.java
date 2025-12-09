@@ -1,15 +1,15 @@
 package org.voyager.api.model.path;
 
+import jakarta.validation.constraints.NotEmpty;
 import lombok.Builder;
-import lombok.Data;
 import lombok.Getter;
 import org.voyager.commons.model.airline.Airline;
-
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Set;
 
-@Data @Builder
+@Getter
+@Builder
 public class PathSearchRequest {
     private Set<String> origins;
     private Set<String> destinations;
@@ -18,10 +18,6 @@ public class PathSearchRequest {
     private Set<Integer> excludeRouteIds;
     private List<Airline> airlines;
     private ZonedDateTime startTime;
-    private ZonedDateTime endTime;
-    @Builder.Default
-    private int size = 10;
-    private String cursor; // For pagination within a search session
-    @Builder.Default
-    private String sortBy = "duration"; // duration, price, stops
+    private int skip;
+    private int size;
 }

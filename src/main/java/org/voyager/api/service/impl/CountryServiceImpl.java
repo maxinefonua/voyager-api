@@ -10,7 +10,6 @@ import org.voyager.api.model.entity.CountryEntity;
 import org.voyager.api.repository.CountryRepository;
 import org.voyager.api.service.CountryService;
 import org.voyager.api.service.utils.MapperUtils;
-
 import java.util.List;
 
 import static org.voyager.api.service.utils.ServiceUtils.handleJPAExceptions;

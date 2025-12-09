@@ -1,7 +1,6 @@
 package org.voyager.api.error;
 
 import org.voyager.commons.constants.ParameterNames;
-
 import java.util.Map;
 
 public class MessageConstants {

@@ -1,11 +1,17 @@
 package org.voyager.api.service.impl;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.voyager.api.model.path.FlightDetailed;
 import org.voyager.api.model.path.PathDetailed;
 import org.voyager.api.model.path.PathSearchRequest;
-import org.voyager.api.service.*;
+import org.voyager.api.service.RouteService;
+import org.voyager.api.service.AirlineService;
+import org.voyager.api.service.FlightService;
+import org.voyager.api.service.AirportsService;
+import org.voyager.api.service.ComprehensivePathSearchService;
 import org.voyager.commons.model.airline.Airline;
 import org.voyager.commons.model.airport.Airport;
 import org.voyager.commons.model.flight.Flight;
@@ -13,12 +19,19 @@ import org.voyager.commons.model.flight.FlightAirlineQuery;
 import org.voyager.commons.model.path.Path;
 import org.voyager.commons.model.route.Route;
 import org.voyager.commons.model.route.RouteQuery;
-
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.util.*;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.Queue;
+import java.util.PriorityQueue;
+import java.util.Comparator;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -36,6 +49,8 @@ public class ComprehensivePathSearchServiceImpl implements ComprehensivePathSear
     @Autowired
     AirportsService airportsService;
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(ComprehensivePathSearchServiceImpl.class);
+
     @Override
     public void streamPaths(PathSearchRequest request, Consumer<PathDetailed> pathConsumer) {
         Set<String> excludeCodes = new HashSet<>(request.getExcludeDestinations());
@@ -48,10 +63,11 @@ public class ComprehensivePathSearchServiceImpl implements ComprehensivePathSear
                                 .excludeDestinationSet(excludeCodes)
                                 .build()).stream().filter(route ->
                         airlineService.hasAnyActiveAirlineForAllAirports(
-                                request.getAirlines(),List.of(route.getDestination(),route.getOrigin())))
+                                request.getAirlines(), List.of(route.getDestination(), route.getOrigin())))
                 .toList();
 
         Queue<Path> queue = routeList.stream()
+                .filter(route -> route.getDistanceKm() != null)
                 .map(route -> Path.builder()
                         .routeList(List.of(route))
                         .totalDistanceKm(route.getDistanceKm())
@@ -59,7 +75,7 @@ public class ComprehensivePathSearchServiceImpl implements ComprehensivePathSear
                 .collect(Collectors.toCollection(
                         () -> new PriorityQueue<>(Comparator.comparing(Path::getTotalDistanceKm))
                 ));
-        processQueue(queue,request,pathConsumer);
+        processQueue(queue, request, pathConsumer);
     }
 
     private void processQueue(Queue<Path> queue,
@@ -78,10 +94,8 @@ public class ComprehensivePathSearchServiceImpl implements ComprehensivePathSear
             while (!queue.isEmpty()) {
                 Path pathSoFar = queue.poll();
                 List<Route> soFarRouteList = pathSoFar.getRouteList();
-                if (soFarRouteList.size() > 3) {
-                    return;
-                }
                 String nextOrigin = soFarRouteList.get(soFarRouteList.size()-1).getDestination();
+                if (visited.contains(nextOrigin)) continue;
                 visited.add(nextOrigin);
                 for (Route route : routeService.getRoutes(RouteQuery.builder()
                         .originList(List.of(nextOrigin))
@@ -97,7 +111,7 @@ public class ComprehensivePathSearchServiceImpl implements ComprehensivePathSear
                             .build();
                     if (destinationSet.contains(route.getDestination())) {
                         buildAllFlightPathsForPath(nextPath,request,pathConsumer);
-                    } else {
+                    } else if (nextPath.getRouteList().size() < 3) {
                         List<String> iataList = new ArrayList<>(routeList.stream().map(Route::getOrigin).toList());
                         iataList.add(route.getDestination());
                         if (airlineService.hasAnyActiveAirlineForAllAirports(validAirlines,iataList)) {
@@ -108,11 +122,15 @@ public class ComprehensivePathSearchServiceImpl implements ComprehensivePathSear
             }
             queue = nextQueue;
         }
+        LOGGER.info("completed processing queue for {}:{} for {}",
+                request.getOrigins().stream().sorted().collect(Collectors.toList()),
+                request.getDestinations().stream().sorted().collect(Collectors.toList()),
+                request.getStartTime().format(DateTimeFormatter.RFC_1123_DATE_TIME));
     }
 
     private void buildAllFlightPathsForPath(Path path, PathSearchRequest request, Consumer<PathDetailed> pathConsumer) {
         ZonedDateTime startTime = request.getStartTime();
-        ZonedDateTime endTime = request.getEndTime();
+        ZonedDateTime endTime = startTime.plusDays(1L);
         List<Route> routeList = path.getRouteList();
         Route firstRoute = routeList.get(0);
         List<Airline> airlineList = request.getAirlines();
@@ -143,6 +161,7 @@ public class ComprehensivePathSearchServiceImpl implements ComprehensivePathSear
                 .filter(list -> !list.isEmpty())
                 .sorted(Comparator.comparing(list->list.get(0).getZonedDateTimeDeparture()))
                 .toList();
+        if (flightPathList.isEmpty()) return;
         pathConsumer.accept(new PathDetailed(flightPathList));
     }
 

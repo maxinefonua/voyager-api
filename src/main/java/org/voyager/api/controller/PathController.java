@@ -1,21 +1,23 @@
 package org.voyager.api.controller;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 import org.voyager.api.model.path.PathSearchRequest;
 import org.voyager.api.model.response.SearchResponse;
-import org.voyager.api.service.*;
+import org.voyager.api.service.RouteService;
+import org.voyager.api.service.AirportsService;
+import org.voyager.api.service.FlightService;
+import org.voyager.api.service.PathSearchService;
 import org.voyager.api.validate.ValidationUtils;
 import org.voyager.commons.constants.ParameterNames;
 import org.voyager.commons.constants.Path;
 import org.voyager.commons.model.airline.Airline;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -50,27 +52,25 @@ public class PathController {
             List<String> excludeRouteIdList,
             @RequestParam(name = ParameterNames.EXCLUDE_FLIGHT_PARAM_NAME, required = false)
             List<String> excludeFlightNumberList,
-            @RequestParam(name = ParameterNames.PAGE, defaultValue = "0")
-            String pageString,
-            @RequestParam(name = ParameterNames.PAGE_SIZE, defaultValue = "10")
+            @RequestParam(name = ParameterNames.ZONE_ID, required = false)
+            String zoneIdString,
+            @RequestParam(name = ParameterNames.SKIP, defaultValue = "0")
+            String skipString,
+            @RequestParam(name = ParameterNames.SIZE, defaultValue = "10")
             String sizeString,
-            @RequestParam(name = ParameterNames.START)
-            String startString,
-            @RequestParam(name = ParameterNames.END)
-            String endString) {
+            @RequestParam(name = ParameterNames.START,defaultValue = "now")
+            String startString) {
         LOGGER.info("GET /path-airline called with {}:{}, {}:{}, {}:{}, {}:{}, {}:{}, {}:{}, {}:{}, {}:{}, {}:{}, {}:{}",
                 ParameterNames.ORIGIN_PARAM_NAME,originList, ParameterNames.DESTINATION_PARAM_NAME,destinationList,
                 ParameterNames.AIRLINE_PARAM_NAME,airlineStringList,
                 ParameterNames.EXCLUDE_PARAM_NAME,excludeAirportCodeList,
                 ParameterNames.EXCLUDE_ROUTE_PARAM_NAME,excludeRouteIdList,
                 ParameterNames.EXCLUDE_FLIGHT_PARAM_NAME,excludeFlightNumberList,
-                ParameterNames.PAGE,pageString, ParameterNames.PAGE_SIZE,sizeString,
-                ParameterNames.START,startString,ParameterNames.END,endString);
-        if (pathSearchService.isPausedForEnrichment()) {
-            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
-                    "undergoing data enrichment, please try again later");
-        }
-        int size = ValidationUtils.validateAndGetInteger(ParameterNames.PAGE_SIZE,sizeString);
+                ParameterNames.ZONE_ID,zoneIdString,
+                ParameterNames.START,startString,
+                ParameterNames.SIZE,sizeString,
+                ParameterNames.SKIP,skipString);
+
         Set<String> originSet = ValidationUtils.validateIataCodeSet(ParameterNames.ORIGIN_PARAM_NAME,
                 Set.copyOf(originList),airportService);
         Set<String> destinationSet = ValidationUtils.validateIataCodeSet(ParameterNames.DESTINATION_PARAM_NAME,
@@ -101,34 +101,27 @@ public class PathController {
                     .collect(Collectors.toSet());
         }
 
-        ZonedDateTime startTime = ValidationUtils.validateAndGetZDT(startString);
-        ZonedDateTime endTime = ValidationUtils.validateAndGetZDT(endString);
+        int size = ValidationUtils.validateAndGetInteger(ParameterNames.SIZE,sizeString);
+        int skip = ValidationUtils.validateAndGetInteger(ParameterNames.SKIP,skipString);
+        ZoneId zoneId = ValidationUtils.validateAndGetZoneId(zoneIdString);
 
-        return pathSearchService.searchPaths(PathSearchRequest.builder()
-                        .origins(originSet)
-                        .destinations(destinationSet)
-                        .excludeDestinations(excludeAirportCodes)
-                        .excludeRouteIds(excludeRouteIds)
-                        .excludeFlightNumbers(excludeFlightNumbers)
-                        .airlines(airlineList)
-                        .startTime(startTime)
-                        .endTime(endTime)
-                        .size(size)
-                .build());
-    }
-
-    @GetMapping("/path/{searchId}")
-    public SearchResponse getMorePathResults(
-            @PathVariable(name = "searchId") String searchId,
-            @RequestParam(name = ParameterNames.PAGE_SIZE, defaultValue = "20") String sizeString){
-        LOGGER.info("GET {} with {}:{}, {}:{}",
-                "/path/{searchId}","searchId",searchId,
-                ParameterNames.PAGE_SIZE,sizeString);
-        if (pathSearchService.isPausedForEnrichment()) {
-            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
-                    "undergoing data enrichment, please try again later");
+        ZonedDateTime startTime;
+        if (StringUtils.isNotBlank(startString) && startString.equalsIgnoreCase("now")) {
+            startTime = ZonedDateTime.now();
+        } else {
+            startTime = ValidationUtils.validateAndGetZDT(ParameterNames.START, startString);
         }
-        int size = ValidationUtils.validateAndGetInteger(ParameterNames.PAGE_SIZE,sizeString);
-        return pathSearchService.getMorePaths(searchId,size);
+        startTime = startTime.toLocalDate().atStartOfDay(zoneId);
+        return pathSearchService.searchPaths(PathSearchRequest.builder()
+                .origins(originSet)
+                .destinations(destinationSet)
+                .excludeDestinations(excludeAirportCodes)
+                .excludeRouteIds(excludeRouteIds)
+                .excludeFlightNumbers(excludeFlightNumbers)
+                .airlines(airlineList)
+                .startTime(startTime)
+                .skip(skip)
+                .size(size)
+                .build());
     }
 }

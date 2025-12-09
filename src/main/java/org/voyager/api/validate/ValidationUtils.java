@@ -1,6 +1,5 @@
 package org.voyager.api.validate;
 
-import io.vavr.control.Option;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,31 +21,30 @@ import org.voyager.commons.model.airport.AirportPatch;
 import org.voyager.commons.model.airport.AirportType;
 import org.voyager.commons.model.country.Continent;
 import org.voyager.commons.model.country.CountryForm;
-import org.voyager.commons.model.flight.FlightForm;
-import org.voyager.commons.model.flight.FlightPatch;
 import org.voyager.commons.model.geoname.fields.FeatureClass;
 import org.voyager.commons.model.geoname.fields.SearchOperator;
-import org.voyager.commons.model.location.LocationPatch;
-import org.voyager.commons.model.location.Source;
-import org.voyager.commons.model.location.LocationForm;
-import org.voyager.commons.model.location.Status;
-import org.voyager.commons.model.route.Route;
 import org.voyager.commons.model.route.RouteForm;
 import org.voyager.commons.model.route.RoutePatch;
 import org.voyager.commons.validate.annotations.ValidEnum;
 import java.lang.reflect.Field;
-import java.time.Instant;
-import java.time.ZoneOffset;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
-import java.util.*;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.StringJoiner;
+import java.util.Optional;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.function.Supplier;
 
 import static org.voyager.api.error.MessageConstants.INTERNAL_SERVICE_ERROR_GENERIC_MESSAGE;
 
 public class ValidationUtils {
-    private static Logger LOGGER = LoggerFactory.getLogger(ValidationUtils.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ValidationUtils.class);
 
     public static List<AirportType> resolveTypeList(List<String> typeList) {
         List<AirportType> airportTypeList = new ArrayList<>();
@@ -63,19 +61,6 @@ public class ValidationUtils {
         return airportTypeList;
     }
 
-    public static Option<Airline> resolveAirlineString(String airlineString) {
-        Option<Airline> airline = Option.none();
-        if (StringUtils.isNotEmpty(airlineString)) {
-            try {
-                airline = Option.of(Airline.valueOf(airlineString.toUpperCase()));
-            } catch (IllegalArgumentException e) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                        MessageConstants.buildInvalidRequestParameterMessage(ParameterNames.AIRLINE_PARAM_NAME, airlineString));
-            }
-        }
-        return airline;
-    }
-
     public static List<Airline> resolveAirlineStringList(List<String> airlineStringList) {
         List<Airline> airlineList = new ArrayList<>();
         if (airlineStringList != null) {
@@ -89,27 +74,6 @@ public class ValidationUtils {
             }
         }
         return airlineList;
-    }
-
-    public static Option<Source> resolveSourceString(String sourceString) {
-        if (StringUtils.isEmpty(sourceString)) return Option.none();
-        try {
-            return Option.of(Source.valueOf(sourceString.toUpperCase()));
-        } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    MessageConstants.buildInvalidRequestParameterMessage(ParameterNames.SOURCE_PARAM_NAME, sourceString));
-        }
-    }
-
-    public static Source validateAndGetSource(String sourceString) {
-        if (StringUtils.isEmpty(sourceString)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                MessageConstants.buildMissingRequestParameterMessage(ParameterNames.SOURCE_PARAM_NAME));
-        try {
-            return Source.valueOf(sourceString.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    MessageConstants.buildInvalidRequestParameterMessage(ParameterNames.SOURCE_PARAM_NAME, sourceString));
-        }
     }
 
     public static Boolean validateAndGetBoolean(String paramName, String paramValue) {
@@ -147,15 +111,6 @@ public class ValidationUtils {
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     MessageConstants.buildInvalidRequestParameterMessage(ParameterNames.AIRLINE_PARAM_NAME,airlineString));
-        }
-    }
-
-    public static Status validateAndGetLocationStatus(String statusString) {
-        try {
-            return Status.valueOf(statusString.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    MessageConstants.buildInvalidRequestParameterMessage(ParameterNames.LOCATION_STATUS_PARAM_NAME, statusString));
         }
     }
 
@@ -266,12 +221,6 @@ public class ValidationUtils {
         }
     }
 
-    public static List<String> validateAndGetCountryCodeList(List<String> countryCodeList, CountryService countryService) {
-        if (countryCodeList == null) return List.of();
-        countryCodeList.replaceAll(countryCode -> validateAndGetCountryCode(true,countryCode,countryService));
-        return countryCodeList;
-    }
-
     public static SearchOperator validateAndGetOperator(String operatorString) {
         try {
             return SearchOperator.valueOf(operatorString.toUpperCase());
@@ -310,21 +259,10 @@ public class ValidationUtils {
         return countryCodeString.toUpperCase();
     }
 
-    public static void validateLocationForm(LocationForm locationForm, BindingResult bindingResult,AirportsService airportsService) {
-        processRequestBodyBindingErrors(locationForm,bindingResult);
-        locationForm.setAirports(getValidatedLocationAirports(locationForm.getAirports(),airportsService));
-        locationForm.setCountryCode(locationForm.getCountryCode().toUpperCase());
-    }
-
     public static void validateRouteForm(RouteForm routeForm, BindingResult bindingResult) {
         processRequestBodyBindingErrors(routeForm,bindingResult);
         routeForm.setOrigin(routeForm.getOrigin().toUpperCase());
         routeForm.setDestination(routeForm.getDestination().toUpperCase());
-    }
-
-    public static void validateFlightForm(FlightForm flightForm, BindingResult bindingResult) {
-        processRequestBodyBindingErrors(flightForm,bindingResult);
-        flightForm.setAirline(flightForm.getAirline().toUpperCase());
     }
 
     public static void validateCountryForm(CountryForm countryForm, BindingResult bindingResult,
@@ -335,30 +273,8 @@ public class ValidationUtils {
                     countryForm.getCountryCode()));
     }
 
-    public static void validateFlightPatch(FlightPatch flightPatch, BindingResult bindingResult) {
-        processRequestBodyBindingErrors(flightPatch,bindingResult);
-    }
-
-    public static void validateLocationPatch(LocationPatch locationPatch, BindingResult bindingResult, AirportsService airportsService) {
-        processRequestBodyBindingErrors(locationPatch,bindingResult);
-        if (locationPatch.getAirports() != null) locationPatch.setAirports(getValidatedLocationAirports(locationPatch.getAirports(),airportsService));
-        if (locationPatch.getStatus() != null) locationPatch.setStatus(locationPatch.getStatus().toUpperCase());
-    }
-
     public static void validateAirportPatch(AirportPatch airportPatch, BindingResult bindingResult) {
         processRequestBodyBindingErrors(airportPatch,bindingResult);
-    }
-
-    private static List<String>  getValidatedLocationAirports(List<String> airports, AirportsService airportsService) {
-        List<String> unique = new ArrayList<>();
-        for (String iata : airports) {
-            if (iata == null || !iata.matches(Regex.AIRPORT_CODE)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    MessageConstants.buildInvalidRequestBodyPropertyMessage(ParameterNames.AIRPORTS_PROPERTY_NAME,iata));
-            if (!airportsService.ifIataExists(iata.toUpperCase())) throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                    MessageConstants.buildResourceNotFoundForPathVariableMessage(ParameterNames.AIRPORTS_PROPERTY_NAME,iata));
-            if (!unique.contains(iata)) unique.add(iata.toUpperCase());
-        }
-        return unique;
     }
 
     private static void processRequestBodyBindingErrors(Object requestBody, BindingResult bindingResult){
@@ -404,19 +320,16 @@ public class ValidationUtils {
         }
 
         StringJoiner valueJoiner = new StringJoiner(",");
-        Arrays.stream(validEnum.enumClass().getEnumConstants()).forEach(value -> {
-            valueJoiner.add(String.format("'%s'",value.name().toLowerCase()));
-        });
+        Arrays.stream(validEnum.enumClass().getEnumConstants()).forEach(value ->
+                valueJoiner.add(String.format("'%s'",value.name().toLowerCase())));
         return (String.format("'%s' accepts values [%s] but has invalid value '%s'",
                 fieldError.getField(),valueJoiner,fieldError.getRejectedValue()));
     }
 
-    // TODO: add existsById to RouteService
     public static Integer validateAndGetRouteId(String routeIdString, RouteService routeService) {
         try {
             Integer routeId = Integer.valueOf(routeIdString);
-            Option<Route> routeOption = routeService.getRouteById(routeId);
-            if (routeOption.isEmpty()) {
+            if (!routeService.existsById(routeId)) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                         MessageConstants.buildResourceNotFoundForParameterMessage(ParameterNames.ROUTE_ID_PARAM_NAME,routeIdString));
             }
@@ -427,13 +340,35 @@ public class ValidationUtils {
         }
     }
 
-    public static ZonedDateTime validateAndGetZDT(String departureString) {
+    public static ZoneId validateAndGetZoneId(String zoneIdString) {
+        if (StringUtils.isBlank(zoneIdString)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    MessageConstants.buildMissingRequestParameterMessage(ParameterNames.ZONE_ID));
+        }
         try {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXX");
-            return ZonedDateTime.parse(departureString, formatter);
+            return ZoneId.of(zoneIdString);
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    MessageConstants.buildInvalidRequestParameterMessage(ParameterNames.DEPARTURE_ZDT, departureString));
+                    MessageConstants.buildInvalidRequestParameterMessage(ParameterNames.ZONE_ID, zoneIdString));
+        }
+    }
+
+    public static LocalDate validateAndGetLocalDate(String onDayString) {
+        try {
+            return LocalDate.parse(onDayString);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    MessageConstants.buildInvalidRequestParameterMessage(ParameterNames.ON_DAY, onDayString));
+        }
+    }
+
+    public static ZonedDateTime validateAndGetZDT(String varName, String varVal) {
+        try {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXX");
+            return ZonedDateTime.parse(varVal, formatter);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    MessageConstants.buildInvalidRequestParameterMessage(varName, varVal));
         }
     }
 
@@ -469,44 +404,6 @@ public class ValidationUtils {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                     INTERNAL_SERVICE_ERROR_GENERIC_MESSAGE);
         }
-    }
-
-    public static Option<Status> resolveStatusString(String statusString) {
-        if (StringUtils.isBlank(statusString)) return Option.none();
-        try {
-            return Option.of(Status.valueOf(statusString.toUpperCase()));
-        } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    MessageConstants.buildInvalidRequestParameterMessage(ParameterNames.LOCATION_STATUS_PARAM_NAME, statusString));
-        }
-    }
-
-    public static List<Status> resolveStatusStringList(List<String> statusStringList) {
-        return handleNullPointerExceptions(()->{
-            if (statusStringList == null) return List.of();
-            List<Status> statusList = new ArrayList<>();
-            for (String statusString : statusStringList) {
-                try {
-                    statusList.add(Status.valueOf(statusString.toUpperCase()));
-                } catch (IllegalArgumentException e) {
-                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                            MessageConstants.buildInvalidRequestParameterMessage(ParameterNames.LOCATION_STATUS_PARAM_NAME, statusString));
-                }
-            }
-            return statusList;
-        });
-    }
-
-    public static Option<Integer> resolveLimitString(String limitString, Boolean isParam) {
-        if (limitString == null) return Option.none();
-        Integer limit = validateAndGetInteger(ParameterNames.LIMIT_PARAM_NAME,limitString,isParam);
-        if (limit < 1) {
-            if (isParam) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    MessageConstants.buildInvalidRequestParameterMessage(ParameterNames.LIMIT_PARAM_NAME, limitString));
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    MessageConstants.buildInvalidPathVariableMessage(ParameterNames.LIMIT_PARAM_NAME, limitString));
-        }
-        return Option.of(limit);
     }
 
     public static void validateAirlineBatchUpsert(AirlineBatchUpsert airlineBatchUpsert,

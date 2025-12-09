@@ -36,11 +36,10 @@ public class SearchSession {
         }
     }
 
-    public List<PathDetailed> getNextBatch(int size) {
+    public List<PathDetailed> getPollResults() {
         List<PathDetailed> batch = new ArrayList<>();
-        for (int i = 0; i < size; i++) {
+        while (!resultsQueue.isEmpty()) {
             PathDetailed pathDetailed = resultsQueue.poll();
-            if (pathDetailed == null) break;
             batch.add(pathDetailed);
             processedCount.incrementAndGet();
         }

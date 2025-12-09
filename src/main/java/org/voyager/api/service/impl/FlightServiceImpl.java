@@ -1,23 +1,28 @@
 package org.voyager.api.service.impl;
 
 import io.vavr.control.Option;
-import jakarta.transaction.Transactional;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.server.ResponseStatusException;
 import org.voyager.api.error.MessageConstants;
 import org.voyager.api.model.response.PagedResponse;
 import org.voyager.commons.model.airline.Airline;
 import org.voyager.api.model.entity.FlightEntity;
-import org.voyager.commons.model.flight.*;
+import org.voyager.commons.model.flight.Flight;
+import org.voyager.commons.model.flight.FlightBatchDelete;
+import org.voyager.commons.model.flight.FlightAirlineQuery;
+import org.voyager.commons.model.flight.FlightQuery;
+import org.voyager.commons.model.flight.FlightUpsert;
+import org.voyager.commons.model.flight.FlightBatchUpsert;
+import org.voyager.commons.model.flight.FlightBatchUpsertResult;
+import org.voyager.commons.model.flight.FlightNumberQuery;
 import org.voyager.api.repository.FlightRepository;
 import org.voyager.api.service.FlightService;
 import org.voyager.api.service.utils.MapperUtils;
@@ -25,7 +30,6 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -33,40 +37,12 @@ import static org.voyager.api.service.utils.ServiceUtils.handleJPAExceptions;
 
 @Service
 public class FlightServiceImpl implements FlightService {
-    private static final Logger LOGGER = LoggerFactory.getLogger(FlightServiceImpl.class);
-
     @Autowired
     FlightRepository flightRepository;
 
     @Override
     public Boolean existsByFlightNumber(String flightNumber) {
         return flightRepository.existsByFlightNumber(flightNumber);
-    }
-
-    @Override
-    public Boolean existsByAirlineForEachRouteIdIn(Airline airline, List<Integer> routeIdList) {
-        int size = routeIdList.size();
-        LOGGER.info("flightRepository.hasMatchingDistinctRouteCount({},{},{}",size,routeIdList,airline);
-        return flightRepository.hasMatchingDistinctRouteCount(size,routeIdList,airline);
-    }
-
-    @Override
-    public Boolean existsByAirlineForEachRouteIdInAndZonedDateTimeDepartureBetween(
-            Airline airline, List<Integer> routeIdList, ZonedDateTime start, ZonedDateTime end) {
-        int size = routeIdList.size();
-        LOGGER.info("flightRepository.existsByAirlineForEachRouteIdInAndZonedDateTimeDepartureBetween({},{},{}",
-                size,routeIdList,airline);
-        return flightRepository.hasMatchingDistinctRouteCountWithDepartureBetween(size,routeIdList,airline,start,end);
-    }
-
-    @Override
-    @Cacheable("anyValidPathAirlineCache")
-    public Boolean existsByAnyAirlineInForEachRouteIdInAndZonedDateTimeDepartureBetween(
-            List<Airline> airlineList, List<Integer> routeIdList, ZonedDateTime start, ZonedDateTime end) {
-        int size = routeIdList.size();
-        LOGGER.info("flightRepository.existsByAnyAirlineInForEachRouteIdInAndZonedDateTimeDepartureBetween({},{},{}",
-                size,routeIdList,airlineList);
-        return flightRepository.existsAnyAirlineWithMatchingRouteCount(size,routeIdList,airlineList,start,end);
     }
 
     @Override
@@ -77,120 +53,12 @@ public class FlightServiceImpl implements FlightService {
     }
 
     @Override
-    public Option<Flight> getFlightWithArrivalAfter(Integer routeId, String flightNumber, ZonedDateTime departure) {
+    public Option<Flight> getFlightOnDay(ZonedDateTime startOfDay, String flightNumber, Integer routeId) {
+        ZonedDateTime endOfDay = startOfDay.plusDays(1L);
         Optional<FlightEntity> flightEntity = flightRepository
-                .findClosestArrivalAfterDeparture(routeId,flightNumber,departure);
+                .findByRouteIdAndFlightNumberAndZonedDateTimeDepartureBetween(routeId,flightNumber,startOfDay,endOfDay);
         if (flightEntity.isPresent()) return Option.of(MapperUtils.entityToFlight(flightEntity.get()));
         return Option.none();
-    }
-
-    @Override
-    public Option<Flight> getFlightWithDepartureBefore(Integer routeId, String flightNumber, ZonedDateTime arrival) {
-        Optional<FlightEntity> flightEntity = flightRepository
-                .findClosestDepartureBeforeArrival(routeId,flightNumber,arrival);
-        if (flightEntity.isPresent()) return Option.of(MapperUtils.entityToFlight(flightEntity.get()));
-        return Option.none();
-    }
-
-    @Override
-    public Option<Flight> getFlight(Integer routeId, String flightNumber, Option<ZonedDateTime> departureBeforeOption,
-                                    Option<ZonedDateTime> arrivalAfterOption) {
-        Optional<FlightEntity> flightEntity = Optional.empty();
-        if (departureBeforeOption.isDefined() && arrivalAfterOption.isDefined()) {
-            flightEntity = flightRepository.findByRouteIdAndFlightNumberAndZonedDateTimeDepartureAndZonedDateTimeArrival(
-                    routeId,flightNumber, departureBeforeOption.get(), arrivalAfterOption.get());
-        } else if (departureBeforeOption.isDefined()) {
-            flightEntity = flightRepository.findByRouteIdAndFlightNumberAndZonedDateTimeDeparture(
-                    routeId,flightNumber, departureBeforeOption.get());
-        } else if (arrivalAfterOption.isDefined()) {
-            flightEntity = flightRepository.findByRouteIdAndFlightNumberAndZonedDateTimeArrival(
-                    routeId,flightNumber, arrivalAfterOption.get());
-        }
-        if (flightEntity.isEmpty()) return Option.none();
-        return Option.of(MapperUtils.entityToFlight(flightEntity.get()));
-    }
-
-    @Override
-    @Cacheable("getAirlineRouteIds")
-    public List<Integer> getAirlineRouteIds(Airline airline) {
-        return flightRepository.selectDistinctRouteIdByAirlineAndIsActive(airline,true);
-    }
-
-    @Override
-    public Flight save(FlightForm flightForm) {
-        return handleJPAExceptions(()-> MapperUtils
-                .entityToFlight(flightRepository.save(MapperUtils.formToFlightEntity(flightForm))));
-    }
-
-    @Override
-    public Flight patch(Flight flight, FlightPatch flightPatch) {
-        return handleJPAExceptions(()-> {
-            FlightEntity patched = MapperUtils.patchToFlightEntity(flight, flightPatch);
-            try {
-                patched = flightRepository.save(patched);
-            } catch (Exception e) {
-                LOGGER.error(e.getMessage()); // TODO: implement alerting
-                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                        MessageConstants.buildRespositoryPatchErrorMessage("flight", flight.getFlightNumber()),
-                        e);
-            }
-            return MapperUtils.entityToFlight(patched);
-        });
-    }
-
-    @Override
-    public List<Flight> getFlights(List<Integer> routeIdList,
-                                   Option<String> flightNumberOption,
-                                   Option<Airline> airlineOption,
-                                   Option<Boolean> isActiveOption) {
-        if (routeIdList.isEmpty() && flightNumberOption.isEmpty() && airlineOption.isEmpty()
-                && isActiveOption.isEmpty())
-            return flightRepository.findAll().stream().map(MapperUtils::entityToFlight).toList();
-
-        if (routeIdList.isEmpty() && flightNumberOption.isEmpty() && airlineOption.isEmpty())
-            return flightRepository.findByIsActive(isActiveOption.get())
-                    .stream().map(MapperUtils::entityToFlight).toList();
-
-        if (routeIdList.isEmpty() && flightNumberOption.isEmpty() && isActiveOption.isEmpty())
-            return flightRepository.findByAirline(airlineOption.get())
-                    .stream().map(MapperUtils::entityToFlight).toList();
-
-        if (routeIdList.isEmpty() && airlineOption.isEmpty() && isActiveOption.isEmpty())
-            return flightRepository.findByFlightNumber(flightNumberOption.get())
-                    .stream().map(MapperUtils::entityToFlight).toList();
-
-        if (airlineOption.isEmpty() && flightNumberOption.isEmpty() && isActiveOption.isEmpty())
-            return flightRepository.findByRouteIdIn(routeIdList)
-                    .stream().map(MapperUtils::entityToFlight).toList();
-
-        if (routeIdList.isEmpty() && flightNumberOption.isEmpty())
-            return flightRepository.findByAirlineAndIsActive(airlineOption.get(),isActiveOption.get())
-                    .stream().map(MapperUtils::entityToFlight).toList();
-
-        if (routeIdList.isEmpty() && airlineOption.isEmpty())
-            return flightRepository.findByFlightNumberAndIsActive(flightNumberOption.get(),isActiveOption.get())
-                    .stream().map(MapperUtils::entityToFlight).toList();
-
-        if (airlineOption.isEmpty() && flightNumberOption.isEmpty())
-            return flightRepository.findByRouteIdInAndIsActive(routeIdList,isActiveOption.get())
-                    .stream().map(MapperUtils::entityToFlight).toList();
-
-        if (airlineOption.isEmpty() && isActiveOption.isEmpty())
-            return flightRepository.findByRouteIdInAndFlightNumber(routeIdList,flightNumberOption.get())
-                    .stream().map(MapperUtils::entityToFlight).toList();
-
-        if (flightNumberOption.isEmpty() && isActiveOption.isEmpty())
-            return flightRepository.findByRouteIdInAndAirline(routeIdList,airlineOption.get())
-                    .stream().map(MapperUtils::entityToFlight).toList();
-
-        if (flightNumberOption.isEmpty())
-            return flightRepository.findByRouteIdInAndAirlineAndIsActive(
-                            routeIdList,airlineOption.get(),isActiveOption.get())
-                    .stream().map(MapperUtils::entityToFlight).toList();
-
-        return flightRepository.findByRouteIdInAndFlightNumberAndIsActive(
-                routeIdList,flightNumberOption.get(),isActiveOption.get())
-                .stream().map(MapperUtils::entityToFlight).toList();
     }
 
     @Override
@@ -239,7 +107,7 @@ public class FlightServiceImpl implements FlightService {
     }
 
     @Override
-    @Transactional
+    @Transactional(timeout = 30)
     public Integer batchDelete(FlightBatchDelete flightBatchDelete) {
         return handleJPAExceptions(()-> {
             if (StringUtils.isNotBlank(flightBatchDelete.getDaysPast())
@@ -292,25 +160,25 @@ public class FlightServiceImpl implements FlightService {
     @Override
     public FlightBatchUpsertResult batchUpsert(@Validated FlightBatchUpsert flightBatchUpsert) {
         List<FlightUpsert> flightUpsertList = flightBatchUpsert.getFlightUpsertList();
-        List<FlightEntity> totalSaves = Collections.synchronizedList(new ArrayList<>());
         AtomicInteger totalCreates = new AtomicInteger(0);
         AtomicInteger totalUpdates = new AtomicInteger(0);
         AtomicInteger totalSkips = new AtomicInteger(0);
+        List<FlightEntity> totalSaves = new ArrayList<>();
 
-        // Process all FlightUpsert objects in parallel
-        flightUpsertList.parallelStream().forEach(flightUpsert -> {
+        for (FlightUpsert flightUpsert : flightUpsertList) {
             Integer routeId = Integer.parseInt(flightUpsert.getRouteId());
             boolean isArrival = Boolean.parseBoolean(flightUpsert.getIsArrival().toLowerCase());
             Airline airline = Airline.valueOf(flightUpsert.getAirline().toUpperCase());
             String flightNumber = flightUpsert.getFlightNumber();
 
-            // Process date times sequentially within each FlightUpsert to avoid nested parallelism
-            flightUpsert.getZonedDateTimeList().forEach(zonedDateTime ->
-                    processDateTime(zonedDateTime, flightUpsert, isArrival, routeId, flightNumber,
-                            airline, totalCreates, totalUpdates, totalSkips, totalSaves));
-        });
+            for (ZonedDateTime zonedDateTime : flightUpsert.getZonedDateTimeList()) {
+                processDateTime(zonedDateTime, flightUpsert, isArrival, routeId,
+                        flightNumber, airline, totalCreates, totalUpdates, totalSkips, totalSaves);
+            }
+        }
 
         flightRepository.saveAll(totalSaves);
+
         return FlightBatchUpsertResult.builder()
                 .skippedCount(totalSkips.get())
                 .createdCount(totalCreates.get())
@@ -319,48 +187,43 @@ public class FlightServiceImpl implements FlightService {
     }
 
     private void processDateTime(ZonedDateTime zonedDateTime, FlightUpsert flightUpsert,
-                                         boolean isArrival, Integer routeId, String flightNumber,
-                                         Airline airline, AtomicInteger totalCreates,
-                                         AtomicInteger totalUpdates, AtomicInteger totalSkips,
-                                         List<FlightEntity> totalSaves) {
+                                 boolean isArrival, Integer routeId, String flightNumber,
+                                 Airline airline, AtomicInteger totalCreates,
+                                 AtomicInteger totalUpdates, AtomicInteger totalSkips,
+                                 List<FlightEntity> totalSaves) {
+
         FlightEntity flightEntity;
         if (isArrival) {
+            Optional<FlightEntity> existingArrival = flightRepository
+                    .findByRouteIdAndFlightNumberAndZonedDateTimeArrival(routeId,flightNumber,zonedDateTime);
+            if (existingArrival.isPresent()) {
+                totalSkips.incrementAndGet();
+                return;
+            }
             Optional<FlightEntity> existingFlightEntity = flightRepository
                     .findClosestDepartureBeforeArrival(routeId, flightNumber, zonedDateTime);
-            if (existingFlightEntity.isPresent()) {
+            if (existingFlightEntity.isPresent() && existingFlightEntity.get().getZonedDateTimeArrival() == null) {
                 flightEntity = existingFlightEntity.get();
-                if (flightEntity.getZonedDateTimeArrival() != null) {
-                    totalSkips.getAndIncrement();
-                    return;
-                }
                 flightEntity.setZonedDateTimeArrival(zonedDateTime);
                 totalUpdates.incrementAndGet();
             } else {
-                Optional<FlightEntity> existingArrival = flightRepository
-                        .findByRouteIdAndFlightNumberAndZonedDateTimeArrival(routeId,flightNumber,zonedDateTime);
-                if (existingArrival.isPresent()) {
-                    return;
-                }
                 flightEntity = createNewArrivalEntity(routeId, flightUpsert, airline, zonedDateTime);
                 totalCreates.incrementAndGet();
             }
         } else {
+            Optional<FlightEntity> existingDeparture = flightRepository
+                    .findByRouteIdAndFlightNumberAndZonedDateTimeDeparture(routeId,flightNumber,zonedDateTime);
+            if (existingDeparture.isPresent()) {
+                totalSkips.incrementAndGet();
+                return;
+            }
             Optional<FlightEntity> existingFlightEntity = flightRepository
                     .findClosestArrivalAfterDeparture(routeId, flightNumber, zonedDateTime);
-            if (existingFlightEntity.isPresent()) {
+            if (existingFlightEntity.isPresent() && existingFlightEntity.get().getZonedDateTimeDeparture() == null) {
                 flightEntity = existingFlightEntity.get();
-                if (flightEntity.getZonedDateTimeDeparture() != null) {
-                    totalSkips.getAndIncrement();
-                    return;
-                }
                 flightEntity.setZonedDateTimeDeparture(zonedDateTime);
                 totalUpdates.incrementAndGet();
             } else {
-                Optional<FlightEntity> existingDeparture = flightRepository
-                        .findByRouteIdAndFlightNumberAndZonedDateTimeDeparture(routeId,flightNumber,zonedDateTime);
-                if (existingDeparture.isPresent()) {
-                    return;
-                }
                 flightEntity = createNewDepartureEntity(routeId, flightUpsert, airline, zonedDateTime);
                 totalCreates.incrementAndGet();
             }

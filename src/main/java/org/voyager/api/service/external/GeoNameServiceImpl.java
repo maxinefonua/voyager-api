@@ -14,7 +14,6 @@ import org.voyager.commons.model.geoname.config.GeoNamesConfig;
 import org.voyager.commons.model.geoname.query.GeoNearbyQuery;
 import org.voyager.commons.model.geoname.query.GeoSearchQuery;
 import org.voyager.commons.model.geoname.query.GeoTimezoneQuery;
-
 import static org.voyager.api.service.utils.ServiceUtils.handleExternalServiceExceptions;
 
 @Service

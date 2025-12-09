@@ -6,16 +6,17 @@ import org.springframework.stereotype.Service;
 import org.voyager.api.model.path.FlightDetailed;
 import org.voyager.api.model.path.PathDetailed;
 import org.voyager.api.model.path.PathSearchRequest;
-import org.voyager.api.service.AirlineService;
 import org.voyager.api.service.FlightService;
 import org.voyager.api.service.QuickPathSearchService;
 import org.voyager.api.service.RouteService;
 import org.voyager.commons.model.flight.Flight;
 import org.voyager.commons.model.flight.FlightAirlineQuery;
 import org.voyager.commons.model.route.Route;
-import org.voyager.commons.model.route.RouteQuery;
-
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.Map;
+import java.util.Comparator;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -25,44 +26,57 @@ public class QuickPathSearchServiceImpl implements QuickPathSearchService {
     RouteService routeService;
 
     @Autowired
-    AirlineService airlineService;
-
-    @Autowired
     FlightService flightService;
 
     @Override
-    public List<PathDetailed> findQuickPaths(PathSearchRequest request, int limit) {
+    public List<PathDetailed> findQuickPaths(PathSearchRequest request) {
         Set<String> originSet = request.getOrigins();
         Set<String> destinationSet = request.getDestinations();
+        List<PathDetailed> pathDetailedList = new ArrayList<>();
+        List<Route> routeList = new ArrayList<>();
 
-        List<Route> routeList = routeService.getRoutes(RouteQuery.builder()
-                .originList(new ArrayList<>(originSet))
-                .destinationList(new ArrayList<>(destinationSet))
-                .excludeDestinationSet(request.getExcludeDestinations())
-                .excludeRouteIdSet(request.getExcludeRouteIds())
-                .build());
+        // for each origin -> destination, check for direct routes
+        for (String origin : originSet) {
+            for (String destination : destinationSet) {
+                if (request.getExcludeDestinations().contains(destination)) continue;
+                Option<Route> routeOption = routeService.getRoute(origin,destination);
+                // if no routes, add no direct flights path
+                if (routeOption.isEmpty()) {
+                    pathDetailedList.add(PathDetailed.noDirectFlights(origin,destination));
+                } else {
+                    Route route = routeOption.get();
+                    if (request.getExcludeRouteIds().contains(route.getId())) continue;
+                    routeList.add(routeOption.get());
+                }
+            }
+        }
 
-        // Get route IDs and create lookup map
-        List<Integer> allRouteIds = routeList.stream()
-                .map(Route::getId)
-                .toList();
+        // if no routes at all, return path list
+        if (routeList.isEmpty()) {
+            return pathDetailedList;
+        }
 
+        // get all flights of route list
         Map<Integer, Route> routeMap = routeList.stream()
                 .collect(Collectors.toMap(Route::getId, Function.identity()));
-
-        // Get all flights
+        List<Integer> allRouteIds = routeMap.keySet().stream().toList();
         List<Flight> allFlights = flightService.getFlights(
                 FlightAirlineQuery.builder()
                         .isActive(true)
                         .routeIdList(allRouteIds)
                         .startTime(request.getStartTime())
-                        .endTime(request.getEndTime())
+                        .endTime(request.getStartTime().plusDays(1L))
                         .airlineList(request.getAirlines())
                         .build());
 
-        if (allFlights.isEmpty()) return List.of();
+        // if no flights, add all no direct flight paths and return
+        if (allFlights.isEmpty()) {
+            pathDetailedList.addAll(routeList.stream().map(route->
+                    PathDetailed.noDirectFlights(route.getOrigin(),route.getDestination())).toList());
+            return pathDetailedList;
+        }
 
-        // Filter excluded flight numbers
+        // Filter excluded flight numbers : TODO: add exclude flights to flightquery?
         if (request.getExcludeFlightNumbers() != null) {
             allFlights = allFlights.stream()
                     .filter(flight -> !request.getExcludeFlightNumbers().contains(flight.getFlightNumber()))
@@ -74,7 +88,7 @@ public class QuickPathSearchServiceImpl implements QuickPathSearchService {
                 .collect(Collectors.groupingBy(Flight::getRouteId));
 
         // Create PathDetailed for each route group
-        return flightsByRoute.entrySet().stream()
+        pathDetailedList.addAll(flightsByRoute.entrySet().stream()
                 .map(entry -> {
                     Integer routeId = entry.getKey();
                     List<Flight> routeFlights = entry.getValue();
@@ -88,7 +102,7 @@ public class QuickPathSearchServiceImpl implements QuickPathSearchService {
 
                     return new PathDetailed(flightDetaileds.stream().map(List::of).toList());
                 })
-                .limit(limit)
-                .toList();
+                .toList());
+        return pathDetailedList;
     }
 }

@@ -13,10 +13,9 @@ import java.util.List;
 @Builder @NoArgsConstructor
 @AllArgsConstructor @Data
 public class SearchResponse {
-    private String searchId;
     private List<PathDetailed> content;
     private SearchStatus status;
     private boolean hasMore;
     private Integer totalFound;
-    private Instant expiresAt;
+    private int size;
 }

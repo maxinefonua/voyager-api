@@ -8,8 +8,9 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.voyager.commons.constants.GeoNames;
 import org.voyager.commons.constants.ParameterNames;
 import org.voyager.commons.model.geoname.fields.FeatureClass;
@@ -20,6 +21,7 @@ import org.voyager.api.service.external.GeoNameService;
 import org.voyager.api.validate.ValidationUtils;
 
 @RestController
+@RequestMapping(GeoNames.GEONAMES)
 public class GeoNamesController {
     @Autowired
     GeoNameService geoNameService;
@@ -34,7 +36,7 @@ public class GeoNamesController {
                                                    String longitudeString,
                                                    @RequestParam(name = GeoNames.ParameterNames.RADIUS,
                                                    required = false) String radiusString) {
-        LOGGER.info("uncached GET {} with latitude: {}, longitude: {}, radius: {}",GeoNames.NEARBY_PLACES,
+        LOGGER.info("non-cached GET {} with latitude: {}, longitude: {}, radius: {}",GeoNames.NEARBY_PLACES,
                 latitudeString,longitudeString,radiusString);
         Double latitude = ValidationUtils.validateAndGetDouble(
                 ParameterNames.LATITUDE_PARAM_NAME,latitudeString);
@@ -58,7 +60,7 @@ public class GeoNamesController {
                                            String latitudeString,
                                           @RequestParam(name = ParameterNames.LONGITUDE_PARAM_NAME)
                                            String longitudeString) {
-        LOGGER.info("uncached GET {} with latitude: {}, longitude: {}",GeoNames.TIMEZONE,
+        LOGGER.info("non-cached GET {} with latitude: {}, longitude: {}",GeoNames.TIMEZONE,
                 latitudeString, longitudeString);
         Double latitude = ValidationUtils.validateAndGetDouble(
                 ParameterNames.LATITUDE_PARAM_NAME,latitudeString);
@@ -67,8 +69,7 @@ public class GeoNamesController {
 
         GeoTimezoneQuery geoTimezoneQuery = GeoTimezoneQuery.builder().latitude(latitude)
                 .longitude(longitude).build();
-        ResponseEntity<String> responseEntity = geoNameService.getTimezone(geoTimezoneQuery);
-        return  responseEntity;
+        return geoNameService.getTimezone(geoTimezoneQuery);
     }
 
     @GetMapping(GeoNames.SEARCH)
@@ -78,7 +79,7 @@ public class GeoNamesController {
                                          required = false) String isNameRequiredString,
                                          @RequestParam(name = GeoNames.ParameterNames.FEATURE_CLASS,
                                          required = false) String featureClassString)  {
-        LOGGER.info("uncached GET {} with query: {}, isNameRequired: {}, featureClass: {}",GeoNames.SEARCH,
+        LOGGER.info("non-cached GET {} with query: {}, isNameRequired: {}, featureClass: {}",GeoNames.SEARCH,
                 query,isNameRequiredString,featureClassString);
         ValidationUtils.validateQuery(query);
         GeoSearchQuery geoSearchQuery = GeoSearchQuery.builder().query(query).build();
@@ -99,7 +100,7 @@ public class GeoNamesController {
     @Cacheable("geoFetchFullVoyager")
     public ResponseEntity<String> fetchFull(@PathVariable(name = ParameterNames.ID_PATH_VAR_NAME)
                                                  String geoIdString)  {
-        LOGGER.info("uncached GET {}/{}",GeoNames.FETCH, geoIdString);
+        LOGGER.info("non-cached GET {}/{}",GeoNames.FETCH, geoIdString);
         Long geoId = ValidationUtils.validateAndGetLong(ParameterNames.ID_PATH_VAR_NAME,
                 geoIdString,false);
         return geoNameService.getFull(geoId,String.class);
@@ -108,7 +109,7 @@ public class GeoNamesController {
     @GetMapping(GeoNames.COUNTRIES)
     @Cacheable("geoCountryVoyager")
     public ResponseEntity<String> getCountryGNList() {
-        LOGGER.info("uncached GET {}",GeoNames.COUNTRIES);
+        LOGGER.info("non-cached GET {}",GeoNames.COUNTRIES);
         return geoNameService.getCountries();
     }
 }

@@ -6,7 +6,6 @@ import org.voyager.commons.model.geoname.query.GeoNearbyQuery;
 import org.voyager.commons.model.geoname.query.GeoSearchQuery;
 import org.voyager.commons.model.geoname.query.GeoTimezoneQuery;
 
-
 public interface GeoNameService {
     ResponseEntity<String> findNearbyPlaces(@NonNull GeoNearbyQuery geoNearbyQuery);
     ResponseEntity<String> getTimezone(@NonNull GeoTimezoneQuery geoTimezoneQuery);

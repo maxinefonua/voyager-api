@@ -25,7 +25,7 @@ public class AuthenticationService {
 
     @Autowired
     public AuthenticationService(AuthConfig authConfig) {
-        this.authConfig = authConfig;
+        AuthenticationService.authConfig = authConfig;
     }
 
     @PostConstruct
