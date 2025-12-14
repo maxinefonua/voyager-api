@@ -8,7 +8,6 @@ import org.voyager.api.model.path.FlightDetailed;
 import org.voyager.api.model.path.PathDetailed;
 import org.voyager.api.model.path.PathSearchRequest;
 import org.voyager.api.service.RouteService;
-import org.voyager.api.service.AirlineService;
 import org.voyager.api.service.FlightService;
 import org.voyager.api.service.AirportsService;
 import org.voyager.api.service.ComprehensivePathSearchService;
@@ -41,9 +40,6 @@ public class ComprehensivePathSearchServiceImpl implements ComprehensivePathSear
     RouteService routeService;
 
     @Autowired
-    AirlineService airlineService;
-
-    @Autowired
     FlightService flightService;
 
     @Autowired
@@ -61,10 +57,7 @@ public class ComprehensivePathSearchServiceImpl implements ComprehensivePathSear
                                 .originList(new ArrayList<>(request.getOrigins()))
                                 .excludeRouteIdSet(request.getExcludeRouteIds())
                                 .excludeDestinationSet(excludeCodes)
-                                .build()).stream().filter(route ->
-                        airlineService.hasAnyActiveAirlineForAllAirports(
-                                request.getAirlines(), List.of(route.getDestination(), route.getOrigin())))
-                .toList();
+                                .build());
 
         Queue<Path> queue = routeList.stream()
                 .filter(route -> route.getDistanceKm() != null)
@@ -85,7 +78,6 @@ public class ComprehensivePathSearchServiceImpl implements ComprehensivePathSear
         visited.addAll(request.getOrigins());
         Set<Integer> excludeRouteIds = request.getExcludeRouteIds();
         Set<String> destinationSet = request.getDestinations();
-        List<Airline> validAirlines = request.getAirlines();
 
         while (!queue.isEmpty()) {
             Queue<Path> nextQueue = new PriorityQueue<>(Comparator
@@ -95,7 +87,6 @@ public class ComprehensivePathSearchServiceImpl implements ComprehensivePathSear
                 Path pathSoFar = queue.poll();
                 List<Route> soFarRouteList = pathSoFar.getRouteList();
                 String nextOrigin = soFarRouteList.get(soFarRouteList.size()-1).getDestination();
-                if (visited.contains(nextOrigin)) continue;
                 visited.add(nextOrigin);
                 for (Route route : routeService.getRoutes(RouteQuery.builder()
                         .originList(List.of(nextOrigin))
@@ -112,11 +103,7 @@ public class ComprehensivePathSearchServiceImpl implements ComprehensivePathSear
                     if (destinationSet.contains(route.getDestination())) {
                         buildAllFlightPathsForPath(nextPath,request,pathConsumer);
                     } else if (nextPath.getRouteList().size() < 3) {
-                        List<String> iataList = new ArrayList<>(routeList.stream().map(Route::getOrigin).toList());
-                        iataList.add(route.getDestination());
-                        if (airlineService.hasAnyActiveAirlineForAllAirports(validAirlines,iataList)) {
-                            nextQueue.add(nextPath);
-                        }
+                        nextQueue.add(nextPath);
                     }
                 }
             }
