@@ -1,4 +1,4 @@
-name: Publish to GitHub Packages
+name: Deploy to EC2
 
 on:
   push:
@@ -6,11 +6,11 @@ on:
   workflow_dispatch:
 
 jobs:
-  publish:
+  build-and-deploy:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write
+      packages: read  # Changed from write to read
     
     steps:
     - uses: actions/checkout@v4
@@ -21,23 +21,64 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
     
-    - name: Build and publish voyager-models
+    - name: Configure Maven for GitHub Packages
       run: |
-        cd voyager-models
-        mvn -B clean deploy -DskipTests
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # Create settings.xml to authenticate with GitHub Packages
+        mkdir -p ~/.m2
+        cat > ~/.m2/settings.xml << 'EOF'
+        <?xml version="1.0" encoding="UTF-8"?>
+        <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
+                                      https://maven.apache.org/xsd/settings-1.0.0.xsd">
+            <servers>
+                <server>
+                    <id>github</id>
+                    <username>${{ github.actor }}</username>
+                    <password>${{ secrets.GITHUB_TOKEN }}</password>
+                </server>
+            </servers>
+        </settings>
+        EOF
     
-    - name: Build and publish voyager-sdk
-      run: |
-        cd voyager-sdk
-        mvn -B clean deploy -DskipTests
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Build with Maven
+      run: mvn clean package -DskipTests
     
-    - name: Build and publish voyager-datasync
+    - name: Verify JAR file
       run: |
-        cd voyager-datasync
-        mvn -B clean deploy -DskipTests
+        JAR_PATH=$(find target -name "*.jar" -type f | head -1)
+        if [ -z "$JAR_PATH" ]; then
+          echo "JAR file not found. Checking target directory:"
+          ls -la target/
+          exit 1
+        fi
+        echo "JAR_PATH=$JAR_PATH" >> $GITHUB_ENV
+    
+    - name: Setup SSH
+      uses: webfactory/ssh-agent@v0.9.0
+      with:
+        ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
+    
+    - name: Deploy to EC2
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        EC2_HOST: ec2-13-57-240-243.us-west-1.compute.amazonaws.com
+      run: |
+        # Get version info
+        VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout 2>/dev/null || echo "1.0.0")
+        SHORT_SHA=$(git rev-parse --short HEAD)
+        TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+        
+        # Rename JAR
+        NEW_JAR_NAME="voyager-api-${VERSION}-${SHORT_SHA}-${TIMESTAMP}.jar"
+        cp "${{ env.JAR_PATH }}" "/tmp/$NEW_JAR_NAME"
+        
+        echo "📦 Deploying: $NEW_JAR_NAME"
+        
+        # Copy to EC2
+        scp -o StrictHostKeyChecking=no "/tmp/$NEW_JAR_NAME" ec2-user@$EC2_HOST:/tmp/
+        
+        # Run deployment script
+        ssh -o StrictHostKeyChecking=no ec2-user@$EC2_HOST "bash /home/ec2-user/api/scripts/deploy.sh"
+        
+        # Clean up
+        rm -f "/tmp/$NEW_JAR_NAME"
