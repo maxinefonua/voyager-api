@@ -20,14 +20,22 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
-        # CRITICAL: Add server-id and settings-path for GitHub Packages auth
-        server-id: github
-        settings-path: ${{ github.workspace }}/settings.xml
+        # Remove settings-path parameter for now
     
     - name: Configure Maven for GitHub Packages
       run: |
+        # First, check what exists at workspace root
+        echo "📁 Workspace contents:"
+        ls -la ${{ github.workspace }}/
+        
+        # Remove any existing settings.xml directory/file
+        rm -rf ${{ github.workspace }}/settings.xml
+        
+        # Create Maven directory
+        mkdir -p ~/.m2
+        
         # Create settings.xml with proper authentication
-        cat > ${{ github.workspace }}/settings.xml << 'EOF'
+        cat > ~/.m2/settings.xml << 'EOF'
         <?xml version="1.0" encoding="UTF-8"?>
         <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -36,7 +44,6 @@ jobs:
           <servers>
             <server>
               <id>github</id>
-              <!-- Using GITHUB_TOKEN with proper scopes -->
               <username>${{ github.actor }}</username>
               <password>${{ secrets.GITHUB_TOKEN }}</password>
             </server>
@@ -44,19 +51,19 @@ jobs:
         </settings>
         EOF
         
-        # Also create in ~/.m2 for compatibility
-        mkdir -p ~/.m2
-        cp ${{ github.workspace }}/settings.xml ~/.m2/
+        echo "✅ Created ~/.m2/settings.xml"
+        echo "📋 Settings.xml content:"
+        cat ~/.m2/settings.xml
     
     - name: Validate Maven configuration
       run: |
         echo "🔍 Validating Maven setup..."
-        echo "Current directory: $(pwd)"
-        echo "Settings.xml exists: $(ls -la ${{ github.workspace }}/settings.xml 2>/dev/null && echo 'Yes' || echo 'No')"
+        echo "Maven home: ~/.m2"
+        echo "Settings.xml exists: $(ls -la ~/.m2/settings.xml 2>/dev/null && echo 'Yes' || echo 'No')"
         
-        # Test if we can resolve dependencies first
-        echo "📦 Testing dependency resolution..."
-        mvn dependency:resolve -DskipTests || echo "Dependency resolution failed, continuing with build..."
+        # Test repository configuration
+        echo "📦 Testing repository access..."
+        mvn help:effective-pom -Doutput=effective-pom.xml || echo "Continuing with build..."
     
     - name: Build with Maven
       run: mvn clean package -DskipTests
@@ -70,9 +77,10 @@ jobs:
         if [ -z "$JAR_PATH" ]; then
           echo "❌ JAR file not found. Checking target directory:"
           ls -la target/
-          # Check build logs
-          echo "📋 Last 50 lines of build output:"
-          tail -50 /tmp/mvn_build.log 2>/dev/null || echo "No build log found"
+          echo "📋 Checking for build errors:"
+          if [ -f "target/surefire-reports" ]; then
+            find target -name "*.txt" -type f -exec echo "=== {} ===" \; -exec head -20 {} \;
+          fi
           exit 1
         fi
         echo "✅ Found JAR: $JAR_PATH"
