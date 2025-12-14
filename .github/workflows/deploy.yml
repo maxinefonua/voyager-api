@@ -20,67 +20,62 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
+        # CRITICAL: Add server-id and settings-path for GitHub Packages auth
+        server-id: github
+        settings-path: ${{ github.workspace }}/settings.xml
     
     - name: Configure Maven for GitHub Packages
       run: |
-        # Create settings.xml to authenticate with GitHub Packages
-        mkdir -p ~/.m2
-        cat > ~/.m2/settings.xml << 'EOF'
+        # Create settings.xml with proper authentication
+        cat > ${{ github.workspace }}/settings.xml << 'EOF'
         <?xml version="1.0" encoding="UTF-8"?>
         <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                   xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
                                       https://maven.apache.org/xsd/settings-1.0.0.xsd">
-            <servers>
-                <server>
-                    <id>github</id>
-                    <username>${{ github.actor }}</username>
-                    <password>${{ secrets.GITHUB_TOKEN }}</password>
-                </server>
-            </servers>
+          <servers>
+            <server>
+              <id>github</id>
+              <!-- Using GITHUB_TOKEN with proper scopes -->
+              <username>${{ github.actor }}</username>
+              <password>${{ secrets.GITHUB_TOKEN }}</password>
+            </server>
+          </servers>
         </settings>
         EOF
+        
+        # Also create in ~/.m2 for compatibility
+        mkdir -p ~/.m2
+        cp ${{ github.workspace }}/settings.xml ~/.m2/
     
-    - name: Fix - Create fake parent POM for dependency resolution
+    - name: Validate Maven configuration
       run: |
-        echo "🛠️ Creating fake parent POM to resolve voyager-models dependency..."
+        echo "🔍 Validating Maven setup..."
+        echo "Current directory: $(pwd)"
+        echo "Settings.xml exists: $(ls -la ${{ github.workspace }}/settings.xml 2>/dev/null && echo 'Yes' || echo 'No')"
         
-        # Create the directory structure for the fake parent POM
-        mkdir -p ~/.m2/repository/org/voyager/voyager-commons/0.1.1
-        
-        # Create a minimal parent POM
-        cat > ~/.m2/repository/org/voyager/voyager-commons/0.1.1/voyager-commons-0.1.1.pom << 'EOF'
-        <?xml version="1.0" encoding="UTF-8"?>
-        <project xmlns="http://maven.apache.org/POM/4.0.0"
-                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
-                                     http://maven.apache.org/xsd/maven-4.0.0.xsd">
-          <modelVersion>4.0.0</modelVersion>
-          <groupId>org.voyager</groupId>
-          <artifactId>voyager-commons</artifactId>
-          <version>0.1.1</version>
-          <packaging>pom</packaging>
-          <name>voyager-commons</name>
-          <description>Voyager Commons Parent POM</description>
-        </project>
-        EOF
-        
-        echo "✅ Created fake parent POM at: ~/.m2/repository/org/voyager/voyager-commons/0.1.1/voyager-commons-0.1.1.pom"
-        
-        # Verify it was created
-        ls -la ~/.m2/repository/org/voyager/voyager-commons/0.1.1/
+        # Test if we can resolve dependencies first
+        echo "📦 Testing dependency resolution..."
+        mvn dependency:resolve -DskipTests || echo "Dependency resolution failed, continuing with build..."
     
     - name: Build with Maven
       run: mvn clean package -DskipTests
     
     - name: Verify JAR file
       run: |
+        echo "🔍 Looking for JAR files..."
+        find . -name "*.jar" -type f | head -10
+        
         JAR_PATH=$(find target -name "*.jar" -type f | head -1)
         if [ -z "$JAR_PATH" ]; then
-          echo "JAR file not found. Checking target directory:"
+          echo "❌ JAR file not found. Checking target directory:"
           ls -la target/
+          # Check build logs
+          echo "📋 Last 50 lines of build output:"
+          tail -50 /tmp/mvn_build.log 2>/dev/null || echo "No build log found"
           exit 1
         fi
+        echo "✅ Found JAR: $JAR_PATH"
         echo "JAR_PATH=$JAR_PATH" >> $GITHUB_ENV
     
     - name: Setup SSH
