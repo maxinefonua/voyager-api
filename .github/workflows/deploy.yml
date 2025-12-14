@@ -3,7 +3,7 @@ name: Deploy to EC2
 on:
   push:
     branches: [ main ]
-  workflow_dispatch: # Allow manual trigger
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:
@@ -11,6 +11,12 @@ jobs:
     
     steps:
     - uses: actions/checkout@v4
+    
+    - name: Clone and build voyager-commons
+      run: |
+        git clone https://github.com/maxinefonua/voyager-commons.git
+        cd voyager-commons
+        mvn clean install -DskipTests
     
     - name: Set up JDK 17
       uses: actions/setup-java@v4
@@ -23,7 +29,7 @@ jobs:
     
     - name: Verify JAR file
       run: |
-        JAR_PATH=$(find target -name "*uber.jar" -o -name "*with-dependencies.jar" -o -name "*.jar" | head -1)
+        JAR_PATH=$(find target -name "*.jar" -type f | head -1)
         if [ -z "$JAR_PATH" ]; then
           echo "JAR file not found. Checking target directory:"
           ls -la target/
@@ -40,8 +46,22 @@ jobs:
       env:
         EC2_HOST: ec2-13-57-240-243.us-west-1.compute.amazonaws.com
       run: |
-        # Copy JAR to EC2
-        scp -o StrictHostKeyChecking=no "${{ env.JAR_PATH }}" ec2-user@$EC2_HOST:/tmp/voyager-api.jar
+        # Get version info
+        VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout 2>/dev/null || echo "1.0.0")
+        SHORT_SHA=$(git rev-parse --short HEAD)
+        TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+        
+        # Rename JAR
+        NEW_JAR_NAME="voyager-api-${VERSION}-${SHORT_SHA}-${TIMESTAMP}.jar"
+        cp "${{ env.JAR_PATH }}" "/tmp/$NEW_JAR_NAME"
+        
+        echo "📦 Deploying: $NEW_JAR_NAME"
+        
+        # Copy to EC2
+        scp -o StrictHostKeyChecking=no "/tmp/$NEW_JAR_NAME" ec2-user@$EC2_HOST:/tmp/
         
         # Run deployment script
         ssh -o StrictHostKeyChecking=no ec2-user@$EC2_HOST "bash /home/ec2-user/api/scripts/deploy.sh"
+        
+        # Clean up
+        rm -f "/tmp/$NEW_JAR_NAME"
