@@ -4,16 +4,14 @@ import lombok.Builder;
 import lombok.Data;
 import org.voyager.api.model.response.SearchStatus;
 import org.voyager.commons.model.path.Path;
-
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-@Builder @Data
-public class CachedSearchResponse {
+@Builder
+@Data
+public class CachedPathResults {
+    List<Path> directs;
     @Builder.Default
-    private List<PathDetailed> content = new CopyOnWriteArrayList<>();
-    private SearchStatus status;
-    boolean hasMore;
-    private int converting;
-    private int converted;
+    private List<Path> connections = new CopyOnWriteArrayList<>();
+    SearchStatus status;
 }

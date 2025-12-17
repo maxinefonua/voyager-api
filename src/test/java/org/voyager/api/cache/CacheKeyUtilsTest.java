@@ -22,7 +22,7 @@ class CacheKeyUtilsTest {
                 .skip(0)
                 .size(10)
                 .build();
-        String cacheKey1 = CacheKeyUtils.generatePathSearchKey(request1);
+        String cacheKey1 = CacheKeyUtils.generateSearchKey(request1);
 
         PathSearchRequest request2 = PathSearchRequest.builder()
                 .origins(Set.of("SFO", "LAX"))
@@ -34,7 +34,7 @@ class CacheKeyUtilsTest {
                 .skip(20)
                 .size(10)
                 .build();
-        String cacheKey2 = CacheKeyUtils.generatePathSearchKey(request2);
+        String cacheKey2 = CacheKeyUtils.generateSearchKey(request2);
         assertEquals(cacheKey1,cacheKey2);
     }
 }
