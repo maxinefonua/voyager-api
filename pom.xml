@@ -8,12 +8,12 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>3.4.2</version>
-        <relativePath/> <!-- lookup parent from repository -->
+        <relativePath/>
     </parent>
 
     <groupId>org.voyager</groupId>
     <artifactId>voyager-api</artifactId>
-    <version>0.1.2</version>
+    <version>0.1.3</version>
     <name>VoyagerAPI</name>
     <description>API Services for Voyager project</description>
     <packaging>jar</packaging>
@@ -26,7 +26,7 @@
         <jdom.version>1.0</jdom.version>
         <vavr.version>0.10.6</vavr.version>
         <apache-commons.version>3.17.0</apache-commons.version>
-        <voyager-models.version>${project.version}</voyager-models.version>
+        <voyager-models.version>0.1.2</voyager-models.version>
     </properties>
 
     <repositories>
