@@ -13,7 +13,7 @@
 
     <groupId>org.voyager</groupId>
     <artifactId>voyager-api</artifactId>
-    <version>0.1.3</version>
+    <version>0.1.4</version>
     <name>VoyagerAPI</name>
     <description>API Services for Voyager project</description>
     <packaging>jar</packaging>
