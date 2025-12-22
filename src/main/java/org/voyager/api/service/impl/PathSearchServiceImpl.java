@@ -60,6 +60,7 @@ public class PathSearchServiceImpl implements PathSearchService {
         }
         List<PathDetailed> paginated = paginate(
                 cachedSearchResponse.getContent(), request.getSkip(), request.getSize());
+        // has more and paginated size < getContent
         return SearchResponse.builder()
                 .content(paginated)
                 .status(cachedSearchResponse.getStatus())
