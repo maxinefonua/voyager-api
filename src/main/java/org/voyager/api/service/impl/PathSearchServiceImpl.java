@@ -63,7 +63,7 @@ public class PathSearchServiceImpl implements PathSearchService {
         return SearchResponse.builder()
                 .content(paginated)
                 .status(cachedSearchResponse.getStatus())
-                .hasMore(cachedSearchResponse.isHasMore())
+                .hasMore(cachedSearchResponse.getStatus().equals(SearchStatus.SEARCHING))
                 .totalFound(cachedSearchResponse.getContent().size())
                 .size(paginated.size())
                 .build();
