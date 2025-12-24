@@ -85,14 +85,16 @@ public class FlightServiceImpl implements FlightService {
                 flightQuery.getEndTime(),
                 Pageable.ofSize(flightQuery.getPageSize()).withPage(flightQuery.getPage())
         );
+        List<Flight> content = pagedFlightEntities.get().map(MapperUtils::entityToFlight).toList();
         return PagedResponse.<Flight>builder()
-                .content(pagedFlightEntities.get().map(MapperUtils::entityToFlight).toList())
+                .content(content)
                 .page(flightQuery.getPage())
                 .size(flightQuery.getPageSize())
                 .totalElements(pagedFlightEntities.getTotalElements())
                 .totalPages(pagedFlightEntities.getTotalPages())
                 .first(pagedFlightEntities.isFirst())
                 .last(pagedFlightEntities.isLast())
+                .numberOfElements(content.size())
                 .build();
     }
 

@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<!-- Modern Fullscreen Modal for API Endpoints -->
+<div th:fragment="apiEndpointsModal" class="modal fade fullscreen-modal" id="apiEndpointsModal" tabindex="-1" aria-labelledby="apiEndpointsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-fullscreen">
+    <div class="modal-content modern-modal">
+      <!-- Responsive Header -->
+      <div class="modal-header glass-header">
+        <div class="container-fluid">
+          <div class="row align-items-center">
+            <div class="col-8 col-md-10">
+              <div class="d-flex align-items-center gap-2 gap-md-3">
+                <div class="api-icon-wrapper d-none d-md-flex">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 13H6C7.1 13 8 13.9 8 15V21H10V15C10 12.79 8.21 11 6 11H4C1.79 11 0 12.79 0 15V21H2V15C2 13.9 2.9 13 4 13Z" fill="currentColor"/>
+                    <path d="M22 9H16C14.9 9 14 9.9 14 11V21H16V11H22V21H24V11C24 9.9 23.1 9 22 9Z" fill="currentColor"/>
+                    <path d="M12 3C13.66 3 15 4.34 15 6C15 7.66 13.66 9 12 9C10.34 9 9 7.66 9 6C9 4.34 10.34 3 12 3ZM12 1C9.24 1 7 3.24 7 6C7 8.76 9.24 11 12 11C14.76 11 17 8.76 17 6C17 3.24 14.76 1 12 1Z" fill="currentColor"/>
+                  </svg>
+                </div>
+                <div>
+                  <h2 class="modal-title fs-4 fs-md-3" id="apiEndpointsModalLabel">Voyager Endpoints</h2>
+                  <p class="modal-subtitle d-none d-md-block">RESTful interface for flight data management</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-4 col-md-2 text-end">
+              <button type="button" class="btn-close btn-close-custom" data-bs-dismiss="modal" aria-label="Close">
+                <span class="close-icon">&times;</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Responsive Body -->
+      <div class="modal-body">
+        <div class="container-fluid">
+          <!-- Status Banner -->
+          <div class="row">
+            <div class="col-12">
+              <div class="status-banner d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-2">
+                <div class="d-flex align-items-center gap-2">
+                  <span class="status-text fs-6 fs-md-inherit">All write requests require admin authentication via API key</span>
+                </div>
+                <span class="badge badge-pill badge-coming align-self-start align-self-md-center">Public demo coming soon</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- API Grid Layout -->
+          <div class="row row-cols-1 row-cols-lg-2 g-3 g-lg-4 mt-2">
+            <!-- Airports Section -->
+            <div class="col">
+              <div class="api-section h-100">
+                <div class="section-header">
+                  <div class="section-icon">📍</div>
+                  <h3 class="section-title">Airports</h3>
+                </div>
+
+                <div class="api-card">
+                  <div class="api-card-header flex-column flex-md-row align-items-start align-items-md-center">
+                    <span class="method-badge method-get mb-2 mb-md-0">GET</span>
+                    <code class="endpoint-path w-100">
+                    <a href="/airports"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       class="endpoint-link w-100">/airports</a>
+                    </code>
+                  </div>
+                  <p class="api-description">Retrieve all airports with filtering, sorting, and pagination</p>
+                  <div class="api-tags">
+                    <span class="api-tag tag-public">Public</span>
+                    <span class="api-tag">Pagination</span>
+                  </div>
+                </div>
+
+                <div class="api-card">
+                  <div class="api-card-header flex-column flex-md-row align-items-start align-items-md-center">
+                    <span class="method-badge method-get mb-2 mb-md-0">GET</span>
+                    <code class="endpoint-path w-100">
+                      <a href="/airports/HNL"
+                         target="_blank"
+                         rel="noopener noreferrer"
+                         class="endpoint-link w-100">/airports/HNL</a>
+                    </code>
+                  </div>
+                  <p class="api-description">Retrieve specific airport details by IATA code</p>
+                  <div class="api-tags">
+                    <span class="api-tag tag-public">Public</span>
+                  </div>
+                </div>
+
+                <div class="api-card">
+                  <div class="api-card-header flex-column flex-md-row align-items-start align-items-md-center">
+                    <span class="method-badge method-post mb-2 mb-md-0">POST</span>
+                    <code class="endpoint-path w-100">/admin/airports</code>
+                  </div>
+                  <p class="api-description">Create new airport record with validation</p>
+                  <div class="api-tags">
+                    <span class="api-tag tag-admin">🔐 Admin Only</span>
+                    <span class="api-tag">Validation</span>
+                  </div>
+                </div>
+
+                <div class="api-card">
+                  <div class="api-card-header flex-column flex-md-row align-items-start align-items-md-center">
+                    <span class="method-badge method-patch mb-2 mb-md-0">PATCH</span>
+                    <code class="endpoint-path w-100">/admin/airports/ITM</code>
+                  </div>
+                  <p class="api-description">Partial update of airport fields by IATA code</p>
+                  <div class="api-tags">
+                    <span class="api-tag tag-admin">🔐 Admin Only</span>
+                    <span class="api-tag">Partial Update</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Countries Section -->
+            <div class="col">
+              <div class="api-section h-100">
+                <div class="section-header">
+                  <div class="section-icon">🗺️</div>
+                  <h3 class="section-title">Countries</h3>
+                </div>
+
+                <div class="api-card">
+                  <div class="api-card-header flex-column flex-md-row align-items-start align-items-md-center">
+                    <span class="method-badge method-get mb-2 mb-md-0">GET</span>
+                    <code class="endpoint-path w-100">
+                      <a href="/countries"
+                         target="_blank"
+                         rel="noopener noreferrer"
+                         class="endpoint-link w-100">/countries</a>
+                    </code>
+                  </div>
+                  <p class="api-description">Retrieve all countries with advanced filtering options</p>
+                  <div class="api-tags">
+                    <span class="api-tag tag-public">Public</span>
+                    <span class="api-tag">Filtering</span>
+                  </div>
+                </div>
+
+                <div class="api-card">
+                  <div class="api-card-header flex-column flex-md-row align-items-start align-items-md-center">
+                    <span class="method-badge method-get mb-2 mb-md-0">GET</span>
+                    <code class="endpoint-path w-100">
+                      <a href="/countries/TO"
+                         target="_blank"
+                         rel="noopener noreferrer"
+                         class="endpoint-link w-100">/countries/TO</a>
+                    </code>
+                  </div>
+                  <p class="api-description">Get country details by ISO 3166-1 alpha-2 code</p>
+                  <div class="api-tags">
+                    <span class="api-tag tag-public">Public</span>
+                  </div>
+                </div>
+
+                <div class="api-card">
+                  <div class="api-card-header flex-column flex-md-row align-items-start align-items-md-center">
+                    <span class="method-badge method-post mb-2 mb-md-0">POST</span>
+                    <code class="endpoint-path w-100">/admin/countries</code>
+                  </div>
+                  <p class="api-description">Create new country record in the system</p>
+                  <div class="api-tags">
+                    <span class="api-tag tag-admin">🔐 Admin Only</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Flights Section -->
+            <div class="col">
+              <div class="api-section h-100">
+                <div class="section-header">
+                  <div class="section-icon">🛫</div>
+                  <h3 class="section-title">Flights</h3>
+                </div>
+
+                <div class="api-card">
+                  <div class="api-card-header flex-column flex-md-row align-items-start align-items-md-center">
+                    <span class="method-badge method-get mb-2 mb-md-0">GET</span>
+                    <code class="endpoint-path w-100">
+                      <a href="/flights"
+                         target="_blank"
+                         rel="noopener noreferrer"
+                         class="endpoint-link w-100">/flights</a>
+                    </code>
+                  </div>
+                  <p class="api-description">Search flights with pagination and comprehensive filters</p>
+                  <div class="api-tags">
+                    <span class="api-tag tag-public">Public</span>
+                    <span class="api-tag">Search</span>
+                  </div>
+                </div>
+
+                <div class="api-card">
+                  <div class="api-card-header flex-column flex-md-row align-items-start align-items-md-center">
+                    <span class="method-badge method-post mb-2 mb-md-0">POST</span>
+                    <code class="endpoint-path w-100">/admin/flights</code>
+                  </div>
+                  <p class="api-description">Bulk upsert flight data with transaction support</p>
+                  <div class="api-tags">
+                    <span class="api-tag tag-admin">🔐 Admin Only</span>
+                    <span class="api-tag">Batch</span>
+                  </div>
+                </div>
+
+                <div class="api-card">
+                  <div class="api-card-header flex-column flex-md-row align-items-start align-items-md-center">
+                    <span class="method-badge method-delete mb-2 mb-md-0">DELETE</span>
+                    <code class="endpoint-path w-100">/admin/flights</code>
+                  </div>
+                  <p class="api-description">Batch delete flights with confirmation</p>
+                  <div class="api-tags">
+                    <span class="api-tag tag-admin">🔐 Admin Only</span>
+                    <span class="api-tag">Batch</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Airlines Section -->
+            <div class="col">
+              <div class="api-section h-100">
+                <div class="section-header">
+                  <div class="section-icon">🎫</div>
+                  <h3 class="section-title">Airlines</h3>
+                </div>
+
+                <div class="api-card">
+                  <div class="api-card-header flex-column flex-md-row align-items-start align-items-md-center">
+                    <span class="method-badge method-get mb-2 mb-md-0">GET</span>
+                    <code class="endpoint-path w-100">
+                      <a href="/airlines"
+                         target="_blank"
+                         rel="noopener noreferrer"
+                         class="endpoint-link w-100">/airlines</a>
+                    </code>
+                  </div>
+                  <p class="api-description">Retrieve all airlines with optional filtering</p>
+                  <div class="api-tags">
+                    <span class="api-tag tag-public">Public</span>
+                    <span class="api-tag">Filtering</span>
+                  </div>
+                </div>
+
+                <div class="api-card">
+                  <div class="api-card-header flex-column flex-md-row align-items-start align-items-md-center">
+                    <span class="method-badge method-post mb-2 mb-md-0">POST</span>
+                    <code class="endpoint-path w-100">/admin/airlines</code>
+                  </div>
+                  <p class="api-description">Bulk upsert airline-airport relationships</p>
+                  <div class="api-tags">
+                    <span class="api-tag tag-admin">🔐 Admin Only</span>
+                    <span class="api-tag">Relationships</span>
+                  </div>
+                </div>
+
+                <div class="api-card">
+                  <div class="api-card-header flex-column flex-md-row align-items-start align-items-md-center">
+                    <span class="method-badge method-delete mb-2 mb-md-0">DELETE</span>
+                    <code class="endpoint-path w-100">/admin/airlines</code>
+                  </div>
+                  <p class="api-description">Delete airline-airport relationships in bulk</p>
+                  <div class="api-tags">
+                    <span class="api-tag tag-admin">🔐 Admin Only</span>
+                    <span class="api-tag">Batch</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Health & Status Section -->
+            <div class="col">
+              <div class="api-section h-100">
+                <div class="section-header">
+                  <div class="section-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                    </svg>
+                  </div>
+                  <h3 class="section-title">Health & Status</h3>
+                </div>
+                <div class="api-card">
+                  <div class="api-card-header flex-column flex-md-row align-items-start align-items-md-center">
+                    <span class="method-badge method-get mb-2 mb-md-0">GET</span>
+                      <code class="endpoint-path w-100">
+                        <a href="/actuator/health" target="_blank" rel="noopener noreferrer" class="endpoint-link w-100">/actuator/health</a>
+                      </code>
+                  </div>
+                  <p class="api-description">Check API health status and system uptime metrics</p>
+                  <div class="api-tags">
+                    <span class="api-tag tag-public">Public</span>
+                    <span class="api-tag tag-health">Monitoring</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Responsive Footer -->
+      <div class="modal-footer">
+        <div class="container-fluid">
+          <div class="row align-items-center">
+            <div class="col-12 col-md-6">
+              <div class="api-stats d-flex justify-content-center justify-content-md-start gap-3 gap-md-4">
+                <div class="stat">
+                  <span class="stat-number">16</span>
+                  <span class="stat-label">Endpoints</span>
+                </div>
+                <div class="stat">
+                  <span class="stat-number">4</span>
+                  <span class="stat-label">Categories</span>
+                </div>
+                <div class="stat">
+                  <span class="stat-number">5</span>
+                  <span class="stat-label">Admin Only</span>
+                </div>
+              </div>
+            </div>
+            <div class="col-12 col-md-6 text-center text-md-end mt-3 mt-md-0">
+              <button type="button" class="btn btn-close-modal w-100 w-md-auto" data-bs-dismiss="modal">
+                Close Documentation
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
