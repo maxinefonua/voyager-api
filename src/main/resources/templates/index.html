@@ -10,7 +10,7 @@
     <link th:href="@{/css/api-endpoints.css}" rel="stylesheet">
 </head>
 <body>
-<div class="container mt-5">
+<div class="container mt-2">
     <!-- Hero Section -->
     <div class="hero text-center">
         <div class="logo-container">
@@ -23,7 +23,7 @@
     </div>
 
     <!-- Features Section -->
-    <div class="row mt-5 g-4">
+    <div class="row g-4">
         <div class="col-md-4">
             <div class="card feature-card h-100 p-4 text-center" data-bs-toggle="modal" data-bs-target="#apiEndpointsModal">
                 <div class="feature-icon">🔧</div>
@@ -55,7 +55,7 @@
     <div th:replace="~{fragments/api-endpoints-modal :: apiEndpointsModal}"></div>
 
     <!-- Footer -->
-    <footer class="mt-5 pt-4 text-muted mb-4">
+    <footer class="pt-4 text-muted">
         <div class="container">
             <div class="row justify-content-center mb-1">
                 <div class="col-auto">
@@ -69,19 +69,8 @@
                         Voyager API GitHub
                     </a>
                 </div>
-                <div class="col-auto">
-                    <a href="https://demo.voyagerapp.org"
-                       target="_blank"
-                       rel="noreferrer noopener"
-                       class="text-decoration-none text-muted d-flex align-items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="-4.171 -1.82 19.71 14.79" width="20" height="20" class="me-2">
-                            <path d="M 14.514 10.962 L -3.154 10.962 L -3.135 11.588 C -1.657 12.536 14.325 12.327 14.495 11.588 M -0.746 7.108 C 1.425 7.5 4.432 6.309 4.896 -1.82 C 9.826 1.373 9.981 3.915 13.794 11.51 C 3.386 9.559 3.898 9.806 -0.746 7.108 M -4.171 11.596 L 15.517 11.615 L 15.536 12.281 C 13.842 13.233 -2.609 13.138 -4.171 12.338" fill="currentColor"/>
-                        </svg>
-                        Voyager Web App
-                    </a>
-                </div>
             </div>
-            <p class="text-center small mb-4 opacity-75">Built with Spring Boot, PostgreSQL, Thymeleaf</p>
+            <p class="text-center small opacity-75">Web page built with Spring, Thymeleaf, Bootstrap</p>
         </div>
     </footer>
 </div>
