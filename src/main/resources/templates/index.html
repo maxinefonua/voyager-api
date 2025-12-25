@@ -28,16 +28,18 @@
             <div class="card feature-card h-100 p-4 text-center" data-bs-toggle="modal" data-bs-target="#apiEndpointsModal">
                 <div class="feature-icon">🔧</div>
                 <h3 class="card-title">API Endpoints</h3>
-                <p class="card-text">All requests require authentication via API key. Rate-limited public demo requests coming soon.</p>
-                <p class="text-muted mt-3 small">Click to view all endpoints →</p>
+                <p class="card-text">Rate-limited GET requests available for public use.</p>
+                <p class="text-muted mt-3 small">Click to try endpoints →</p>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card feature-card h-100 p-4 text-center">
-                <div class="feature-icon">📚</div>
-                <h3 class="card-title">Documentation</h3>
-                <p class="card-text">Full API documentation and swagger files with interactive demos.</p>
-                <p class="text-muted mt-3 small">Coming Soon</p>
+            <div data-href="https://demo.voyagerapp.org"
+                 onclick="window.open(this.dataset.href, '_blank', 'noopener,noreferrer')"
+                 class="card feature-card h-100 p-4 text-center">
+                <div class="feature-icon">✈️</div>
+                <h3 class="card-title">Voyager App</h3>
+                <p class="card-text">Flight search built on Voyager API, available for public use.</p>
+                <p class="text-muted mt-3 small">Click to open in new tab →</p>
             </div>
         </div>
         <div class="col-md-4">
@@ -79,7 +81,7 @@
                     </a>
                 </div>
             </div>
-            <p class="text-center small mb-4 opacity-75">Built with Spring Boot 3 & PostgreSQL</p>
+            <p class="text-center small mb-4 opacity-75">Built with Spring Boot, PostgreSQL, Thymeleaf</p>
         </div>
     </footer>
 </div>

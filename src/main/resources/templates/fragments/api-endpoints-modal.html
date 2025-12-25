@@ -201,7 +201,7 @@
                     <span class="method-badge method-post mb-2 mb-md-0">POST</span>
                     <code class="endpoint-path w-100">/admin/flights</code>
                   </div>
-                  <p class="api-description">Bulk upsert flight data with transaction support</p>
+                  <p class="api-description">Batch upsert flight data with transaction support</p>
                   <div class="api-tags">
                     <span class="api-tag tag-admin">🔐 Admin Only</span>
                     <span class="api-tag">Batch</span>
@@ -252,7 +252,7 @@
                     <span class="method-badge method-post mb-2 mb-md-0">POST</span>
                     <code class="endpoint-path w-100">/admin/airlines</code>
                   </div>
-                  <p class="api-description">Bulk upsert airline-airport relationships</p>
+                  <p class="api-description">Batch upsert airline-airport relationships</p>
                   <div class="api-tags">
                     <span class="api-tag tag-admin">🔐 Admin Only</span>
                     <span class="api-tag">Relationships</span>
@@ -264,10 +264,37 @@
                     <span class="method-badge method-delete mb-2 mb-md-0">DELETE</span>
                     <code class="endpoint-path w-100">/admin/airlines</code>
                   </div>
-                  <p class="api-description">Delete airline-airport relationships in bulk</p>
+                  <p class="api-description">Batch delete airline-airport relationships</p>
                   <div class="api-tags">
                     <span class="api-tag tag-admin">🔐 Admin Only</span>
                     <span class="api-tag">Batch</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Path Section -->
+            <div class="col">
+              <div class="api-section h-100">
+                <div class="section-header">
+                  <div class="section-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                    </svg>
+                  </div>
+                  <h3 class="section-title">Path</h3>
+                </div>
+                <div class="api-card">
+                  <div class="api-card-header flex-column flex-md-row align-items-start align-items-md-center">
+                    <span class="method-badge method-get mb-2 mb-md-0">GET</span>
+                    <code class="endpoint-path w-100">
+                      <a href="/path?origin=SJC&destination=HEL" target="_blank" rel="noopener noreferrer" class="endpoint-link w-100">/path?origin=SJC&destination=HEL</a>
+                    </code>
+                  </div>
+                  <p class="api-description">Exhaustive flight search for shortest paths between airports</p>
+                  <div class="api-tags">
+                    <span class="api-tag tag-public">Public</span>
+                    <span class="api-tag tag-health">Search</span>
                   </div>
                 </div>
               </div>
