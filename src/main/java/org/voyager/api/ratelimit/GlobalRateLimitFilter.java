@@ -16,8 +16,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.GenericFilterBean;
 import org.voyager.api.auth.ApiKeyAuthentication;
-import org.voyager.commons.constants.Path;
-
 import java.io.IOException;
 import java.io.PrintWriter;
 
@@ -88,9 +86,7 @@ public class GlobalRateLimitFilter extends GenericFilterBean {
         writer.println(String.format(
                 "{\"error\": \"Public request rate limit exceeded\", " +
                         "\"message\": \"Daily global limit of %d public requests reached. " +
-                        "Further requests require an authenticated API key.\", " +
-                        "\"remaining\": 0, " +
-                        "\"limit\": %d}",
+                        "Further requests require an authenticated API key.\"}",
                 globalRateLimitService.getGlobalDailyLimit(),
                 globalRateLimitService.getGlobalDailyLimit()
         ));

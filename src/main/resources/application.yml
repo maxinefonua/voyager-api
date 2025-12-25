@@ -73,4 +73,4 @@ app:
   groupId: @project.groupId@
 public:
   daily:
-    limit: 10
+    limit: ${PUBLIC_DAILY_LIMIT:1000}
