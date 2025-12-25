@@ -22,6 +22,14 @@ spring:
     hibernate:
       ddl-auto: validate
       format_sql: false
+  thymeleaf:
+    prefix: classpath:/templates/
+    suffix: .html
+    mode: HTML
+    cache: false
+    enabled: true
+    check-template: true
+    check-template-location: true
   logging:
     level:
       org:
@@ -57,3 +65,12 @@ cors:
   allowed-origin-patterns:
     - "http://localhost:*"
     - "https://localhost:*"
+app:
+  version: @project.version@
+  name: @project.name@
+  description: @project.description@
+  artifactId: @project.artifactId@
+  groupId: @project.groupId@
+public:
+  daily:
+    limit: ${PUBLIC_DAILY_LIMIT:1000}

@@ -18,6 +18,7 @@ import org.voyager.commons.constants.ParameterNames;
 import org.voyager.commons.constants.Path;
 import org.voyager.commons.model.airline.Airline;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -103,7 +104,10 @@ public class PathController {
 
         int size = ValidationUtils.validateAndGetInteger(ParameterNames.SIZE,sizeString);
         int skip = ValidationUtils.validateAndGetInteger(ParameterNames.SKIP,skipString);
-        ZoneId zoneId = ValidationUtils.validateAndGetZoneId(zoneIdString);
+        ZoneId zoneId = ZoneOffset.UTC;
+        if (StringUtils.isNotBlank(zoneIdString)) {
+            zoneId = ValidationUtils.validateAndGetZoneId(zoneIdString);
+        }
 
         ZonedDateTime startTime;
         if (StringUtils.isNotBlank(startString) && startString.equalsIgnoreCase("now")) {

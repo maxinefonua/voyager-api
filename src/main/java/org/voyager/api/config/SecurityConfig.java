@@ -3,6 +3,7 @@ package org.voyager.api.config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -16,6 +17,9 @@ import org.voyager.api.auth.AuthenticationFilter;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.voyager.api.auth.AuthenticationFilter.PUBLIC_ENDPOINTS;
+import static org.voyager.api.auth.AuthenticationFilter.PUBLIC_LIMITED_PREFIXES;
+
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -25,16 +29,35 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity
-                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // New way
+                .formLogin(AbstractHttpConfigurer::disable) // Disable default login form
+                .httpBasic(AbstractHttpConfigurer::disable) // Disable basic auth
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authz -> authz
-                        // URL-based security happens BEFORE parameter validation
+                        // Make home endpoints public
+                        .requestMatchers(PUBLIC_ENDPOINTS.toArray(new String[0])).permitAll()
+                        .requestMatchers("/actuator/**").permitAll()
+                        .requestMatchers("/actuator/health/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, PUBLIC_LIMITED_PREFIXES.stream()
+                                .flatMap(prefix -> Arrays.stream(new String[]{prefix, prefix + "/**"}))
+                                .toArray(String[]::new)).permitAll()
+
+                        // Static resources
+                        .requestMatchers("/css/**", "/js/**", "/images/**", "/favicon.ico", "/*.html").permitAll()
+
+                        // Documentation
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
+
+                        // ADMIN endpoints
                         .requestMatchers("/admin/**").hasRole("ADMIN")
+
+                        // All other requests require authentication
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(new AuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+
         return httpSecurity.build();
     }
 

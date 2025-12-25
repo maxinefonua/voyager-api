@@ -1,0 +1,77 @@
+/* src/main/resources/static/css/home.css */
+
+.hero {
+    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+    color: white;
+    padding: 60px 20px;
+    border-radius: 15px;
+    margin-bottom: 40px;
+    box-shadow: 0 10px 30px rgba(33, 150, 243, 0.2);
+}
+
+.logo-container {
+    margin-bottom: 10px;
+}
+
+.footer-bottom-margin {
+    margin-bottom: 50px;
+}
+
+.logo-svg {
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+}
+
+.feature-icon {
+    font-size: 3rem;
+    margin-bottom: 1.5rem;
+    color: #2196F3;
+}
+
+.feature-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.app-name {
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+}
+
+.card-title {
+    color: #1976D2;
+    font-weight: 600;
+}
+
+a {
+    color: #2196F3;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+a:hover {
+    color: #1976D2;
+    text-decoration: underline;
+}
+
+footer a:hover {
+    color: #000 !important;
+    transform: translateY(-1px);
+    transition: all 0.2s ease;
+}
+
+footer .d-flex.gap-4 a:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    right: -1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 1.2em;
+    width: 1px;
+    background-color: rgba(0,0,0,0.1);
+}
