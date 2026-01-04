@@ -29,9 +29,7 @@ import org.voyager.api.service.utils.MapperUtils;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import static org.voyager.api.service.utils.ServiceUtils.handleJPAExceptions;
 
@@ -172,10 +170,25 @@ public class FlightServiceImpl implements FlightService {
             boolean isArrival = Boolean.parseBoolean(flightUpsert.getIsArrival().toLowerCase());
             Airline airline = Airline.valueOf(flightUpsert.getAirline().toUpperCase());
             String flightNumber = flightUpsert.getFlightNumber();
-
+            Map<ZonedDateTime,FlightEntity> arrivalMap = new HashMap<>();
+            Map<ZonedDateTime,FlightEntity> departureMap = new HashMap<>();
+            flightRepository.findByRouteIdAndFlightNumber(routeId,flightNumber).forEach(flightEntity -> {
+                ZonedDateTime arrival = flightEntity.getZonedDateTimeArrival();
+                ZonedDateTime departure = flightEntity.getZonedDateTimeDeparture();
+                if (arrival != null) {
+                    arrivalMap.put(arrival,flightEntity);
+                }
+                if (departure != null) {
+                    departureMap.put(departure,flightEntity);
+                }
+            });
+            List<FlightEntity> arrivalsOldestFirst = new ArrayList<>(arrivalMap.values().stream().toList());
+            arrivalsOldestFirst.sort(Comparator.comparing(FlightEntity::getZonedDateTimeArrival));
+            List<FlightEntity> departuresNewestFirst = new ArrayList<>(departureMap.values().stream().toList());
+            departuresNewestFirst.sort(Comparator.comparing(FlightEntity::getZonedDateTimeDeparture).reversed());
             for (ZonedDateTime zonedDateTime : flightUpsert.getZonedDateTimeList()) {
-                processDateTime(zonedDateTime, flightUpsert, isArrival, routeId,
-                        flightNumber, airline, totalCreates, totalUpdates, totalSkips, totalSaves);
+                processDateTime(zonedDateTime, flightUpsert, isArrival, totalCreates, totalUpdates, totalSkips,
+                        totalSaves,arrivalMap,departureMap,arrivalsOldestFirst,departuresNewestFirst);
             }
         }
 
@@ -188,71 +201,72 @@ public class FlightServiceImpl implements FlightService {
                 .build();
     }
 
-    private void processDateTime(ZonedDateTime zonedDateTime, FlightUpsert flightUpsert,
-                                 boolean isArrival, Integer routeId, String flightNumber,
-                                 Airline airline, AtomicInteger totalCreates,
-                                 AtomicInteger totalUpdates, AtomicInteger totalSkips,
-                                 List<FlightEntity> totalSaves) {
-
-        FlightEntity flightEntity;
+    private void processDateTime(
+            ZonedDateTime zonedDateTime, FlightUpsert flightUpsert, boolean isArrival, AtomicInteger totalCreates,
+            AtomicInteger totalUpdates, AtomicInteger totalSkips,
+            List<FlightEntity> totalSaves, Map<ZonedDateTime, FlightEntity> arrivalMap,
+            Map<ZonedDateTime, FlightEntity> departureMap, List<FlightEntity> arrivalsOldestFirst,
+            List<FlightEntity> departuresNewestFirst) {
+        FlightEntity toSave;
         if (isArrival) {
-            Optional<FlightEntity> existingArrival = flightRepository
-                    .findByRouteIdAndFlightNumberAndZonedDateTimeArrival(routeId,flightNumber,zonedDateTime);
-            if (existingArrival.isPresent()) {
+            FlightEntity existingArrival = arrivalMap.get(zonedDateTime);
+            if (existingArrival != null) {
                 totalSkips.incrementAndGet();
                 return;
             }
-            Optional<FlightEntity> existingFlightEntity = flightRepository
-                    .findClosestDepartureBeforeArrival(routeId, flightNumber, zonedDateTime);
-            if (existingFlightEntity.isPresent() && existingFlightEntity.get().getZonedDateTimeArrival() == null) {
-                flightEntity = existingFlightEntity.get();
-                flightEntity.setZonedDateTimeArrival(zonedDateTime);
+            FlightEntity existingDeparture = departuresNewestFirst.stream()
+                    .filter(flightEntity ->
+                            flightEntity.getZonedDateTimeDeparture().isBefore(zonedDateTime))
+                    .findFirst()
+                    .orElse(null);
+            if (existingDeparture != null && existingDeparture.getZonedDateTimeArrival() == null) {
+                toSave = existingDeparture;
+                toSave.setZonedDateTimeArrival(zonedDateTime);
                 totalUpdates.incrementAndGet();
             } else {
-                flightEntity = createNewArrivalEntity(routeId, flightUpsert, airline, zonedDateTime);
                 totalCreates.incrementAndGet();
+                toSave = createNewArrivalEntity(flightUpsert, zonedDateTime);
             }
         } else {
-            Optional<FlightEntity> existingDeparture = flightRepository
-                    .findByRouteIdAndFlightNumberAndZonedDateTimeDeparture(routeId,flightNumber,zonedDateTime);
-            if (existingDeparture.isPresent()) {
+            FlightEntity existingDeparture = departureMap.get(zonedDateTime);
+            if (existingDeparture != null) {
                 totalSkips.incrementAndGet();
                 return;
             }
-            Optional<FlightEntity> existingFlightEntity = flightRepository
-                    .findClosestArrivalAfterDeparture(routeId, flightNumber, zonedDateTime);
-            if (existingFlightEntity.isPresent() && existingFlightEntity.get().getZonedDateTimeDeparture() == null) {
-                flightEntity = existingFlightEntity.get();
-                flightEntity.setZonedDateTimeDeparture(zonedDateTime);
+            FlightEntity existingArrival = arrivalsOldestFirst.stream()
+                    .filter(flightEntity ->
+                            flightEntity.getZonedDateTimeArrival().isAfter(zonedDateTime))
+                    .findFirst()
+                    .orElse(null);
+            if (existingArrival != null && existingArrival.getZonedDateTimeDeparture() == null) {
+                toSave = existingArrival;
+                toSave.setZonedDateTimeDeparture(zonedDateTime);
                 totalUpdates.incrementAndGet();
             } else {
-                flightEntity = createNewDepartureEntity(routeId, flightUpsert, airline, zonedDateTime);
+                toSave = createNewDepartureEntity(flightUpsert, zonedDateTime);
                 totalCreates.incrementAndGet();
             }
         }
-        flightEntity.setIsActive(flightEntity.getZonedDateTimeArrival() != null
-                && flightEntity.getZonedDateTimeDeparture() != null);
-        totalSaves.add(flightEntity);
+        toSave.setIsActive(toSave.getZonedDateTimeArrival() != null
+                && toSave.getZonedDateTimeDeparture() != null);
+        totalSaves.add(toSave);
     }
 
-    private FlightEntity createNewArrivalEntity(Integer routeId, FlightUpsert flightUpsert,
-                                                Airline airline, ZonedDateTime zonedDateTime) {
+    private FlightEntity createNewArrivalEntity(FlightUpsert flightUpsert, ZonedDateTime zonedDateTime) {
         return FlightEntity.builder()
-                .routeId(routeId)
+                .routeId(Integer.valueOf(flightUpsert.getRouteId()))
                 .flightNumber(flightUpsert.getFlightNumber())
-                .airline(airline)
+                .airline(Airline.valueOf(flightUpsert.getAirline().toUpperCase()))
                 .zonedDateTimeArrival(zonedDateTime)
                 .build();
     }
 
-    private FlightEntity createNewDepartureEntity(Integer routeId, FlightUpsert flightUpsert,
-                                                  Airline airline, ZonedDateTime zonedDateTime) {
+    private FlightEntity createNewDepartureEntity(FlightUpsert flightUpsert, ZonedDateTime zonedDateTime) {
         return FlightEntity.builder()
-                .routeId(routeId)
+                .routeId(Integer.valueOf(flightUpsert.getRouteId()))
                 .flightNumber(flightUpsert.getFlightNumber())
-                .airline(airline)
+                .airline(Airline.valueOf(flightUpsert.getAirline().toUpperCase()))
                 .zonedDateTimeDeparture(zonedDateTime)
                 .build();
     }
-
 }

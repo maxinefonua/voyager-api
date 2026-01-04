@@ -25,6 +25,7 @@ import org.voyager.commons.model.geoname.fields.FeatureClass;
 import org.voyager.commons.model.geoname.fields.SearchOperator;
 import org.voyager.commons.model.route.RouteForm;
 import org.voyager.commons.model.route.RoutePatch;
+import org.voyager.commons.model.route.Status;
 import org.voyager.commons.validate.annotations.ValidEnum;
 import java.lang.reflect.Field;
 import java.time.LocalDate;
@@ -81,6 +82,32 @@ public class ValidationUtils {
                 MessageConstants.buildMissingRequestParameterMessage(paramName));
         try {
             return Boolean.valueOf(paramValue.toLowerCase());
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    MessageConstants.buildInvalidRequestParameterMessage(paramName, paramValue));
+        }
+    }
+
+    public static List<Status> validateAndGetStatusList(String paramName, List<String> statusStringList) {
+        if (statusStringList == null || statusStringList.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    MessageConstants.buildMissingRequestParameterMessage(paramName));
+        }
+        return statusStringList.stream().map(statusString->{
+            try{
+                return Status.valueOf(statusString);
+            } catch (IllegalArgumentException e) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        MessageConstants.buildInvalidRequestParameterMessage(paramName,statusString));
+            }
+        }).toList();
+    }
+
+    public static Status validateAndGetStatus(String paramName, String paramValue) {
+        if (StringUtils.isEmpty(paramValue)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                MessageConstants.buildMissingRequestParameterMessage(paramName));
+        try {
+            return Status.valueOf(paramValue.toUpperCase());
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     MessageConstants.buildInvalidRequestParameterMessage(paramName, paramValue));

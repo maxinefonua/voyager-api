@@ -20,6 +20,8 @@ public interface FlightRepository  extends JpaRepository<FlightEntity,Integer> {
     Optional<FlightEntity> findByRouteIdAndFlightNumberAndZonedDateTimeArrival(
             Integer routeId, String flightNumber, ZonedDateTime arrival);
 
+    List<FlightEntity> findByRouteIdAndFlightNumber(Integer routeId, String flightNumber);
+
     @Modifying
     @Query("DELETE FROM FlightEntity f WHERE f.airline = :airline AND f.isActive = :isActive")
     int deleteByAirlineAndIsActive(@Param("airline") Airline airline,
@@ -78,22 +80,6 @@ public interface FlightRepository  extends JpaRepository<FlightEntity,Integer> {
             @Param("routeId") Integer routeId,
             @Param("flightNumber") String flightNumber,
             @Param("arrival") ZonedDateTime arrival);
-
-//    @Query("SELECT f FROM FlightEntity f WHERE " +
-//            "(:routeIds IS NULL OR f.routeId IN :routeIds) AND " +
-//            "(:airlineList IS NULL OR f.airline IN :airlineList) AND " +
-//            "(:flightNumber IS NULL OR f.flightNumber = :flightNumber) AND " +
-//            "(:isActive IS NULL OR f.isActive = :isActive) AND " +
-//            "f.zonedDateTimeDeparture BETWEEN :startTime AND :endTime")
-//    Page<FlightEntity> findFlightsDynamic(
-//            @Param("routeIds") List<Integer> routeIds,
-//            @Param("airlineList") List<Airline> airlineList,
-//            @Param("flightNumber") String flightNumber,
-//            @Param("isActive") Boolean isActive,
-//            @Param("startTime") ZonedDateTime startTime,
-//            @Param("endTime") ZonedDateTime endTime,
-//            Pageable pageable
-//    );
 
     @Query(value = """
     SELECT f FROM FlightEntity f 
