@@ -27,7 +27,7 @@ public class FlightAdminController {
     @PostMapping
     public FlightBatchUpsertResult upsertFlights(@Valid @RequestBody(required = false) FlightBatchUpsert flightBatchUpsert,
                                                  BindingResult bindingResult) {
-        LOGGER.info("upsertFlights of {} upserts",flightBatchUpsert.getFlightUpsertList().size());
+        LOGGER.info("POST {} of {}",Path.Admin.FLIGHTS,flightBatchUpsert);
         ValidationUtils.validate(flightBatchUpsert,bindingResult);
         return flightService.batchUpsert(flightBatchUpsert);
     }
@@ -35,7 +35,7 @@ public class FlightAdminController {
     @DeleteMapping
     public Integer batchDeleteFlights(@Valid @RequestBody(required = false) FlightBatchDelete flightBatchDelete,
                                       BindingResult bindingResult) {
-        LOGGER.trace("batchDeleteFlights {}",flightBatchDelete);
+        LOGGER.trace("DELETE {} of {}",Path.Admin.FLIGHTS,flightBatchDelete);
         ValidationUtils.validate(flightBatchDelete,bindingResult);
         return flightService.batchDelete(flightBatchDelete);
     }

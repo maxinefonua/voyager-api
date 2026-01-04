@@ -1,11 +1,6 @@
 package org.voyager.api.service.utils;
 
-import org.voyager.api.model.entity.RouteEntity;
-import org.voyager.api.model.entity.AirportEntity;
-import org.voyager.api.model.entity.AirlineEntity;
-import org.voyager.api.model.entity.AirlineAirportEntity;
-import org.voyager.api.model.entity.FlightEntity;
-import org.voyager.api.model.entity.CountryEntity;
+import org.voyager.api.model.entity.*;
 import org.voyager.commons.model.airline.AirlineAirport;
 import org.voyager.commons.model.airport.Airport;
 import org.voyager.commons.model.airport.AirportForm;
@@ -17,9 +12,23 @@ import org.voyager.commons.model.airline.Airline;
 import org.voyager.commons.model.flight.Flight;
 import org.voyager.commons.model.route.Route;
 import org.voyager.commons.model.route.RouteForm;
+import org.voyager.commons.model.route.RouteSync;
+
 import java.time.ZoneId;
 
 public class MapperUtils {
+    public static RouteSync entityToRouteSync(RouteSyncEntity routeSync) {
+        return RouteSync.builder()
+                .id(routeSync.getRouteId())
+                .updated(routeSync.getUpdatedAt())
+                .status(routeSync.getStatus())
+                .lastProcessed(routeSync.getLastProcessedAt())
+                .error(routeSync.getErrorMessage())
+                .attempts(routeSync.getAttempts())
+                .created(routeSync.getCreatedAt())
+                .build();
+    }
+
     public static Airport entityToAirport(AirportEntity airportEntity) {
         return Airport.builder()
                 .iata(airportEntity.getIata())

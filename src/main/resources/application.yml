@@ -35,8 +35,6 @@ spring:
       org:
         springframework:
           cache: trace
-      org.hibernate.SQL: DEBUG
-      org.hibernate.type.descriptor.sql.BasicBinder: TRACE
   datasource:
     url: jdbc:postgresql://${POSTGRES_HOST:}:${POSTGRES_PORT:}/${POSTGRES_DB:}
     username: ${POSTGRES_USER:}

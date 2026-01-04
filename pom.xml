@@ -26,7 +26,7 @@
         <jdom.version>1.0</jdom.version>
         <vavr.version>0.10.6</vavr.version>
         <apache-commons.version>3.17.0</apache-commons.version>
-        <voyager-models.version>0.1.2</voyager-models.version>
+        <voyager-models.version>0.1.3</voyager-models.version>
     </properties>
 
     <repositories>

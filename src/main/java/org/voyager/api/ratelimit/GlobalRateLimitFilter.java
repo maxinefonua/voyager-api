@@ -87,7 +87,6 @@ public class GlobalRateLimitFilter extends GenericFilterBean {
                 "{\"error\": \"Public request rate limit exceeded\", " +
                         "\"message\": \"Daily global limit of %d public requests reached. " +
                         "Further requests require an authenticated API key.\"}",
-                globalRateLimitService.getGlobalDailyLimit(),
                 globalRateLimitService.getGlobalDailyLimit()
         ));
         writer.flush();
