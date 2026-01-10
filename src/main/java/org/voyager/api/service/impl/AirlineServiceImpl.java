@@ -1,5 +1,6 @@
 package org.voyager.api.service.impl;
 
+import jakarta.annotation.PostConstruct;
 import lombok.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -7,8 +8,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import org.voyager.api.error.MessageConstants;
+import org.voyager.api.model.entity.AirlineEntity;
 import org.voyager.commons.model.airline.Airline;
 import org.voyager.commons.model.airline.AirlineQuery;
 import org.voyager.commons.model.airline.AirlineAirportQuery;
@@ -20,9 +23,10 @@ import org.voyager.api.repository.AirlineAirportRepository;
 import org.voyager.api.repository.AirlineRepository;
 import org.voyager.api.service.AirlineService;
 import org.voyager.api.service.utils.MapperUtils;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
 import static org.voyager.api.service.utils.ServiceUtils.handleJPAExceptions;
 
 @Service
@@ -34,6 +38,21 @@ public class AirlineServiceImpl implements AirlineService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AirlineServiceImpl.class);
 
+    @PostConstruct
+    @Transactional
+    public void initAirlines() {
+        Set<Airline> dbAirlines = airlineRepository.findAll().stream()
+                .map(MapperUtils::entityToAirline).collect(Collectors.toSet());
+        Arrays.stream(Airline.values()).forEach(airline -> {
+            if (!dbAirlines.contains(airline)) {
+                AirlineEntity entity = AirlineEntity.builder()
+                        .airline(airline)
+                        .build();
+                airlineRepository.save(entity);
+                LOGGER.info("Saved missing airline {} into db",airline);
+            }
+        });
+    }
 
     @Override
     @Cacheable("airlineCache")

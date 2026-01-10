@@ -1,4 +1,4 @@
-package org.voyager.api.auth;
+package org.voyager.api.auth.service;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
@@ -10,6 +10,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.stereotype.Service;
+import org.voyager.api.auth.ApiKeyAuthentication;
 import org.voyager.api.config.AuthConfig;
 import org.voyager.commons.constants.EnvVariableNames;
 import org.voyager.commons.constants.Headers;

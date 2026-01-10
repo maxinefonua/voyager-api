@@ -20,4 +20,5 @@ public interface AirportsService {
     Airport getByIata(String iata);
     Airport patch(String iata, AirportPatch airportPatch);
     Airport createAirport(@Validated AirportForm airportForm);
+    void deleteAirport(String iata);
 }

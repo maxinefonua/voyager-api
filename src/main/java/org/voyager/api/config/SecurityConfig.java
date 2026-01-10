@@ -13,12 +13,12 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.voyager.api.auth.AuthenticationFilter;
+import org.voyager.api.auth.filter.AuthenticationFilter;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.voyager.api.auth.AuthenticationFilter.PUBLIC_ENDPOINTS;
-import static org.voyager.api.auth.AuthenticationFilter.PUBLIC_LIMITED_PREFIXES;
+import static org.voyager.api.auth.filter.AuthenticationFilter.PUBLIC_ENDPOINTS;
+import static org.voyager.api.auth.filter.AuthenticationFilter.PUBLIC_LIMITED_PREFIXES;
 
 @Configuration
 @EnableWebSecurity

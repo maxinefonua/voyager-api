@@ -211,6 +211,11 @@ public class AirportsServiceImpl implements AirportsService {
                 });
     }
 
+    @Override
+    public void deleteAirport(String iata) {
+        handleJPAExceptions(()->airportRepository.deleteById(iata));
+    }
+
     private List<String> getActiveAirlineCodes(List<Airline> airlineList) {
         return handleJPAExceptions(() ->
                 airlineAirportRepository.selectDistinctIataCodesByAirlineInAndIsActive(airlineList,true));
