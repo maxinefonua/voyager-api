@@ -18,6 +18,7 @@ import org.springframework.web.server.ResponseStatusException;
 import org.voyager.api.model.query.AirportQuery;
 import org.voyager.api.model.response.PagedResponse;
 import org.voyager.api.repository.admin.AdminAirportRepository;
+import org.voyager.api.repository.tests.TestsAirportRepository;
 import org.voyager.commons.model.airport.AirportForm;
 import org.voyager.commons.model.airport.AirportPatch;
 import org.voyager.api.model.entity.AirportEntity;
@@ -44,6 +45,9 @@ public class AirportsServiceImpl implements AirportsService {
 
     @Autowired
     AdminAirportRepository adminAirportRepository;
+
+    @Autowired
+    TestsAirportRepository testsAirportRepository;
 
     @Autowired
     AirlineAirportRepository airlineAirportRepository;
@@ -231,12 +235,7 @@ public class AirportsServiceImpl implements AirportsService {
     @Transactional("testsTransactionManager")
     public void deleteAirport(String iata) {
         handleJPAExceptions(()->{
-            entityManager.createNativeQuery("SET ROLE postgres").executeUpdate();
-            try {
-                adminAirportRepository.deleteById(iata);
-            } finally {
-                entityManager.createNativeQuery("RESET ROLE").executeUpdate();
-            }
+            testsAirportRepository.deleteById(iata);
         });
     }
 

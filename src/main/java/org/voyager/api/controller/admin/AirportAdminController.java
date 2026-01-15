@@ -74,7 +74,6 @@ public class AirportAdminController {
             @CacheEvict(value = "nearbyAirportsCache", allEntries = true)
     })
     public void deleteAirport(@PathVariable(ParameterNames.IATA_PARAM_NAME) String iata) {
-        // TODO: add filter check on delete airports endpoint, verify tests auth key
         if (!isTestEnvironment()) {
             LOGGER.warn("DELETE endpoint called in non-test environment: {}", runtimeEnvironment);
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,

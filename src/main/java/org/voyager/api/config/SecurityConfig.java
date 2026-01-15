@@ -47,6 +47,8 @@ public class SecurityConfig {
                         // Documentation
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
 
+                        // TESTS delete endpoints
+                        .requestMatchers(HttpMethod.DELETE, "/admin/airports/*").hasRole("TEST")
                         // ADMIN endpoints
                         .requestMatchers("/admin/**").hasRole("ADMIN")
 
