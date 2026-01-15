@@ -23,7 +23,6 @@ import org.voyager.commons.model.flight.Flight;
 import org.voyager.api.service.FlightService;
 import org.voyager.api.service.RouteService;
 import org.voyager.api.validate.ValidationUtils;
-
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;

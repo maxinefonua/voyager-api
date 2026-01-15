@@ -1,15 +1,19 @@
 package org.voyager.api.model.entity;
 
-import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.Builder;
-import lombok.AllArgsConstructor;
+import jakarta.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.EnumType;
+import lombok.*;
 import org.voyager.commons.model.airline.Airline;
 import java.time.ZonedDateTime;
 
 @Entity
-@Data
+@Getter
 @NoArgsConstructor
 @Builder
 @AllArgsConstructor
@@ -26,14 +30,17 @@ public class FlightEntity {
     Integer routeId;
 
     @Column(name = "departure_zdt")
+    @Setter
     ZonedDateTime zonedDateTimeDeparture;
 
     @Column(name = "arrival_zdt")
+    @Setter
     ZonedDateTime zonedDateTimeArrival;
 
     @Enumerated(EnumType.STRING)
     Airline airline;
 
     @Column(name = "active")
+    @Setter
     Boolean isActive;
 }

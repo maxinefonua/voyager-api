@@ -1,5 +1,7 @@
-package org.voyager.api.repository;
+package org.voyager.api.repository.primary;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.voyager.api.model.entity.AirportEntity;
@@ -17,4 +19,5 @@ public interface AirportRepository extends JpaRepository<AirportEntity,String> {
     List<AirportEntity> findByCountryCodeOrderByIataAsc(String countryCode);
     List<AirportEntity> findByCountryCodeAndTypeInOrderByIataAsc(String countryCode, List<AirportType> typeList);
     List<AirportEntity> findByTypeInOrderByIataAsc(List<AirportType> typeList);
+    Page<AirportEntity> findAllByOrderByIataAsc(Pageable pageable);
 }

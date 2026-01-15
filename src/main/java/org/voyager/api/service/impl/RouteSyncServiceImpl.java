@@ -5,14 +5,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.voyager.api.model.entity.RouteSyncEntity;
-import org.voyager.api.repository.RouteSyncRepository;
+import org.voyager.api.repository.admin.AdminRouteSyncRepository;
 import org.voyager.api.service.RouteSyncService;
 import org.voyager.api.service.utils.MapperUtils;
 import org.voyager.commons.model.route.RouteSync;
 import org.voyager.commons.model.route.RouteSyncBatchUpdate;
 import org.voyager.commons.model.route.RouteSyncPatch;
 import org.voyager.commons.model.route.Status;
-
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -22,28 +21,31 @@ import static org.voyager.api.service.utils.ServiceUtils.handleJPAExceptions;
 @Service
 public class RouteSyncServiceImpl implements RouteSyncService {
     @Autowired
-    RouteSyncRepository routeSyncRepository;
+    AdminRouteSyncRepository adminRouteSyncRepository;
 
     @Override
+    @Transactional("adminTransactionManager")
     public boolean existsById(@NonNull Integer routeId) {
-        return routeSyncRepository.existsById(routeId);
+        return adminRouteSyncRepository.existsById(routeId);
     }
 
     @Override
+    @Transactional("adminTransactionManager")
     public List<RouteSync> getRouteSyncList(@NonNull List<Status> statusList) {
-        return routeSyncRepository.findByStatusIn(statusList).stream().map(MapperUtils::entityToRouteSync).toList();
+        return adminRouteSyncRepository.findByStatusIn(statusList).stream().map(MapperUtils::entityToRouteSync).toList();
     }
 
-    @Transactional
     @Override
+    @Transactional("adminTransactionManager")
     public Integer batchUpdate(@NonNull RouteSyncBatchUpdate routeSyncBatchUpdate) {
-        return handleJPAExceptions(()->routeSyncRepository.batchUpdateStatus(
+        return handleJPAExceptions(()-> adminRouteSyncRepository.batchUpdateStatus(
                 routeSyncBatchUpdate.getStatus(),ZonedDateTime.now(),routeSyncBatchUpdate.getRouteIdList()));
     }
 
     @Override
+    @Transactional("adminTransactionManager")
     public RouteSync patch(@NonNull Integer routeId, @NonNull RouteSyncPatch routeSyncPatch) {
-        Optional<RouteSyncEntity> optional = routeSyncRepository.findById(routeId);
+        Optional<RouteSyncEntity> optional = adminRouteSyncRepository.findById(routeId);
         assert optional.isPresent();
         RouteSyncEntity routeSyncEntity = optional.get();
         ZonedDateTime now = ZonedDateTime.now();
@@ -59,6 +61,6 @@ public class RouteSyncServiceImpl implements RouteSyncService {
             routeSyncEntity.setErrorMessage(routeSyncPatch.getError());
         }
         routeSyncEntity.setUpdatedAt(now);
-        return MapperUtils.entityToRouteSync(routeSyncRepository.save(routeSyncEntity));
+        return MapperUtils.entityToRouteSync(adminRouteSyncRepository.save(routeSyncEntity));
     }
 }

@@ -2,7 +2,6 @@ package org.voyager.api.cache;
 
 import org.voyager.api.model.path.PathSearchRequest;
 import org.voyager.commons.model.airline.Airline;
-
 import java.util.Set;
 import java.util.stream.Collectors;
 

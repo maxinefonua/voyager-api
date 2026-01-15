@@ -16,7 +16,6 @@ import org.voyager.commons.constants.EnvVariableNames;
 import org.voyager.commons.constants.Headers;
 import org.voyager.api.error.MessageConstants;
 import org.voyager.commons.utils.Environment;
-
 import java.util.List;
 
 @Service
@@ -50,7 +49,7 @@ public class AuthenticationService {
             return AuthorityUtils.createAuthorityList("ROLE_ADMIN", "ROLE_USER");
         }
         if (authConfig.isTestsKey(apiKey)) {
-            return AuthorityUtils.createAuthorityList("ROLE_TEST", "ROLE_USER");
+            return AuthorityUtils.createAuthorityList("ROLE_TEST", "ROLE_ADMIN","ROLE_USER");
         }
         if (authConfig.isUserKey(apiKey)) {
             return AuthorityUtils.createAuthorityList("ROLE_USER");

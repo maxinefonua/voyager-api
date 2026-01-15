@@ -21,6 +21,16 @@ spring:
     url: jdbc:postgresql://${POSTGRES_HOST:}:${POSTGRES_PORT:}/${POSTGRES_DB:}
     username: ${POSTGRES_USER:}
     password: ${POSTGRES_PASSWORD:}
+  admin:
+    datasource:
+      url: jdbc:postgresql://${POSTGRES_HOST:}:${POSTGRES_PORT:}/${POSTGRES_DB:}
+      username: ${POSTGRES_ADMIN_USER:}
+      password: ${POSTGRES_ADMIN_PASSWORD:}
+  tests:
+    datasource:
+      url: jdbc:postgresql://${POSTGRES_HOST:}:${POSTGRES_PORT:}/${POSTGRES_DB:}
+      username: ${POSTGRES_TESTS_USER:}
+      password: ${POSTGRES_TESTS_PASSWORD:}
 
 server:
   port: ${SERVER_PORT:8080}
@@ -69,6 +79,12 @@ spring:
       on-profile: dev
   datasource:
     url: jdbc:postgresql://${POSTGRES_HOST:}:${POSTGRES_PORT:}/${POSTGRES_DB:}_dev
+  admin:
+    datasource:
+      url: jdbc:postgresql://${POSTGRES_HOST:}:${POSTGRES_PORT:}/${POSTGRES_DB:}_dev
+  tests:
+    datasource:
+      url: jdbc:postgresql://${POSTGRES_HOST:}:${POSTGRES_PORT:}/${POSTGRES_DB:}_dev
 name: dev-YAML
 runtime:
   environment: dev
@@ -82,6 +98,12 @@ spring:
       on-profile: stage
   datasource:
     url: jdbc:postgresql://${POSTGRES_HOST:}:${POSTGRES_PORT:}/${POSTGRES_DB:}_stage
+  admin:
+    datasource:
+      url: jdbc:postgresql://${POSTGRES_HOST:}:${POSTGRES_PORT:}/${POSTGRES_DB:}_stage
+  tests:
+    datasource:
+      url: jdbc:postgresql://${POSTGRES_HOST:}:${POSTGRES_PORT:}/${POSTGRES_DB:}_stage
 name: stage-YAML
 runtime:
   environment: stage

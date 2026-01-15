@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
+import org.voyager.api.model.query.AirportQuery;
+import org.voyager.api.model.response.PagedResponse;
 import org.voyager.commons.constants.ParameterNames;
 import org.voyager.commons.constants.Path;
 import org.voyager.commons.model.airline.Airline;
@@ -55,7 +57,39 @@ public class AirportController {
     }
 
     @GetMapping(Path.AIRPORTS)
-    @Cacheable("airportsCache")
+    public PagedResponse<Airport> getPagedAirports(
+            @RequestParam(name = ParameterNames.COUNTRY_CODE_PARAM_NAME, required = false) String countryCodeString,
+            @RequestParam(name = ParameterNames.TYPE_PARAM_NAME, required = false) List<String> typeList,
+            @RequestParam(name = ParameterNames.AIRLINE_PARAM_NAME, required = false) List<String> airlineStringList,
+            @RequestParam(name = ParameterNames.SIZE, defaultValue = "100") String pageSizeString,
+            @RequestParam(name = ParameterNames.PAGE, defaultValue = "0") String pageNumberString) {
+        LOGGER.info("GET /airports called with {}:{}, {}:{}, {}:{}, {}:{}, {}:{}",
+                ParameterNames.COUNTRY_CODE_PARAM_NAME,countryCodeString,
+                ParameterNames.TYPE_PARAM_NAME,typeList,
+                ParameterNames.AIRLINE_PARAM_NAME,airlineStringList,
+                ParameterNames.SIZE,pageSizeString,
+                ParameterNames.PAGE,pageNumberString);
+        AirportQuery airportQuery = AirportQuery.builder().build();
+        Integer pageSize = ValidationUtils.validateAndGetInteger(ParameterNames.SIZE,pageSizeString);
+        Integer pageNumber = ValidationUtils.validateAndGetInteger(ParameterNames.PAGE,pageNumberString);
+        airportQuery.setPage(pageNumber);
+        airportQuery.setSize(pageSize);
+        if (countryCodeString != null) {
+            airportQuery.setCountry(ValidationUtils.validateAndGetCountryCode(
+                    true,countryCodeString, countryService));
+        }
+        if (typeList != null && !typeList.isEmpty()) {
+            List<AirportType> airportTypeList = ValidationUtils.resolveTypeList(typeList);
+            airportQuery.setAirportTypeList(airportTypeList);
+        }
+        if (airlineStringList != null && !airlineStringList.isEmpty()) {
+            List<Airline> airlineList = airlineStringList.stream().map(ValidationUtils::validateAndGetAirline).toList();
+            airportQuery.setAirlineList(airlineList);
+        }
+        ValidationUtils.validate(airportQuery);
+        return airportsService.getPagedAirports(airportQuery);
+    }
+
     public List<Airport> getAirports(@RequestParam(name = ParameterNames.COUNTRY_CODE_PARAM_NAME, required = false) String countryCodeString,
                                      @RequestParam(name = ParameterNames.TYPE_PARAM_NAME, required = false) List<String> typeList,
                                      @RequestParam(name = ParameterNames.AIRLINE_PARAM_NAME, required = false) List<String> airlineStringList) {

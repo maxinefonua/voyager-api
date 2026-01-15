@@ -16,7 +16,6 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.voyager.api.auth.filter.AuthenticationFilter;
 import java.util.Arrays;
 import java.util.List;
-
 import static org.voyager.api.auth.filter.AuthenticationFilter.PUBLIC_ENDPOINTS;
 import static org.voyager.api.auth.filter.AuthenticationFilter.PUBLIC_LIMITED_PREFIXES;
 

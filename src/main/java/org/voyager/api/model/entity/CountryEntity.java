@@ -6,14 +6,11 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Column;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.EnumType;
-import lombok.Data;
-import lombok.Builder;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
+import lombok.*;
 import org.voyager.commons.model.country.Continent;
 
 @Entity
-@Data
+@Getter
 @NoArgsConstructor
 @Builder
 @AllArgsConstructor
