@@ -3,24 +3,15 @@ package org.voyager.api.service.impl;
 import io.vavr.control.Option;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.voyager.api.model.path.FlightDetailed;
-import org.voyager.api.model.path.PathDetailed;
 import org.voyager.api.model.path.PathSearchRequest;
-import org.voyager.api.service.FlightService;
 import org.voyager.api.service.QuickPathSearchService;
 import org.voyager.api.service.RouteService;
-import org.voyager.commons.model.flight.Flight;
-import org.voyager.commons.model.flight.FlightAirlineQuery;
 import org.voyager.commons.model.path.Path;
 import org.voyager.commons.model.route.Route;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.Map;
-import java.util.Comparator;
 import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Service
 public class QuickPathSearchServiceImpl implements QuickPathSearchService {

@@ -1,7 +1,6 @@
 package org.voyager.api.service.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.voyager.api.model.path.FlightDetailed;
 import org.voyager.api.model.path.PathDetailed;
@@ -16,7 +15,6 @@ import org.voyager.commons.model.flight.Flight;
 import org.voyager.commons.model.flight.FlightAirlineQuery;
 import org.voyager.commons.model.path.Path;
 import org.voyager.commons.model.route.Route;
-
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;

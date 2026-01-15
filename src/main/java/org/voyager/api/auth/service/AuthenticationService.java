@@ -1,4 +1,4 @@
-package org.voyager.api.auth;
+package org.voyager.api.auth.service;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
@@ -10,12 +10,12 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.stereotype.Service;
+import org.voyager.api.auth.ApiKeyAuthentication;
 import org.voyager.api.config.AuthConfig;
 import org.voyager.commons.constants.EnvVariableNames;
 import org.voyager.commons.constants.Headers;
 import org.voyager.api.error.MessageConstants;
 import org.voyager.commons.utils.Environment;
-
 import java.util.List;
 
 @Service
@@ -49,7 +49,7 @@ public class AuthenticationService {
             return AuthorityUtils.createAuthorityList("ROLE_ADMIN", "ROLE_USER");
         }
         if (authConfig.isTestsKey(apiKey)) {
-            return AuthorityUtils.createAuthorityList("ROLE_TEST", "ROLE_USER");
+            return AuthorityUtils.createAuthorityList("ROLE_TEST", "ROLE_ADMIN","ROLE_USER");
         }
         if (authConfig.isUserKey(apiKey)) {
             return AuthorityUtils.createAuthorityList("ROLE_USER");

@@ -4,13 +4,15 @@ import io.vavr.control.Option;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.voyager.api.model.entity.RouteEntity;
+import org.voyager.api.repository.admin.AdminRouteRepository;
 import org.voyager.commons.model.route.RouteForm;
 import org.voyager.commons.model.route.Route;
 import org.voyager.commons.model.route.RoutePatch;
 import org.voyager.commons.model.route.RouteQuery;
-import org.voyager.api.repository.RouteRepository;
+import org.voyager.api.repository.primary.RouteRepository;
 import org.voyager.api.service.RouteService;
 import org.voyager.api.service.utils.MapperUtils;
 import java.util.ArrayList;
@@ -24,15 +26,19 @@ public class RouteServiceImpl implements RouteService {
     @Autowired
     RouteRepository routeRepository;
 
+    @Autowired
+    AdminRouteRepository adminRouteRepository;
+
     @Override
     public boolean existsById(Integer id) {
         return routeRepository.existsById(id);
     }
 
     @Override
+    @Transactional("adminTransactionManager")
     public Route patchRoute(@Validated RouteEntity routeEntity, RoutePatch routePatch) {
         routeEntity.setDistanceKm(routePatch.getDistanceKm());
-        return MapperUtils.entityToRoute(routeRepository.save(routeEntity));
+        return MapperUtils.entityToRoute(adminRouteRepository.save(routeEntity));
     }
 
     @Override
@@ -78,10 +84,11 @@ public class RouteServiceImpl implements RouteService {
     }
 
     @Override
+    @Transactional("adminTransactionManager")
     public Route save(RouteForm routeForm) {
         return handleJPAExceptions(()-> {
             RouteEntity routeEntity = MapperUtils.formToRouteEntity(routeForm);
-                routeEntity = routeRepository.save(routeEntity);
+                routeEntity = adminRouteRepository.save(routeEntity);
             return MapperUtils.entityToRoute(routeEntity);
         });
     }

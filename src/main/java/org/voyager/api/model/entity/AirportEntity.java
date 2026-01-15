@@ -16,26 +16,40 @@ import java.time.ZoneId;
 
 @Entity
 @Table(name="airports")
-@Getter @Setter @Builder(toBuilder = true)
+@Getter @Builder(toBuilder = true)
 @NoArgsConstructor @AllArgsConstructor
 public class AirportEntity {
     @Id @Column(name = "iata", length = 3,
             columnDefinition = "bpchar")
     String iata;
+
+    @Setter
     String name;
+
     @Column(length = 50)
+    @Setter
     String city;
+
     @Column(name="subd",length = 50)
+    @Setter
     String subdivision;
+
     @Column(name="country",length = 2,
             columnDefinition = "bpchar")
     String countryCode;
-    @Column(name = "lon",columnDefinition = "real")
+
+    @Column(name = "lon",
+            columnDefinition = "real")
     Double longitude;
-    @Column(name = "lat",columnDefinition = "real")
+
+    @Column(name = "lat",
+            columnDefinition = "real")
     Double latitude;
+
     @Enumerated(EnumType.STRING)
+    @Setter
     AirportType type;
+
     @Column(name = "tz")
     ZoneId zoneId;
 }

@@ -1,23 +1,26 @@
 package org.voyager.api.service.impl;
 
-import io.vavr.control.Option;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.voyager.api.repository.admin.AdminCountryRepository;
 import org.voyager.commons.model.country.Continent;
 import org.voyager.commons.model.country.Country;
 import org.voyager.commons.model.country.CountryForm;
 import org.voyager.api.model.entity.CountryEntity;
-import org.voyager.api.repository.CountryRepository;
+import org.voyager.api.repository.primary.CountryRepository;
 import org.voyager.api.service.CountryService;
 import org.voyager.api.service.utils.MapperUtils;
 import java.util.List;
-
 import static org.voyager.api.service.utils.ServiceUtils.handleJPAExceptions;
 
 @Service
 public class CountryServiceImpl implements CountryService {
     @Autowired
     CountryRepository countryRepository;
+
+    @Autowired
+    AdminCountryRepository adminCountryRepository;
 
     @Override
     public List<Country> getAll(List<Continent> continentList) {
@@ -33,20 +36,19 @@ public class CountryServiceImpl implements CountryService {
     }
 
     @Override
+    @Transactional("adminTransactionManager")
     public Country addCountry(CountryForm countryForm) {
-        return handleJPAExceptions(() ->
-                MapperUtils.entityToCountry(countryRepository.save(MapperUtils.formToCountryEntity(countryForm))));
+        return handleJPAExceptions(() -> MapperUtils.entityToCountry(
+                adminCountryRepository.save(MapperUtils.formToCountryEntity(countryForm))));
     }
 
     @Override
     public boolean countryCodeExists(String countryCode) {
-        return handleJPAExceptions(()->
-                countryRepository.existsById(countryCode));
+        return countryRepository.existsById(countryCode);
     }
 
     @Override
-    public Option<Country> getCountry(String countryCode) {
-        return handleJPAExceptions(() ->
-                Option.ofOptional(countryRepository.findById(countryCode).map(MapperUtils::entityToCountry)));
+    public Country getCountry(String countryCode) {
+        return countryRepository.findById(countryCode).map(MapperUtils::entityToCountry).get();
     }
 }

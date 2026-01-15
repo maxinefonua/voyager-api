@@ -7,15 +7,13 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Column;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.EnumType;
-import lombok.Data;
-import lombok.Builder;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
+import lombok.*;
 import org.voyager.commons.model.airline.Airline;
 
 @Entity
 @Table(name="airline_airports")
-@Data @Builder(toBuilder = true)
+@Getter
+@Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @IdClass(AirlineAirportId.class)
@@ -30,5 +28,6 @@ public class AirlineAirportEntity {
     Airline airline;
 
     @Column(name = "active")
+    @Setter
     Boolean isActive;
 }

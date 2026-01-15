@@ -13,6 +13,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.server.ResponseStatusException;
 import org.voyager.api.error.MessageConstants;
 import org.voyager.api.model.response.PagedResponse;
+import org.voyager.api.repository.admin.AdminFlightRepository;
 import org.voyager.commons.model.airline.Airline;
 import org.voyager.api.model.entity.FlightEntity;
 import org.voyager.commons.model.flight.Flight;
@@ -23,13 +24,18 @@ import org.voyager.commons.model.flight.FlightUpsert;
 import org.voyager.commons.model.flight.FlightBatchUpsert;
 import org.voyager.commons.model.flight.FlightBatchUpsertResult;
 import org.voyager.commons.model.flight.FlightNumberQuery;
-import org.voyager.api.repository.FlightRepository;
+import org.voyager.api.repository.primary.FlightRepository;
 import org.voyager.api.service.FlightService;
 import org.voyager.api.service.utils.MapperUtils;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.util.*;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Optional;
+import java.util.Comparator;
 import java.util.concurrent.atomic.AtomicInteger;
 import static org.voyager.api.service.utils.ServiceUtils.handleJPAExceptions;
 
@@ -37,6 +43,9 @@ import static org.voyager.api.service.utils.ServiceUtils.handleJPAExceptions;
 public class FlightServiceImpl implements FlightService {
     @Autowired
     FlightRepository flightRepository;
+
+    @Autowired
+    AdminFlightRepository adminFlightRepository;
 
     @Override
     public Boolean existsByFlightNumber(String flightNumber) {
@@ -107,7 +116,7 @@ public class FlightServiceImpl implements FlightService {
     }
 
     @Override
-    @Transactional(timeout = 30)
+    @Transactional("adminTransactionManager")
     public Integer batchDelete(FlightBatchDelete flightBatchDelete) {
         return handleJPAExceptions(()-> {
             if (StringUtils.isNotBlank(flightBatchDelete.getDaysPast())
@@ -158,6 +167,7 @@ public class FlightServiceImpl implements FlightService {
     }
 
     @Override
+    @Transactional("adminTransactionManager")
     public FlightBatchUpsertResult batchUpsert(@Validated FlightBatchUpsert flightBatchUpsert) {
         List<FlightUpsert> flightUpsertList = flightBatchUpsert.getFlightUpsertList();
         AtomicInteger totalCreates = new AtomicInteger(0);
@@ -168,11 +178,10 @@ public class FlightServiceImpl implements FlightService {
         for (FlightUpsert flightUpsert : flightUpsertList) {
             Integer routeId = Integer.parseInt(flightUpsert.getRouteId());
             boolean isArrival = Boolean.parseBoolean(flightUpsert.getIsArrival().toLowerCase());
-            Airline airline = Airline.valueOf(flightUpsert.getAirline().toUpperCase());
             String flightNumber = flightUpsert.getFlightNumber();
             Map<ZonedDateTime,FlightEntity> arrivalMap = new HashMap<>();
             Map<ZonedDateTime,FlightEntity> departureMap = new HashMap<>();
-            flightRepository.findByRouteIdAndFlightNumber(routeId,flightNumber).forEach(flightEntity -> {
+            adminFlightRepository.findByRouteIdAndFlightNumber(routeId,flightNumber).forEach(flightEntity -> {
                 ZonedDateTime arrival = flightEntity.getZonedDateTimeArrival();
                 ZonedDateTime departure = flightEntity.getZonedDateTimeDeparture();
                 if (arrival != null) {
@@ -192,13 +201,14 @@ public class FlightServiceImpl implements FlightService {
             }
         }
 
-        flightRepository.saveAll(totalSaves);
-
-        return FlightBatchUpsertResult.builder()
-                .skippedCount(totalSkips.get())
-                .createdCount(totalCreates.get())
-                .updatedCount(totalUpdates.get())
-                .build();
+        return handleJPAExceptions(()->{
+            adminFlightRepository.saveAll(totalSaves);
+            return FlightBatchUpsertResult.builder()
+                    .skippedCount(totalSkips.get())
+                    .createdCount(totalCreates.get())
+                    .updatedCount(totalUpdates.get())
+                    .build();
+        });
     }
 
     private void processDateTime(

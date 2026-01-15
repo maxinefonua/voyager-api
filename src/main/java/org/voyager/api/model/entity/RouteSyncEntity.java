@@ -12,30 +12,35 @@ import java.time.ZonedDateTime;
 import java.util.Map;
 
 @Entity
-@Data
 @NoArgsConstructor
 @Builder
 @AllArgsConstructor
+@Getter
 @Table(name="route_sync")
 public class RouteSyncEntity {
     @Id
-    @Getter
     private Integer routeId;
 
     @Enumerated(EnumType.STRING)
+    @Setter
     private Status status;
 
+    @Setter
     private int attempts;
 
     @Column(name = "last_processed_at")
+    @Setter
     private ZonedDateTime lastProcessedAt;
 
     @Column(name = "error_message")
+    @Setter
     private String errorMessage;
 
     @Column(name = "created_at")
+    @Setter
     private ZonedDateTime createdAt;
 
     @Column(name = "updated_at")
+    @Setter
     private ZonedDateTime updatedAt;
 }

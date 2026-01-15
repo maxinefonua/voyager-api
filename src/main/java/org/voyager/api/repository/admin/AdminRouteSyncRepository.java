@@ -1,4 +1,4 @@
-package org.voyager.api.repository;
+package org.voyager.api.repository.admin;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -6,11 +6,10 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.voyager.api.model.entity.RouteSyncEntity;
 import org.voyager.commons.model.route.Status;
-
 import java.time.ZonedDateTime;
 import java.util.List;
 
-public interface RouteSyncRepository extends JpaRepository<RouteSyncEntity,Integer> {
+public interface AdminRouteSyncRepository extends JpaRepository<RouteSyncEntity,Integer> {
     List<RouteSyncEntity> findByStatusIn(List<Status> statusList);
 
     @Modifying

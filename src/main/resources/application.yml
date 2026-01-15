@@ -1,22 +1,4 @@
 spring:
-  config:
-    activate:
-      on-profile: local
-name: local-YAML
-environment: local
-enabled: true
----
-spring:
-  config:
-    activate:
-      on-profile: dev
-name: dev-YAML
-environment: dev
-enabled: true
----
-spring:
-  profiles:
-    active: dev
   jpa:
     show-sql: false
     hibernate:
@@ -39,10 +21,22 @@ spring:
     url: jdbc:postgresql://${POSTGRES_HOST:}:${POSTGRES_PORT:}/${POSTGRES_DB:}
     username: ${POSTGRES_USER:}
     password: ${POSTGRES_PASSWORD:}
+  admin:
+    datasource:
+      url: jdbc:postgresql://${POSTGRES_HOST:}:${POSTGRES_PORT:}/${POSTGRES_DB:}
+      username: ${POSTGRES_ADMIN_USER:}
+      password: ${POSTGRES_ADMIN_PASSWORD:}
+  tests:
+    datasource:
+      url: jdbc:postgresql://${POSTGRES_HOST:}:${POSTGRES_PORT:}/${POSTGRES_DB:}
+      username: ${POSTGRES_TESTS_USER:}
+      password: ${POSTGRES_TESTS_PASSWORD:}
+
 server:
-  port: ${SERVER_PORT:}
+  port: ${SERVER_PORT:8080}
   error:
     include-message: always
+
 geonames:
   protocol: https
   host: secure.geonames.org
@@ -55,20 +49,85 @@ geonames:
   isNameRequired: true
   featureClass: P
   featureClassAdmin: A
-auth:
-  adminApiKey: ${ADMIN_API_KEY:}
-  testsApiKey: ${TESTS_API_KEY:}
-  userApiKey: ${VOYAGER_API_KEY:}
+
 cors:
   allowed-origin-patterns:
     - "http://localhost:*"
     - "https://localhost:*"
+
 app:
   version: @project.version@
   name: @project.name@
   description: @project.description@
   artifactId: @project.artifactId@
   groupId: @project.groupId@
+
 public:
   daily:
     limit: ${PUBLIC_DAILY_LIMIT:1000}
+
+auth:
+  adminApiKey: ${ADMIN_API_KEY:}
+  testsApiKey: ${TESTS_API_KEY:}
+  userApiKey: ${VOYAGER_API_KEY:}
+
+# Development profile
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:}:${POSTGRES_PORT:}/${POSTGRES_DB:}_dev
+  admin:
+    datasource:
+      url: jdbc:postgresql://${POSTGRES_HOST:}:${POSTGRES_PORT:}/${POSTGRES_DB:}_dev
+  tests:
+    datasource:
+      url: jdbc:postgresql://${POSTGRES_HOST:}:${POSTGRES_PORT:}/${POSTGRES_DB:}_dev
+name: dev-YAML
+runtime:
+  environment: dev
+enabled: true
+
+# Staging profile
+---
+spring:
+  config:
+    activate:
+      on-profile: stage
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:}:${POSTGRES_PORT:}/${POSTGRES_DB:}_stage
+  admin:
+    datasource:
+      url: jdbc:postgresql://${POSTGRES_HOST:}:${POSTGRES_PORT:}/${POSTGRES_DB:}_stage
+  tests:
+    datasource:
+      url: jdbc:postgresql://${POSTGRES_HOST:}:${POSTGRES_PORT:}/${POSTGRES_DB:}_stage
+name: stage-YAML
+runtime:
+  environment: stage
+enabled: true
+server:
+  port: ${SERVER_PORT:8081}
+
+# Production profile
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+  thymeleaf:
+    cache: true
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  logging:
+    level:
+      org:
+        springframework:
+          cache: INFO
+name: prod-YAML
+runtime:
+  environment: prod
+enabled: true

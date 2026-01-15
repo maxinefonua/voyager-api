@@ -1,6 +1,5 @@
 package org.voyager.api.model.path;
 
-import jakarta.validation.constraints.NotEmpty;
 import lombok.Builder;
 import lombok.Getter;
 import org.voyager.commons.model.airline.Airline;

@@ -37,7 +37,7 @@ public class CountryController {
     public Country getCountry(@PathVariable(name = ParameterNames.COUNTRY_CODE_PARAM_NAME) String countryCodeString) {
         LOGGER.info("GET countries/{} called", countryCodeString);
         String validatedCountryCode = ValidationUtils.validateAndGetCountryCode(false,countryCodeString,countryService);
-        Country response = countryService.getCountry(validatedCountryCode).get();
+        Country response = countryService.getCountry(validatedCountryCode);
         LOGGER.info("GET country response: '{}'", response);
         return response;
     }

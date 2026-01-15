@@ -1,4 +1,4 @@
-package org.voyager.api.ratelimit;
+package org.voyager.api.auth.filter;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -16,17 +16,18 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.GenericFilterBean;
 import org.voyager.api.auth.ApiKeyAuthentication;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 
-import static org.voyager.api.auth.AuthenticationFilter.PUBLIC_LIMITED_PREFIXES;
+import static org.voyager.api.auth.filter.AuthenticationFilter.PUBLIC_LIMITED_PREFIXES;
 
 @Component
 public class GlobalRateLimitFilter extends GenericFilterBean {
     private static final Logger LOGGER = LoggerFactory.getLogger(GlobalRateLimitFilter.class);
 
     @Autowired
-    GlobalRateLimitService globalRateLimitService;
+    ApiKeyAuthentication.GlobalRateLimitService globalRateLimitService;
 
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse,

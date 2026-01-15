@@ -1,5 +1,6 @@
 package org.voyager.api.validate;
 
+import jakarta.validation.ConstraintViolation;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +16,7 @@ import org.voyager.api.service.RouteService;
 import org.voyager.commons.constants.ParameterNames;
 import org.voyager.commons.constants.Regex;
 import org.voyager.api.error.MessageConstants;
+import org.voyager.commons.error.ValidationException;
 import org.voyager.commons.model.airline.Airline;
 import org.voyager.commons.model.airline.AirlineBatchUpsert;
 import org.voyager.commons.model.airport.AirportPatch;
@@ -41,7 +43,6 @@ import java.util.Optional;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.function.Supplier;
-
 import static org.voyager.api.error.MessageConstants.INTERNAL_SERVICE_ERROR_GENERIC_MESSAGE;
 
 public class ValidationUtils {
@@ -272,7 +273,7 @@ public class ValidationUtils {
     }
 
     public static String validateAndGetCountryCode(boolean isParam, String countryCodeString, CountryService countryService) {
-        if (!countryCodeString.matches(Regex.COUNTRY_CODE)) {
+        if (!countryCodeString.toUpperCase().matches(Regex.COUNTRY_CODE)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     MessageConstants.buildInvalidRequestParameterMessage(ParameterNames.COUNTRY_CODE_PARAM_NAME, countryCodeString));
         }
@@ -443,5 +444,19 @@ public class ValidationUtils {
 
     public static <T> void validate(T object, BindingResult bindingResult) {
         processRequestBodyBindingErrors(object,bindingResult);
+    }
+
+    public static <T> void validate(T object) {
+        try {
+            org.voyager.commons.validate.ValidationUtils.validateAndThrow(object);
+        } catch (ValidationException e) {
+            Set<ConstraintViolation<?>> constraintViolationSet = e.getConstraintViolationSet();
+            StringJoiner stringJoiner = new StringJoiner("; ");
+            constraintViolationSet.forEach(constraintViolation ->
+                    stringJoiner.add(String.format("'%s' %s",
+                            constraintViolation.getPropertyPath(),
+                            constraintViolation.getMessage())));
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, stringJoiner.toString());
+        }
     }
 }

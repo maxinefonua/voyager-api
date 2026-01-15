@@ -1,4 +1,4 @@
-package org.voyager.api.repository;
+package org.voyager.api.repository.primary;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -7,14 +7,10 @@ import org.voyager.commons.model.airline.Airline;
 import org.voyager.api.model.entity.AirlineAirportEntity;
 import org.voyager.api.model.entity.AirlineAirportId;
 import java.util.List;
-import java.util.Optional;
 
 public interface AirlineAirportRepository extends JpaRepository<AirlineAirportEntity, AirlineAirportId> {
     @Query("SELECT DISTINCT a.airline FROM AirlineAirportEntity a WHERE a.iata IN ?1 AND a.isActive = ?2")
     List<Airline> selectDistinctAirlinesByIataInAndIsActive(List<String> iataList, Boolean isActive);
-
-    @Query("SELECT a.iata FROM AirlineAirportEntity a WHERE a.airline = ?1 AND a.isActive = ?2")
-    List<String> selectIataCodesByAirlineAndIsActive(Airline airline, Boolean isActive);
 
     @Query("SELECT DISTINCT a.iata FROM AirlineAirportEntity a WHERE a.airline IN ?1 AND a.isActive = ?2")
     List<String> selectDistinctIataCodesByAirlineInAndIsActive(List<Airline> airlineList, Boolean isActive);
@@ -22,8 +18,6 @@ public interface AirlineAirportRepository extends JpaRepository<AirlineAirportEn
     @Query("SELECT DISTINCT a.iata FROM AirlineAirportEntity a WHERE a.airline IN ?1")
     List<String> selectDistinctIataCodesByAirlineIn(List<Airline> airlineList);
 
-    Optional<AirlineAirportEntity> findByIataAndAirline(String iata, Airline airline);
-    // newly added
     @Query(value = "SELECT airline FROM airline_airports " +
             "WHERE iata IN (:iataCodes) AND active = :isActive " +
             "GROUP BY airline " +
@@ -43,6 +37,4 @@ public interface AirlineAirportRepository extends JpaRepository<AirlineAirportEn
             @Param("iataCodes") List<String> iataCodes,
             @Param("isActive") Boolean isActive,
             @Param("airlines") List<Airline> airlines);
-
-    int deleteByAirline(Airline airline);
 }

@@ -7,7 +7,6 @@ import org.voyager.api.model.path.PathDetailed;
 import org.voyager.api.model.path.PathSearchRequest;
 import org.voyager.api.model.path.Session;
 import org.voyager.commons.model.path.Path;
-
 import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

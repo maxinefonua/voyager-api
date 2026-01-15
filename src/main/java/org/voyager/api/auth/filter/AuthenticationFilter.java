@@ -1,4 +1,4 @@
-package org.voyager.api.auth;
+package org.voyager.api.auth.filter;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -12,6 +12,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.GenericFilterBean;
+import org.voyager.api.auth.service.AuthenticationService;
 import org.voyager.commons.constants.Path;
 
 import java.io.IOException;
