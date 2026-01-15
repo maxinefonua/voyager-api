@@ -11,17 +11,18 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
-import org.voyager.api.model.query.AirportQuery;
-import org.voyager.api.model.response.PagedResponse;
 import org.voyager.commons.constants.ParameterNames;
 import org.voyager.commons.constants.Path;
 import org.voyager.commons.model.airline.Airline;
 import org.voyager.commons.model.airport.Airport;
+import org.voyager.commons.model.airport.AirportQuery;
 import org.voyager.commons.model.airport.AirportType;
 import org.voyager.api.model.query.IataQuery;
 import org.voyager.api.service.AirportsService;
 import org.voyager.api.service.CountryService;
 import org.voyager.api.validate.ValidationUtils;
+import org.voyager.commons.model.response.PagedResponse;
+
 import java.util.List;
 
 @RestController
@@ -75,7 +76,7 @@ public class AirportController {
         airportQuery.setPage(pageNumber);
         airportQuery.setSize(pageSize);
         if (countryCodeString != null) {
-            airportQuery.setCountry(ValidationUtils.validateAndGetCountryCode(
+            airportQuery.setCountryCode(ValidationUtils.validateAndGetCountryCode(
                     true,countryCodeString, countryService));
         }
         if (typeList != null && !typeList.isEmpty()) {
@@ -89,22 +90,6 @@ public class AirportController {
         ValidationUtils.validate(airportQuery);
         return airportsService.getPagedAirports(airportQuery);
     }
-
-    public List<Airport> getAirports(@RequestParam(name = ParameterNames.COUNTRY_CODE_PARAM_NAME, required = false) String countryCodeString,
-                                     @RequestParam(name = ParameterNames.TYPE_PARAM_NAME, required = false) List<String> typeList,
-                                     @RequestParam(name = ParameterNames.AIRLINE_PARAM_NAME, required = false) List<String> airlineStringList) {
-        LOGGER.info("GET /airports called with countryCodeString: '{}', typeList: '{}', airlineStringList: '{}'", countryCodeString, typeList, airlineStringList);
-        if (countryCodeString != null) countryCodeString = ValidationUtils.validateAndGetCountryCode(true,countryCodeString, countryService);
-        List<AirportType> airportTypeList = ValidationUtils.resolveTypeList(typeList);
-        List<Airline> airlineList = List.of();
-        if (airlineStringList != null && !airlineStringList.isEmpty()) {
-            airlineList = airlineStringList.stream().map(ValidationUtils::validateAndGetAirline).toList();
-        }
-        List<Airport> response = airportsService.getAll(Option.of(countryCodeString),airportTypeList,airlineList);
-        LOGGER.debug("response: '{}'", response);
-        return response;
-    }
-
 
     @GetMapping(Path.AIRPORT_BY_IATA)
     @Cacheable(value = "airportCache", key = "#iata")

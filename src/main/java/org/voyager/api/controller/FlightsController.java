@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.server.ResponseStatusException;
-import org.voyager.api.model.response.PagedResponse;
 import org.voyager.commons.constants.ParameterNames;
 import org.voyager.commons.constants.Path;
 import org.voyager.api.error.MessageConstants;
@@ -23,6 +22,8 @@ import org.voyager.commons.model.flight.Flight;
 import org.voyager.api.service.FlightService;
 import org.voyager.api.service.RouteService;
 import org.voyager.api.validate.ValidationUtils;
+import org.voyager.commons.model.response.PagedResponse;
+
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;

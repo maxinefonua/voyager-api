@@ -15,21 +15,21 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.server.ResponseStatusException;
-import org.voyager.api.model.query.AirportQuery;
-import org.voyager.api.model.response.PagedResponse;
+import org.voyager.api.model.entity.FlightEntity;
 import org.voyager.api.repository.admin.AdminAirportRepository;
 import org.voyager.api.repository.tests.TestsAirportRepository;
-import org.voyager.commons.model.airport.AirportForm;
-import org.voyager.commons.model.airport.AirportPatch;
+import org.voyager.commons.model.airport.*;
 import org.voyager.api.model.entity.AirportEntity;
 import org.voyager.commons.model.airline.Airline;
-import org.voyager.commons.model.airport.Airport;
-import org.voyager.commons.model.airport.AirportType;
 import org.voyager.api.model.query.IataQuery;
 import org.voyager.api.repository.primary.AirlineAirportRepository;
 import org.voyager.api.repository.primary.AirportRepository;
 import org.voyager.api.service.AirportsService;
 import org.voyager.api.service.utils.MapperUtils;
+import org.voyager.commons.model.flight.FlightAirlineQuery;
+import org.voyager.commons.model.flight.FlightQuery;
+import org.voyager.commons.model.response.PagedResponse;
+
 import java.util.List;
 import java.util.HashSet;
 import java.util.ArrayList;
@@ -96,8 +96,13 @@ public class AirportsServiceImpl implements AirportsService {
 
     @Override
     public PagedResponse<Airport> getPagedAirports(AirportQuery airportQuery) {
-        Page<AirportEntity> airportEntityPage = airportRepository.findAllByOrderByIataAsc(
-                Pageable.ofSize(airportQuery.getSize()).withPage(airportQuery.getPage()));
+        Pageable pageable = Pageable.ofSize(airportQuery.getSize())
+                .withPage(airportQuery.getPage());
+        Page<AirportEntity> airportEntityPage = airportRepository.findAirportsDynamic(
+                airportQuery.getAirlineList(),
+                airportQuery.getAirportTypeList(),
+                airportQuery.getCountryCode(),
+                pageable);
         List<Airport> content = airportEntityPage.get().map(MapperUtils::entityToAirport).toList();
         return PagedResponse.<Airport>builder()
                 .content(content)

@@ -2,12 +2,12 @@ package org.voyager.api.service;
 
 import io.vavr.control.Option;
 import org.springframework.validation.annotation.Validated;
-import org.voyager.api.model.query.AirportQuery;
-import org.voyager.api.model.response.PagedResponse;
 import org.voyager.commons.model.airline.Airline;
 import org.voyager.commons.model.airport.Airport;
+import org.voyager.commons.model.response.PagedResponse;
 import org.voyager.commons.model.airport.AirportForm;
 import org.voyager.commons.model.airport.AirportPatch;
+import org.voyager.commons.model.airport.AirportQuery;
 import org.voyager.commons.model.airport.AirportType;
 import org.voyager.api.model.query.IataQuery;
 import java.util.List;

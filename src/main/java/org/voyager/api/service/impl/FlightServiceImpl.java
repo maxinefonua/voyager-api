@@ -12,7 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.server.ResponseStatusException;
 import org.voyager.api.error.MessageConstants;
-import org.voyager.api.model.response.PagedResponse;
 import org.voyager.api.repository.admin.AdminFlightRepository;
 import org.voyager.commons.model.airline.Airline;
 import org.voyager.api.model.entity.FlightEntity;
@@ -27,6 +26,8 @@ import org.voyager.commons.model.flight.FlightNumberQuery;
 import org.voyager.api.repository.primary.FlightRepository;
 import org.voyager.api.service.FlightService;
 import org.voyager.api.service.utils.MapperUtils;
+import org.voyager.commons.model.response.PagedResponse;
+
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
