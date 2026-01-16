@@ -20,38 +20,6 @@ public interface FlightRepository  extends JpaRepository<FlightEntity,Integer> {
             Integer routeId, String flightNumber, ZonedDateTime arrival);
 
     List<FlightEntity> findByRouteIdAndFlightNumber(Integer routeId, String flightNumber);
-
-    @Modifying
-    @Query("DELETE FROM FlightEntity f WHERE f.airline = :airline AND f.isActive = :isActive")
-    int deleteByAirlineAndIsActive(@Param("airline") Airline airline,
-                                   @Param("isActive") Boolean isActive);
-
-    @Modifying
-    @Query("DELETE FROM FlightEntity f WHERE f.isActive = :isActive")
-    int deleteByIsActive(@Param("isActive") Boolean isActive);
-
-    @Modifying
-    @Query("DELETE FROM FlightEntity f WHERE f.airline = :airline")
-    int deleteByAirline(Airline airline);
-
-    @Modifying
-    @Query("DELETE FROM FlightEntity f WHERE f.zonedDateTimeArrival < :cutoffTime")
-    int deleteByZonedDateTimeArrivalBefore(@Param("cutoffTime") ZonedDateTime cutoffTime);
-
-    @Modifying
-    @Query("DELETE FROM FlightEntity f WHERE f.zonedDateTimeArrival < :cutoffTime AND f.airline = :airline")
-    int deleteByZonedDateTimeArrivalBeforeAndAirline(@Param("cutoffTime") ZonedDateTime cutoffTime, @Param("airline") Airline airline);
-
-    @Modifying
-    @Query("DELETE FROM FlightEntity f WHERE f.zonedDateTimeArrival < :cutoffTime AND f.isActive = :isActive")
-    int deleteByZonedDateTimeArrivalBeforeAndIsActive(@Param("cutoffTime") ZonedDateTime cutoffTime,
-                                                      @Param("isActive") Boolean isActive);
-    @Modifying
-    @Query("DELETE FROM FlightEntity f WHERE f.zonedDateTimeArrival < :cutoffTime AND f.airline = :airline AND f.isActive = :isActive")
-    int deleteByZonedDateTimeArrivalBeforeAndAirlineAndIsActive(@Param("cutoffTime") ZonedDateTime cutoffTime,
-                                                                @Param("airline") Airline airline,
-                                                                @Param("isActive") Boolean isActive);
-
     // For flights arriving AFTER a certain time
     @Query(value = """
     SELECT f.* FROM flights f 
