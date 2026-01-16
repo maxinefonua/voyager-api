@@ -127,7 +127,7 @@ public class FlightServiceImpl implements FlightService {
                         .minusDays(Integer.parseInt(flightBatchDelete.getDaysPast()));
                 Airline airline = Airline.valueOf(flightBatchDelete.getAirline().toUpperCase());
                 boolean isActive = Boolean.parseBoolean(flightBatchDelete.getIsActive().toLowerCase());
-                return flightRepository.deleteByZonedDateTimeArrivalBeforeAndAirlineAndIsActive(
+                return adminFlightRepository.deleteByZonedDateTimeArrivalBeforeAndAirlineAndIsActive(
                         cutoff,airline,isActive);
             }
             if (StringUtils.isNotBlank(flightBatchDelete.getDaysPast())
@@ -135,32 +135,32 @@ public class FlightServiceImpl implements FlightService {
                 ZonedDateTime cutoff = Instant.now().atZone(ZoneOffset.UTC)
                         .minusDays(Integer.parseInt(flightBatchDelete.getDaysPast()));
                 Airline airline = Airline.valueOf(flightBatchDelete.getAirline().toUpperCase());
-                return flightRepository.deleteByZonedDateTimeArrivalBeforeAndAirline(cutoff,airline);
+                return adminFlightRepository.deleteByZonedDateTimeArrivalBeforeAndAirline(cutoff,airline);
             }
             if (StringUtils.isNotBlank(flightBatchDelete.getDaysPast())
                     && StringUtils.isNotBlank(flightBatchDelete.getIsActive())) {
                 ZonedDateTime cutoff = Instant.now().atZone(ZoneOffset.UTC)
                         .minusDays(Integer.parseInt(flightBatchDelete.getDaysPast()));
                 boolean isActive = Boolean.parseBoolean(flightBatchDelete.getIsActive().toLowerCase());
-                return flightRepository.deleteByZonedDateTimeArrivalBeforeAndIsActive(cutoff,isActive);
+                return adminFlightRepository.deleteByZonedDateTimeArrivalBeforeAndIsActive(cutoff,isActive);
             }
             if (StringUtils.isNotBlank(flightBatchDelete.getAirline())
                     && StringUtils.isNotBlank(flightBatchDelete.getIsActive()))
-                return flightRepository.deleteByAirlineAndIsActive(
+                return adminFlightRepository.deleteByAirlineAndIsActive(
                         Airline.valueOf(flightBatchDelete.getAirline().toUpperCase()),
                         Boolean.valueOf(flightBatchDelete.getIsActive().toLowerCase()));
             if (StringUtils.isNotBlank(flightBatchDelete.getAirline())) {
-                return flightRepository.deleteByAirline(
+                return adminFlightRepository.deleteByAirline(
                         Airline.valueOf(flightBatchDelete.getAirline().toUpperCase()));
             }
             if (StringUtils.isNotBlank(flightBatchDelete.getIsActive())) {
-                return flightRepository.deleteByIsActive(
+                return adminFlightRepository.deleteByIsActive(
                         Boolean.valueOf(flightBatchDelete.getIsActive().toLowerCase()));
             }
             if (StringUtils.isNotBlank(flightBatchDelete.getDaysPast())) {
                 ZonedDateTime cutoff = Instant.now().atZone(ZoneOffset.UTC)
                         .minusDays(Integer.parseInt(flightBatchDelete.getDaysPast()));
-                return flightRepository.deleteByZonedDateTimeArrivalBefore(cutoff);
+                return adminFlightRepository.deleteByZonedDateTimeArrivalBefore(cutoff);
             }
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                     MessageConstants.INTERNAL_SERVICE_ERROR_GENERIC_MESSAGE);
