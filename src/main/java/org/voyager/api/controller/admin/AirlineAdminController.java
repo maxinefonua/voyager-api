@@ -13,6 +13,8 @@ import org.voyager.commons.constants.Path;
 import org.voyager.commons.model.airline.Airline;
 import org.voyager.commons.model.airline.AirlineAirport;
 import org.voyager.commons.model.airline.AirlineBatchUpsert;
+import org.voyager.commons.model.airline.AirlineBatchUpsertResult;
+
 import java.util.List;
 
 @RestController
@@ -23,9 +25,9 @@ public class AirlineAdminController {
     private static final Logger LOGGER = LoggerFactory.getLogger(AirlineAdminController.class);
 
     @PostMapping
-    public List<AirlineAirport> batchUpsertAirline(@RequestBody(required = false) @Valid
+    public AirlineBatchUpsertResult batchUpsertAirline(@RequestBody(required = false) @Valid
                                                    AirlineBatchUpsert airlineBatchUpsert,
-                                                   BindingResult bindingResult) {
+                                                       BindingResult bindingResult) {
         LOGGER.info("POST {} called with airlineBatchUpsert: '{}'", Path.AIRLINES, airlineBatchUpsert);
         ValidationUtils.validateAirlineBatchUpsert(airlineBatchUpsert,bindingResult);
         return airlineService.batchUpsert(airlineBatchUpsert);
