@@ -1,6 +1,5 @@
 package org.voyager.api.controller;
 
-import io.vavr.control.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +21,6 @@ import org.voyager.api.service.AirportsService;
 import org.voyager.api.service.CountryService;
 import org.voyager.api.validate.ValidationUtils;
 import org.voyager.commons.model.response.PagedResponse;
-
 import java.util.List;
 
 @RestController
