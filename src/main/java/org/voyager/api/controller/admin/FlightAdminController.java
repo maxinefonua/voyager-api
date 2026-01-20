@@ -25,16 +25,18 @@ public class FlightAdminController {
     private static final Logger LOGGER = LoggerFactory.getLogger(FlightAdminController.class);
 
     @PostMapping
-    public FlightBatchUpsertResult upsertFlights(@Valid @RequestBody(required = false) FlightBatchUpsert flightBatchUpsert,
-                                                 BindingResult bindingResult) {
+    public FlightBatchUpsertResult upsertFlights(
+            @Valid @RequestBody(required = false) FlightBatchUpsert flightBatchUpsert,
+            BindingResult bindingResult) {
         LOGGER.info("POST {} of {}",Path.Admin.FLIGHTS,flightBatchUpsert);
         ValidationUtils.validate(flightBatchUpsert,bindingResult);
         return flightService.batchUpsert(flightBatchUpsert);
     }
 
     @DeleteMapping
-    public Integer batchDeleteFlights(@Valid @RequestBody(required = false) FlightBatchDelete flightBatchDelete,
-                                      BindingResult bindingResult) {
+    public Integer batchDeleteFlights(
+            @Valid @RequestBody(required = false) FlightBatchDelete flightBatchDelete,
+            BindingResult bindingResult) {
         LOGGER.trace("DELETE {} of {}",Path.Admin.FLIGHTS,flightBatchDelete);
         ValidationUtils.validate(flightBatchDelete,bindingResult);
         return flightService.batchDelete(flightBatchDelete);

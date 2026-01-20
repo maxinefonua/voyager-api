@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -52,18 +51,21 @@ public class RouteAdminController {
     }
 
     @PatchMapping(Path.BY_ID)
-    public Route patchRouteById(@PathVariable(name = ParameterNames.ID_PATH_VAR_NAME) String idString, @RequestBody(required = false) @Valid RoutePatch routePatch, BindingResult bindingResult) {
+    public Route patchRouteById(@PathVariable(name = ParameterNames.ID) String idString,
+                                @RequestBody(required = false) @Valid RoutePatch routePatch,
+                                BindingResult bindingResult) {
         LOGGER.info("PATCH {} of {}", Path.Admin.ROUTES.concat("/").concat(idString),routePatch);
-        Integer id = ValidationUtils.validateAndGetInteger(ParameterNames.ID_PATH_VAR_NAME,idString,false);
+        Integer id = ValidationUtils.validateAndGetInteger(ParameterNames.ID,idString,false);
         ValidationUtils.validateRoutePatch(routePatch,bindingResult);
         Option<RouteEntity> routeEntityOption = routeService.getRouteEntityById(id);
         if (routeEntityOption.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                MessageConstants.buildResourceNotFoundForPathVariableMessage(ParameterNames.ID_PATH_VAR_NAME,String.valueOf(id)));
+                MessageConstants.buildResourceNotFoundForPathVariableMessage(ParameterNames.ID,String.valueOf(id)));
         return routeService.patchRoute(routeEntityOption.get(),routePatch);
     }
 
     @GetMapping(Path.Admin.SYNC)
-    public List<RouteSync> getRouteByStatus(@RequestParam(name = ParameterNames.STATUS, required = false) List<String> statusStringList) {
+    public List<RouteSync> getRouteByStatus(
+            @RequestParam(name = ParameterNames.STATUS, required = false) List<String> statusStringList) {
         LOGGER.info("GET {} with {}:{}", Path.Admin.ROUTES.concat(Path.Admin.SYNC),ParameterNames.STATUS,statusStringList);
         List<Status> statusList = ValidationUtils.validateAndGetStatusList(ParameterNames.STATUS,statusStringList);
         return routeSyncService.getRouteSyncList(statusList);
@@ -71,14 +73,14 @@ public class RouteAdminController {
 
     @PatchMapping(Path.Admin.SYNC)
     public Integer batchUpdate(@RequestBody(required = false) RouteSyncBatchUpdate routeSyncBatchUpdate,
-                            BindingResult bindingResult) {
+                               BindingResult bindingResult) {
         LOGGER.info("PATCH {} of {}", Path.Admin.ROUTES.concat(Path.Admin.SYNC),routeSyncBatchUpdate);
         ValidationUtils.validate(routeSyncBatchUpdate,bindingResult);
         return routeSyncService.batchUpdate(routeSyncBatchUpdate);
     }
 
     @PatchMapping(Path.Admin.SYNC_BY_ID)
-    public RouteSync patchRouteSync(@PathVariable(name = ParameterNames.ID_PATH_VAR_NAME) String idString,
+    public RouteSync patchRouteSync(@PathVariable(name = ParameterNames.ID) String idString,
                                     @RequestBody(required = false) RouteSyncPatch routeSyncPatch,
                                     BindingResult bindingResult) {
         LOGGER.info("PATCH {} of {}", Path.Admin.ROUTES.concat(Path.Admin.SYNC).concat("/").concat(idString),routeSyncPatch);

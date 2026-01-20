@@ -5,17 +5,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.voyager.api.service.AirlineService;
 import org.voyager.api.validate.ValidationUtils;
 import org.voyager.commons.constants.ParameterNames;
 import org.voyager.commons.constants.Path;
 import org.voyager.commons.model.airline.Airline;
-import org.voyager.commons.model.airline.AirlineAirport;
 import org.voyager.commons.model.airline.AirlineBatchUpsert;
 import org.voyager.commons.model.airline.AirlineBatchUpsertResult;
-
-import java.util.List;
 
 @RestController
 @RequestMapping(Path.Admin.AIRLINES)
@@ -35,7 +37,7 @@ public class AirlineAdminController {
 
     @DeleteMapping
     public Integer batchDeleteAirline(
-            @RequestParam(name = ParameterNames.AIRLINE_PARAM_NAME) String airlineString) {
+            @RequestParam(name = ParameterNames.AIRLINE) String airlineString) {
         LOGGER.info("DELETE {} called with airlineString: '{}'", Path.AIRLINES, airlineString);
         Airline airline = ValidationUtils.validateAndGetAirline(airlineString);
         Integer deleted = airlineService.batchDelete(airline);

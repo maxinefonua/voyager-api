@@ -33,13 +33,13 @@ public class AirlineController {
 
     @GetMapping
     public List<Airline> getAirlines(
-            @RequestParam(name = ParameterNames.IATA_PARAM_NAME, required = false)
+            @RequestParam(name = ParameterNames.IATA, required = false)
                 List<String> iataList,
             @RequestParam(name = ParameterNames.OPERATOR,defaultValue = "OR")
                 String operatorString,
-            @RequestParam(name = ParameterNames.ORIGIN_PARAM_NAME, required = false)
+            @RequestParam(name = ParameterNames.ORIGIN, required = false)
                 List<String> originList,
-            @RequestParam(name = ParameterNames.DESTINATION_PARAM_NAME, required = false)
+            @RequestParam(name = ParameterNames.DESTINATION, required = false)
                 List<String> destinationList) {
         LOGGER.info("GET /airlines with iataList:{}, operatorString:{}, originList:{}, destinationList:{}",
                 iataList,operatorString,originList,destinationList);
@@ -51,15 +51,15 @@ public class AirlineController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     String.format("Cannot specify both %s and %s/%s parameters. " +
                                     "Use %s for airport airlines OR %s/%s for path airlines",
-                            ParameterNames.IATA_PARAM_NAME,
-                            ParameterNames.ORIGIN_PARAM_NAME,ParameterNames.DESTINATION_PARAM_NAME,
-                            ParameterNames.IATA_PARAM_NAME,
-                            ParameterNames.ORIGIN_PARAM_NAME,ParameterNames.DESTINATION_PARAM_NAME));
+                            ParameterNames.IATA,
+                            ParameterNames.ORIGIN,ParameterNames.DESTINATION,
+                            ParameterNames.IATA,
+                            ParameterNames.ORIGIN,ParameterNames.DESTINATION));
         }
 
         if (hasAirportParams) {
             iataList = ValidationUtils.validateIataCodeList(
-                    ParameterNames.IATA_PARAM_NAME,iataList,airportsService);
+                    ParameterNames.IATA,iataList,airportsService);
             AirlineAirportQuery airlineAirportQuery = AirlineAirportQuery.builder().iatalist(iataList).build();
             if (StringUtils.isNotBlank(operatorString)) {
                 SearchOperator operator = ValidationUtils.validateAndGetOperator(operatorString);
@@ -70,9 +70,9 @@ public class AirlineController {
 
         if (hasPathParams) {
             originList = ValidationUtils.validateIataCodeList(
-                    ParameterNames.ORIGIN_PARAM_NAME,originList,airportsService);
+                    ParameterNames.ORIGIN,originList,airportsService);
             destinationList = ValidationUtils.validateIataCodeList(
-                    ParameterNames.DESTINATION_PARAM_NAME,destinationList,airportsService);
+                    ParameterNames.DESTINATION,destinationList,airportsService);
             AirlinePathQuery airlinePathQuery = AirlinePathQuery.builder()
                     .originList(originList).destinationList(destinationList).build();
             return airlineService.getAirlines(airlinePathQuery);

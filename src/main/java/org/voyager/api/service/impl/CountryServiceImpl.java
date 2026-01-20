@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.voyager.api.repository.admin.AdminCountryRepository;
+import org.voyager.api.repository.tests.TestsAirportRepository;
 import org.voyager.commons.model.country.Continent;
 import org.voyager.commons.model.country.Country;
 import org.voyager.commons.model.country.CountryForm;
@@ -21,6 +22,9 @@ public class CountryServiceImpl implements CountryService {
 
     @Autowired
     AdminCountryRepository adminCountryRepository;
+
+    @Autowired
+    TestsAirportRepository testsAirportRepository;
 
     @Override
     public List<Country> getAll(List<Continent> continentList) {
@@ -50,5 +54,10 @@ public class CountryServiceImpl implements CountryService {
     @Override
     public Country getCountry(String countryCode) {
         return countryRepository.findById(countryCode).map(MapperUtils::entityToCountry).get();
+    }
+
+    @Override
+    public void deleteCountry(String countryCode) {
+        handleJPAExceptions(()-> testsAirportRepository.deleteById(countryCode));
     }
 }

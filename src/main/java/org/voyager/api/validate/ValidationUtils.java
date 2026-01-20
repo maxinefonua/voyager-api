@@ -56,7 +56,7 @@ public class ValidationUtils {
                     airportTypeList.add(AirportType.valueOf(typeString.toUpperCase()));
                 } catch (IllegalArgumentException e) {
                     throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                            MessageConstants.buildInvalidRequestParameterMessage(ParameterNames.TYPE_PARAM_NAME, typeString));
+                            MessageConstants.buildInvalidRequestParameterMessage(ParameterNames.TYPE, typeString));
                 }
             }
         }
@@ -71,7 +71,7 @@ public class ValidationUtils {
                     airlineList.add(Airline.valueOf(airlineString.toUpperCase()));
                 } catch (IllegalArgumentException e) {
                     throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                            MessageConstants.buildInvalidRequestParameterMessage(ParameterNames.TYPE_PARAM_NAME,airlineString));
+                            MessageConstants.buildInvalidRequestParameterMessage(ParameterNames.TYPE,airlineString));
                 }
             }
         }
@@ -128,17 +128,17 @@ public class ValidationUtils {
 
     public static void validateQuery(String query) {
         if (StringUtils.isEmpty(query)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                MessageConstants.buildMissingRequestParameterMessage(ParameterNames.QUERY_PARAM_NAME));
+                MessageConstants.buildMissingRequestParameterMessage(ParameterNames.QUERY));
     }
 
     public static Airline validateAndGetAirline(String airlineString) {
         if (StringUtils.isEmpty(airlineString)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                MessageConstants.buildMissingRequestParameterMessage(ParameterNames.AIRLINE_PARAM_NAME));
+                MessageConstants.buildMissingRequestParameterMessage(ParameterNames.AIRLINE));
         try {
             return Airline.valueOf(airlineString.toUpperCase());
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    MessageConstants.buildInvalidRequestParameterMessage(ParameterNames.AIRLINE_PARAM_NAME,airlineString));
+                    MessageConstants.buildInvalidRequestParameterMessage(ParameterNames.AIRLINE,airlineString));
         }
     }
 
@@ -261,12 +261,12 @@ public class ValidationUtils {
     public static String validateAndGetFlightNumber(String flightNumberString, FlightService flightService) {
         if (!flightNumberString.matches(Regex.FLIGHT_NUMBER)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    MessageConstants.buildInvalidRequestParameterMessage(ParameterNames.FLIGHT_NUMBER_PARAM_NAME,
+                    MessageConstants.buildInvalidRequestParameterMessage(ParameterNames.FLIGHT_NUMBER,
                             flightNumberString));
         }
         if (!flightService.existsByFlightNumber(flightNumberString)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    MessageConstants.buildResourceNotFoundForParameterMessage(ParameterNames.FLIGHT_NUMBER_PARAM_NAME,
+                    MessageConstants.buildResourceNotFoundForParameterMessage(ParameterNames.FLIGHT_NUMBER,
                             flightNumberString));
         }
         return flightNumberString;
@@ -275,14 +275,14 @@ public class ValidationUtils {
     public static String validateAndGetCountryCode(boolean isParam, String countryCodeString, CountryService countryService) {
         if (!countryCodeString.toUpperCase().matches(Regex.COUNTRY_CODE)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    MessageConstants.buildInvalidRequestParameterMessage(ParameterNames.COUNTRY_CODE_PARAM_NAME, countryCodeString));
+                    MessageConstants.buildInvalidRequestParameterMessage(ParameterNames.COUNTRY_CODE, countryCodeString));
         }
         if (!countryService.countryCodeExists(countryCodeString.toUpperCase())) {
             if (isParam)
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    MessageConstants.buildInvalidRequestParameterMessage(ParameterNames.COUNTRY_CODE_PARAM_NAME, countryCodeString));
+                    MessageConstants.buildInvalidRequestParameterMessage(ParameterNames.COUNTRY_CODE, countryCodeString));
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                    MessageConstants.buildInvalidPathVariableMessage(ParameterNames.COUNTRY_CODE_PARAM_NAME, countryCodeString));
+                    MessageConstants.buildInvalidPathVariableMessage(ParameterNames.COUNTRY_CODE, countryCodeString));
         }
         return countryCodeString.toUpperCase();
     }
@@ -324,7 +324,7 @@ public class ValidationUtils {
     }
 
     private static String resolveInvalidInputErrors(FieldError fieldError, Object requestBody) {
-        if (fieldError.getField().equals(ParameterNames.SOURCE_PARAM_NAME)) {
+        if (fieldError.getField().equals(ParameterNames.SOURCE)) {
             return String.format("'%s' %s but has invalid value %s",
                     fieldError.getField(),fieldError.getDefaultMessage(),fieldError.getRejectedValue());
         }
@@ -359,12 +359,12 @@ public class ValidationUtils {
             Integer routeId = Integer.valueOf(routeIdString);
             if (!routeService.existsById(routeId)) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                        MessageConstants.buildResourceNotFoundForParameterMessage(ParameterNames.ROUTE_ID_PARAM_NAME,routeIdString));
+                        MessageConstants.buildResourceNotFoundForParameterMessage(ParameterNames.ROUTE_ID,routeIdString));
             }
             return routeId;
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    MessageConstants.buildInvalidRequestParameterMessage(ParameterNames.ROUTE_ID_PARAM_NAME, routeIdString));
+                    MessageConstants.buildInvalidRequestParameterMessage(ParameterNames.ROUTE_ID, routeIdString));
         }
     }
 
@@ -412,7 +412,7 @@ public class ValidationUtils {
                         continentSet.add(Continent.fromDisplayText(continentString));
                     } catch (IllegalArgumentException illegalArgumentException) {
                         throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                                MessageConstants.buildInvalidRequestParameterMessage(ParameterNames.CONTINENT_PARAM_NAME,continentString));
+                                MessageConstants.buildInvalidRequestParameterMessage(ParameterNames.CONTINENT,continentString));
                     }
                 }
             }
