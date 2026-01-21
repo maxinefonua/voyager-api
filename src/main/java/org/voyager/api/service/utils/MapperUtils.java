@@ -96,6 +96,8 @@ public class MapperUtils {
         return Country.builder()
                 .code(countryEntity.getCode())
                 .name(countryEntity.getName())
+                .currencyCode(countryEntity.getCurrencyCode())
+                .languages(countryEntity.getLanguages())
                 .capitalCity(countryEntity.getCapitalCity())
                 .population(countryEntity.getPopulation())
                 .areaInSqKm(countryEntity.getAreaSqKm())
@@ -106,8 +108,9 @@ public class MapperUtils {
 
     public static CountryEntity formToCountryEntity(CountryForm countryForm) {
         return CountryEntity.builder()
-                .code(countryForm.getCountryCode())
-                .name(countryForm.getCountryName())
+                .code(countryForm.getCode())
+                .name(countryForm.getName())
+                .languages(countryForm.getLanguages().toArray(new String[0]))
                 .capitalCity(countryForm.getCapitalCity())
                 .population(countryForm.getPopulation())
                 .areaSqKm(countryForm.getAreaInSqKm())

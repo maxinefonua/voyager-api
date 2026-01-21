@@ -278,11 +278,14 @@ public class ValidationUtils {
                     MessageConstants.buildInvalidRequestParameterMessage(ParameterNames.COUNTRY_CODE, countryCodeString));
         }
         if (!countryService.countryCodeExists(countryCodeString.toUpperCase())) {
-            if (isParam)
+            if (isParam) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    MessageConstants.buildInvalidRequestParameterMessage(ParameterNames.COUNTRY_CODE, countryCodeString));
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                    MessageConstants.buildInvalidPathVariableMessage(ParameterNames.COUNTRY_CODE, countryCodeString));
+                        MessageConstants.buildInvalidPathVariableMessage(ParameterNames.COUNTRY_CODE, countryCodeString));
+            } else {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        MessageConstants.buildResourceNotFoundForPathVariableMessage(ParameterNames.COUNTRY_CODE,
+                                countryCodeString));
+            }
         }
         return countryCodeString.toUpperCase();
     }
@@ -296,9 +299,9 @@ public class ValidationUtils {
     public static void validateCountryForm(CountryForm countryForm, BindingResult bindingResult,
                                            CountryService countryService) {
         processRequestBodyBindingErrors(countryForm,bindingResult);
-        if (countryService.countryCodeExists(countryForm.getCountryCode()))
+        if (countryService.countryCodeExists(countryForm.getCode()))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,String.format("%s country code already exists",
-                    countryForm.getCountryCode()));
+                    countryForm.getCode()));
     }
 
     public static void validateAirportPatch(AirportPatch airportPatch, BindingResult bindingResult) {

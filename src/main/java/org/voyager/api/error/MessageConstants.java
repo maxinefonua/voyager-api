@@ -99,6 +99,7 @@ public class MessageConstants {
     private static final String VALID_LIMIT_CONSTRAINT = "Must be a valid integer greater than 0";
 
     private static final String IATA_RESOURCE_NOT_FOUND = "Information on given IATA code is currently unavailable";
+    private static final String COUNTRY_RESOURCE_NOT_FOUND = "No information on given country code available";
 
     private static final String MISSING_SOURCE_CONSTRAINT = "Must also include 'source' parameter when providing a 'sourceId'";
 
@@ -111,7 +112,8 @@ public class MessageConstants {
             Map.entry(ParameterNames.ORIGIN,IATA_RESOURCE_NOT_FOUND),
             Map.entry(ParameterNames.DESTINATION,IATA_RESOURCE_NOT_FOUND),
             Map.entry(ParameterNames.EXCLUDE,IATA_RESOURCE_NOT_FOUND),
-            Map.entry(ParameterNames.AIRPORTS,IATA_RESOURCE_NOT_FOUND)
+            Map.entry(ParameterNames.AIRPORTS,IATA_RESOURCE_NOT_FOUND),
+            Map.entry(ParameterNames.COUNTRY_CODE,COUNTRY_RESOURCE_NOT_FOUND)
             );
 
     private static final Map<String,String> CONSTRAINT_MAP = Map.ofEntries(

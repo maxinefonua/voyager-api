@@ -45,7 +45,7 @@ public class CountryAdminController {
 
     @DeleteMapping(Path.BY_COUNTRY_CODE)
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteCountry(@PathVariable(ParameterNames.IATA) String countryCodeString) {
+    public void deleteCountry(@PathVariable(ParameterNames.COUNTRY_CODE) String countryCodeString) {
         if (!environmentConfig.isTestEnvironment()) {
             LOGGER.warn("DELETE endpoint called in non-test environment: {}", environmentConfig.getRuntimeEnvironment());
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
