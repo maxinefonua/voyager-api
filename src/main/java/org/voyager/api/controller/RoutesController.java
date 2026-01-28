@@ -26,19 +26,20 @@ public class RoutesController {
     AirportsService airportService;
 
     @GetMapping(Path.ROUTES)
-    public List<Route> getRoutes(@RequestParam(name = ParameterNames.ORIGIN_PARAM_NAME, required = false) List<String> originList,
-                                 @RequestParam(name = ParameterNames.DESTINATION_PARAM_NAME, required = false) List<String> destinationList) {
+    public List<Route> getRoutes(
+            @RequestParam(name = ParameterNames.ORIGIN, required = false) List<String> originList,
+            @RequestParam(name = ParameterNames.DESTINATION, required = false) List<String> destinationList) {
         RouteQuery routeQuery = null;
         if (originList != null && !originList.isEmpty()) {
             originList = originList.stream().map(origin->
                     ValidationUtils.validateIataToUpperCase(origin,airportService,
-                            ParameterNames.ORIGIN_PARAM_NAME,true)).toList();
+                            ParameterNames.ORIGIN,true)).toList();
             routeQuery = RouteQuery.builder().originList(originList).build();
         }
         if (destinationList != null && !destinationList.isEmpty()) {
             destinationList = destinationList.stream().map(destination->
                     ValidationUtils.validateIataToUpperCase(destination,airportService,
-                            ParameterNames.DESTINATION_PARAM_NAME,true)).toList();
+                            ParameterNames.DESTINATION,true)).toList();
             if (routeQuery == null) routeQuery = RouteQuery.builder().build();
             routeQuery.setDestinationList(destinationList);
         }
@@ -47,23 +48,24 @@ public class RoutesController {
     }
 
     @GetMapping(Path.ROUTE)
-    public Route getRoute(@RequestParam(name = ParameterNames.ORIGIN_PARAM_NAME) String origin,
-                                 @RequestParam(name = ParameterNames.DESTINATION_PARAM_NAME) String destination) {
-        origin = ValidationUtils.validateIataToUpperCase(origin,airportService,ParameterNames.ORIGIN_PARAM_NAME,true);
-        destination = ValidationUtils.validateIataToUpperCase(destination,airportService,ParameterNames.DESTINATION_PARAM_NAME,true);
+    public Route getRoute(
+            @RequestParam(name = ParameterNames.ORIGIN) String origin,
+            @RequestParam(name = ParameterNames.DESTINATION) String destination) {
+        origin = ValidationUtils.validateIataToUpperCase(origin,airportService,ParameterNames.ORIGIN,true);
+        destination = ValidationUtils.validateIataToUpperCase(destination,airportService,ParameterNames.DESTINATION,true);
         Option<Route> routeOption = routeService.getRoute(origin,destination);
         if (routeOption.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                MessageConstants.buildResourceNotFoundForMultiParameterMessage(ParameterNames.ORIGIN_PARAM_NAME,origin,
-                        ParameterNames.DESTINATION_PARAM_NAME,destination));
+                MessageConstants.buildResourceNotFoundForMultiParameterMessage(ParameterNames.ORIGIN,origin,
+                        ParameterNames.DESTINATION,destination));
         return routeOption.get();
     }
 
     @GetMapping("/routes/{id}")
-    public Route getRoute(@PathVariable(name = ParameterNames.ID_PATH_VAR_NAME) String idString) {
-        Integer id = ValidationUtils.validateAndGetInteger(ParameterNames.ID_PATH_VAR_NAME,idString,false);
+    public Route getRoute(@PathVariable(name = ParameterNames.ID) String idString) {
+        Integer id = ValidationUtils.validateAndGetInteger(ParameterNames.ID,idString,false);
         Option<Route> routeOption = routeService.getRouteById(id);
         if (routeOption.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                MessageConstants.buildResourceNotFoundForPathVariableMessage(ParameterNames.ID_PATH_VAR_NAME,String.valueOf(id)));
+                MessageConstants.buildResourceNotFoundForPathVariableMessage(ParameterNames.ID,String.valueOf(id)));
         return routeOption.get();
     }
 }

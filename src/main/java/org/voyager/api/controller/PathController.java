@@ -41,17 +41,17 @@ public class PathController {
 
     @GetMapping(Path.PATH)
     public SearchResponse getSearchResponse(
-            @RequestParam(name = ParameterNames.ORIGIN_PARAM_NAME)
+            @RequestParam(name = ParameterNames.ORIGIN)
             List<String> originList,
-            @RequestParam(name = ParameterNames.DESTINATION_PARAM_NAME)
+            @RequestParam(name = ParameterNames.DESTINATION)
             List<String> destinationList,
-            @RequestParam(name = ParameterNames.AIRLINE_PARAM_NAME, required = false)
+            @RequestParam(name = ParameterNames.AIRLINE, required = false)
             List<String> airlineStringList,
-            @RequestParam(name = ParameterNames.EXCLUDE_PARAM_NAME, required = false)
+            @RequestParam(name = ParameterNames.EXCLUDE, required = false)
             List<String> excludeAirportCodeList,
-            @RequestParam(name = ParameterNames.EXCLUDE_ROUTE_PARAM_NAME, required = false)
+            @RequestParam(name = ParameterNames.EXCLUDE_ROUTE, required = false)
             List<String> excludeRouteIdList,
-            @RequestParam(name = ParameterNames.EXCLUDE_FLIGHT_PARAM_NAME, required = false)
+            @RequestParam(name = ParameterNames.EXCLUDE_FLIGHT, required = false)
             List<String> excludeFlightNumberList,
             @RequestParam(name = ParameterNames.ZONE_ID, required = false)
             String zoneIdString,
@@ -62,19 +62,19 @@ public class PathController {
             @RequestParam(name = ParameterNames.START,defaultValue = "now")
             String startString) {
         LOGGER.info("GET /path-airline called with {}:{}, {}:{}, {}:{}, {}:{}, {}:{}, {}:{}, {}:{}, {}:{}, {}:{}, {}:{}",
-                ParameterNames.ORIGIN_PARAM_NAME,originList, ParameterNames.DESTINATION_PARAM_NAME,destinationList,
-                ParameterNames.AIRLINE_PARAM_NAME,airlineStringList,
-                ParameterNames.EXCLUDE_PARAM_NAME,excludeAirportCodeList,
-                ParameterNames.EXCLUDE_ROUTE_PARAM_NAME,excludeRouteIdList,
-                ParameterNames.EXCLUDE_FLIGHT_PARAM_NAME,excludeFlightNumberList,
+                ParameterNames.ORIGIN,originList, ParameterNames.DESTINATION,destinationList,
+                ParameterNames.AIRLINE,airlineStringList,
+                ParameterNames.EXCLUDE,excludeAirportCodeList,
+                ParameterNames.EXCLUDE_ROUTE,excludeRouteIdList,
+                ParameterNames.EXCLUDE_FLIGHT,excludeFlightNumberList,
                 ParameterNames.ZONE_ID,zoneIdString,
                 ParameterNames.START,startString,
                 ParameterNames.SIZE,sizeString,
                 ParameterNames.SKIP,skipString);
 
-        Set<String> originSet = ValidationUtils.validateIataCodeSet(ParameterNames.ORIGIN_PARAM_NAME,
+        Set<String> originSet = ValidationUtils.validateIataCodeSet(ParameterNames.ORIGIN,
                 Set.copyOf(originList),airportService);
-        Set<String> destinationSet = ValidationUtils.validateIataCodeSet(ParameterNames.DESTINATION_PARAM_NAME,
+        Set<String> destinationSet = ValidationUtils.validateIataCodeSet(ParameterNames.DESTINATION,
                 Set.copyOf(destinationList),airportService);
 
         List<Airline> airlineList = Arrays.stream(Airline.values()).toList();
@@ -84,7 +84,7 @@ public class PathController {
 
         Set<String> excludeAirportCodes = new HashSet<>();
         if (excludeAirportCodeList != null) {
-            excludeAirportCodes = ValidationUtils.validateIataCodeSet(ParameterNames.EXCLUDE_PARAM_NAME,
+            excludeAirportCodes = ValidationUtils.validateIataCodeSet(ParameterNames.EXCLUDE,
                     Set.copyOf(excludeAirportCodeList),airportService);
         }
 

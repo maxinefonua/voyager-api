@@ -1,6 +1,5 @@
 package org.voyager.api.controller;
 
-import io.vavr.control.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +21,6 @@ import org.voyager.api.service.AirportsService;
 import org.voyager.api.service.CountryService;
 import org.voyager.api.validate.ValidationUtils;
 import org.voyager.commons.model.response.PagedResponse;
-
 import java.util.List;
 
 @RestController
@@ -37,9 +35,9 @@ public class AirportController {
 
     @GetMapping(Path.IATA)
     @Cacheable("iataCache")
-    public List<String> getIataCodes(@RequestParam(name = ParameterNames.TYPE_PARAM_NAME,
+    public List<String> getIataCodes(@RequestParam(name = ParameterNames.TYPE,
             required = false) List<String> typeList,
-                                     @RequestParam(name = ParameterNames.AIRLINE_PARAM_NAME,
+                                     @RequestParam(name = ParameterNames.AIRLINE,
                                              required = false) List<String> airlineStringList) {
         LOGGER.info("GET /iata called with typeList: {}, airlineList: {}", typeList, airlineStringList);
         List<AirportType> airportTypeList = ValidationUtils.resolveTypeList(typeList);
@@ -59,15 +57,15 @@ public class AirportController {
 
     @GetMapping(Path.AIRPORTS)
     public PagedResponse<Airport> getPagedAirports(
-            @RequestParam(name = ParameterNames.COUNTRY_CODE_PARAM_NAME, required = false) String countryCodeString,
-            @RequestParam(name = ParameterNames.TYPE_PARAM_NAME, required = false) List<String> typeList,
-            @RequestParam(name = ParameterNames.AIRLINE_PARAM_NAME, required = false) List<String> airlineStringList,
+            @RequestParam(name = ParameterNames.COUNTRY_CODE, required = false) String countryCodeString,
+            @RequestParam(name = ParameterNames.TYPE, required = false) List<String> typeList,
+            @RequestParam(name = ParameterNames.AIRLINE, required = false) List<String> airlineStringList,
             @RequestParam(name = ParameterNames.SIZE, defaultValue = "100") String pageSizeString,
             @RequestParam(name = ParameterNames.PAGE, defaultValue = "0") String pageNumberString) {
         LOGGER.info("GET /airports called with {}:{}, {}:{}, {}:{}, {}:{}, {}:{}",
-                ParameterNames.COUNTRY_CODE_PARAM_NAME,countryCodeString,
-                ParameterNames.TYPE_PARAM_NAME,typeList,
-                ParameterNames.AIRLINE_PARAM_NAME,airlineStringList,
+                ParameterNames.COUNTRY_CODE,countryCodeString,
+                ParameterNames.TYPE,typeList,
+                ParameterNames.AIRLINE,airlineStringList,
                 ParameterNames.SIZE,pageSizeString,
                 ParameterNames.PAGE,pageNumberString);
         AirportQuery airportQuery = AirportQuery.builder().build();
@@ -93,9 +91,9 @@ public class AirportController {
 
     @GetMapping(Path.AIRPORT_BY_IATA)
     @Cacheable(value = "airportCache", key = "#iata")
-    public Airport getAirportByIata(@PathVariable(ParameterNames.IATA_PARAM_NAME) String iata) {
+    public Airport getAirportByIata(@PathVariable(ParameterNames.IATA) String iata) {
         LOGGER.info("GET /airports/{}", iata);
-        iata = ValidationUtils.validateIataToUpperCase(iata,airportsService,ParameterNames.IATA_PARAM_NAME,false);
+        iata = ValidationUtils.validateIataToUpperCase(iata,airportsService,ParameterNames.IATA,false);
         Airport response = airportsService.getByIata(iata);
         LOGGER.debug("GET airports response: '{}'", response);
         return response;
@@ -104,25 +102,25 @@ public class AirportController {
     @GetMapping(Path.NEARBY_AIRPORTS)
     @Cacheable("nearbyAirportsCache")
     // TODO: add param for kilometer radius
-    public List<Airport> nearbyAirports(@RequestParam(value = ParameterNames.LATITUDE_PARAM_NAME,required = false)
+    public List<Airport> nearbyAirports(@RequestParam(value = ParameterNames.LATITUDE,required = false)
                                             String latitudeString,
-                                        @RequestParam(value = ParameterNames.LONGITUDE_PARAM_NAME, required = false)
+                                        @RequestParam(value = ParameterNames.LONGITUDE, required = false)
                                             String longitudeString,
-                                        @RequestParam(value = ParameterNames.IATA_PARAM_NAME, required = false)
+                                        @RequestParam(value = ParameterNames.IATA, required = false)
                                             String iataString,
-                                        @RequestParam(name = ParameterNames.LIMIT_PARAM_NAME,defaultValue = "5")
+                                        @RequestParam(name = ParameterNames.LIMIT,defaultValue = "5")
                                             String limitString,
-                                        @RequestParam(name = ParameterNames.TYPE_PARAM_NAME, required = false)
+                                        @RequestParam(name = ParameterNames.TYPE, required = false)
                                             List<String> typeList,
-                                        @RequestParam(name = ParameterNames.AIRLINE_PARAM_NAME, required = false)
+                                        @RequestParam(name = ParameterNames.AIRLINE, required = false)
                                             List<String> airlineStringList) {
         LOGGER.info("GET /nearby-airports called with {}:{}, {}:{}, {}:{}, {}:{}, {}:{}, {}:{}",
-                ParameterNames.LATITUDE_PARAM_NAME,latitudeString,
-                ParameterNames.LONGITUDE_PARAM_NAME,longitudeString,
-                ParameterNames.IATA_PARAM_NAME,iataString,
-                ParameterNames.LIMIT_PARAM_NAME,limitString,
-                ParameterNames.TYPE_PARAM_NAME,typeList,
-                ParameterNames.AIRLINE_PARAM_NAME,airlineStringList);
+                ParameterNames.LATITUDE,latitudeString,
+                ParameterNames.LONGITUDE,longitudeString,
+                ParameterNames.IATA,iataString,
+                ParameterNames.LIMIT,limitString,
+                ParameterNames.TYPE,typeList,
+                ParameterNames.AIRLINE,airlineStringList);
 
         boolean hasIataParam = iataString != null;
         boolean hasLngLatParams = latitudeString != null | longitudeString != null;
@@ -131,25 +129,25 @@ public class AirportController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     String.format("Cannot specify both %s and %s/%s parameters. " +
                                     "Use %s for nearby airport OR %s/%s for nearby coordinates",
-                            ParameterNames.IATA_PARAM_NAME,
-                            ParameterNames.LATITUDE_PARAM_NAME,ParameterNames.LONGITUDE_PARAM_NAME,
-                            ParameterNames.IATA_PARAM_NAME,
-                            ParameterNames.LATITUDE_PARAM_NAME,ParameterNames.LONGITUDE_PARAM_NAME));
+                            ParameterNames.IATA,
+                            ParameterNames.LATITUDE,ParameterNames.LONGITUDE,
+                            ParameterNames.IATA,
+                            ParameterNames.LATITUDE,ParameterNames.LONGITUDE));
         }
 
         List<AirportType> airportTypeList = ValidationUtils.resolveTypeList(typeList);
         List<Airline> airlineList = ValidationUtils.resolveAirlineStringList(airlineStringList);
-        int limit = ValidationUtils.validateAndGetInteger(ParameterNames.LIMIT_PARAM_NAME,limitString);
+        int limit = ValidationUtils.validateAndGetInteger(ParameterNames.LIMIT,limitString);
 
         if (hasLngLatParams) {
-            Double latitude = ValidationUtils.validateAndGetDouble(ParameterNames.LATITUDE_PARAM_NAME, latitudeString);
-            Double longitude = ValidationUtils.validateAndGetDouble(ParameterNames.LONGITUDE_PARAM_NAME, longitudeString);
+            Double latitude = ValidationUtils.validateAndGetDouble(ParameterNames.LATITUDE, latitudeString);
+            Double longitude = ValidationUtils.validateAndGetDouble(ParameterNames.LONGITUDE, longitudeString);
             List<Airport> response = airportsService.getByDistance(latitude,longitude,limit,airportTypeList,airlineList);
             LOGGER.debug("GET nearby response: '{}'", response);
             return response;
         }
 
-        String iata = ValidationUtils.validateIataToUpperCase(iataString,airportsService,ParameterNames.IATA_PARAM_NAME,true);
+        String iata = ValidationUtils.validateIataToUpperCase(iataString,airportsService,ParameterNames.IATA,true);
         return airportsService.getNearbyAirport(iata,limit,airportTypeList,airlineList);
     }
 }

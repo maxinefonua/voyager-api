@@ -23,7 +23,6 @@ import org.voyager.api.service.FlightService;
 import org.voyager.api.service.RouteService;
 import org.voyager.api.validate.ValidationUtils;
 import org.voyager.commons.model.response.PagedResponse;
-
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -40,13 +39,13 @@ public class FlightsController {
 
     @GetMapping(Path.FLIGHTS)
     public PagedResponse<Flight> getFlights(
-            @RequestParam(required = false,name = ParameterNames.ROUTE_ID_PARAM_NAME)
+            @RequestParam(required = false,name = ParameterNames.ROUTE_ID)
                 List<String> routeIdStringList,
-            @RequestParam(required = false, name = ParameterNames.FLIGHT_NUMBER_PARAM_NAME)
+            @RequestParam(required = false, name = ParameterNames.FLIGHT_NUMBER)
                 String flightNumberString,
-            @RequestParam(required = false, name = ParameterNames.AIRLINE_PARAM_NAME)
+            @RequestParam(required = false, name = ParameterNames.AIRLINE)
                 List<String> airlineStringList,
-            @RequestParam(name = ParameterNames.IS_ACTIVE_PARAM_NAME, defaultValue = "true")
+            @RequestParam(name = ParameterNames.IS_ACTIVE, defaultValue = "true")
                 String isActiveString,
             @RequestParam(name = ParameterNames.START, defaultValue = "now")
                 String startString,
@@ -57,10 +56,10 @@ public class FlightsController {
             @RequestParam(name = ParameterNames.SIZE, defaultValue = "100")
                 String pageSizeString) {
         LOGGER.info("GET {} with {}:{}, {}:{}, {}:{}, {}:{}, {}:{}, {}:{}, {}:{}, {}:{}", Path.FLIGHTS,
-                ParameterNames.ROUTE_ID_PARAM_NAME, routeIdStringList,
-                ParameterNames.FLIGHT_NUMBER_PARAM_NAME, flightNumberString,
-                ParameterNames.AIRLINE_PARAM_NAME, airlineStringList,
-                ParameterNames.IS_ACTIVE_PARAM_NAME,isActiveString,
+                ParameterNames.ROUTE_ID, routeIdStringList,
+                ParameterNames.FLIGHT_NUMBER, flightNumberString,
+                ParameterNames.AIRLINE, airlineStringList,
+                ParameterNames.IS_ACTIVE,isActiveString,
                 ParameterNames.START,startString, ParameterNames.END,endString,
                 ParameterNames.PAGE,pageString,ParameterNames.SIZE,pageSizeString);
 
@@ -71,8 +70,8 @@ public class FlightsController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     String.format("Cannot specify both %s and %s parameters. " +
                                     "Use %s for airline flights OR %s for flights with given flight number",
-                            ParameterNames.AIRLINE_PARAM_NAME, ParameterNames.FLIGHT_NUMBER_PARAM_NAME,
-                            ParameterNames.AIRLINE_PARAM_NAME, ParameterNames.FLIGHT_NUMBER_PARAM_NAME));
+                            ParameterNames.AIRLINE, ParameterNames.FLIGHT_NUMBER,
+                            ParameterNames.AIRLINE, ParameterNames.FLIGHT_NUMBER));
         }
 
         List<Integer> routeIdList = null;
@@ -92,7 +91,7 @@ public class FlightsController {
         } else {
             endTime = ValidationUtils.validateAndGetZDT(ParameterNames.END,endString);
         }
-        Boolean isActive = ValidationUtils.validateAndGetBoolean(ParameterNames.IS_ACTIVE_PARAM_NAME,isActiveString);
+        Boolean isActive = ValidationUtils.validateAndGetBoolean(ParameterNames.IS_ACTIVE,isActiveString);
         int page = ValidationUtils.validateAndGetInteger(ParameterNames.PAGE,pageString);
         int pageSize = ValidationUtils.validateAndGetInteger(ParameterNames.SIZE,pageSizeString);
 
@@ -122,24 +121,24 @@ public class FlightsController {
     }
 
     @GetMapping(Path.FLIGHT_BY_ID)
-    public Flight getFlight(@PathVariable(name = ParameterNames.ID_PATH_VAR_NAME) String idString) {
-        LOGGER.info("GET {} with {}:{}",Path.FLIGHT_BY_ID,ParameterNames.ID_PATH_VAR_NAME,idString);
-        Integer id = ValidationUtils.validateAndGetInteger(ParameterNames.ID_PATH_VAR_NAME,idString);
+    public Flight getFlight(@PathVariable(name = ParameterNames.ID) String idString) {
+        LOGGER.info("GET {} with {}:{}",Path.FLIGHT_BY_ID,ParameterNames.ID,idString);
+        Integer id = ValidationUtils.validateAndGetInteger(ParameterNames.ID,idString);
         Option<Flight> flightOption = flightService.getById(id);
         if (flightOption.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND,
                 MessageConstants.buildResourceNotFoundForPathVariableMessage(
-                        ParameterNames.ID_PATH_VAR_NAME,String.valueOf(id)));
+                        ParameterNames.ID,String.valueOf(id)));
         return flightOption.get();
     }
 
     @GetMapping(Path.FLIGHT)
-    public Flight getFlight(@RequestParam(name = ParameterNames.ROUTE_ID_PARAM_NAME) String routeIdString,
-                            @RequestParam(name = ParameterNames.FLIGHT_NUMBER_PARAM_NAME) String flightNumber,
+    public Flight getFlight(@RequestParam(name = ParameterNames.ROUTE_ID) String routeIdString,
+                            @RequestParam(name = ParameterNames.FLIGHT_NUMBER) String flightNumber,
                             @RequestParam(name = ParameterNames.ON_DAY) String onDayString,
                             @RequestParam(name = ParameterNames.ZONE_ID) String zoneIdString) {
         LOGGER.info("GET {} with {}:{}, {}:{}, {}:{}, {}:{}",Path.FLIGHT,
-                ParameterNames.ROUTE_ID_PARAM_NAME,routeIdString,
-                ParameterNames.FLIGHT_NUMBER_PARAM_NAME,flightNumber,
+                ParameterNames.ROUTE_ID,routeIdString,
+                ParameterNames.FLIGHT_NUMBER,flightNumber,
                 ParameterNames.ON_DAY,onDayString,
                 ParameterNames.ZONE_ID,zoneIdString);
 
@@ -151,8 +150,8 @@ public class FlightsController {
         if (flightOption.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
                     MessageConstants.buildResourceNotFoundForMultiParameterMessage(
-                            ParameterNames.ROUTE_ID_PARAM_NAME,routeIdString,
-                            ParameterNames.FLIGHT_NUMBER_PARAM_NAME,flightNumber));
+                            ParameterNames.ROUTE_ID,routeIdString,
+                            ParameterNames.FLIGHT_NUMBER,flightNumber));
         }
         return flightOption.get();
     }

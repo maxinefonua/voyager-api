@@ -30,18 +30,16 @@ public class GeoNamesController {
 
     @GetMapping(GeoNames.NEARBY_PLACES)
     @Cacheable("geoNearbyVoyager")
-    public ResponseEntity<String> findNearbyPlaces(@RequestParam(name = ParameterNames.LATITUDE_PARAM_NAME)
-                                                       String latitudeString,
-                                                   @RequestParam(name = ParameterNames.LONGITUDE_PARAM_NAME)
-                                                   String longitudeString,
-                                                   @RequestParam(name = GeoNames.ParameterNames.RADIUS,
-                                                   required = false) String radiusString) {
+    public ResponseEntity<String> findNearbyPlaces(
+            @RequestParam(name = ParameterNames.LATITUDE) String latitudeString,
+            @RequestParam(name = ParameterNames.LONGITUDE) String longitudeString,
+            @RequestParam(name = GeoNames.ParameterNames.RADIUS, required = false) String radiusString) {
         LOGGER.info("non-cached GET {} with latitude: {}, longitude: {}, radius: {}",GeoNames.NEARBY_PLACES,
                 latitudeString,longitudeString,radiusString);
         Double latitude = ValidationUtils.validateAndGetDouble(
-                ParameterNames.LATITUDE_PARAM_NAME,latitudeString);
+                ParameterNames.LATITUDE,latitudeString);
         Double longitude = ValidationUtils.validateAndGetDouble(
-                ParameterNames.LONGITUDE_PARAM_NAME,longitudeString);
+                ParameterNames.LONGITUDE,longitudeString);
 
         Integer radius = null;
         if (StringUtils.isNotBlank(radiusString)) {
@@ -56,16 +54,15 @@ public class GeoNamesController {
 
     @GetMapping(GeoNames.TIMEZONE)
     @Cacheable("geoTimezoneVoyager")
-    public ResponseEntity<String> getTimezone(@RequestParam(name = ParameterNames.LATITUDE_PARAM_NAME)
-                                           String latitudeString,
-                                          @RequestParam(name = ParameterNames.LONGITUDE_PARAM_NAME)
-                                           String longitudeString) {
+    public ResponseEntity<String> getTimezone(
+            @RequestParam(name = ParameterNames.LATITUDE) String latitudeString,
+            @RequestParam(name = ParameterNames.LONGITUDE) String longitudeString) {
         LOGGER.info("non-cached GET {} with latitude: {}, longitude: {}",GeoNames.TIMEZONE,
                 latitudeString, longitudeString);
         Double latitude = ValidationUtils.validateAndGetDouble(
-                ParameterNames.LATITUDE_PARAM_NAME,latitudeString);
+                ParameterNames.LATITUDE,latitudeString);
         Double longitude = ValidationUtils.validateAndGetDouble(
-                ParameterNames.LONGITUDE_PARAM_NAME,longitudeString);
+                ParameterNames.LONGITUDE,longitudeString);
 
         GeoTimezoneQuery geoTimezoneQuery = GeoTimezoneQuery.builder().latitude(latitude)
                 .longitude(longitude).build();
@@ -74,11 +71,12 @@ public class GeoNamesController {
 
     @GetMapping(GeoNames.SEARCH)
     @Cacheable("geoSearchVoyager")
-    public ResponseEntity<String> search(@RequestParam(name = GeoNames.ParameterNames.QUERY) String query,
-                                         @RequestParam(name = GeoNames.ParameterNames.IS_NAME_REQUIRED,
-                                         required = false) String isNameRequiredString,
-                                         @RequestParam(name = GeoNames.ParameterNames.FEATURE_CLASS,
-                                         required = false) String featureClassString)  {
+    public ResponseEntity<String> search(
+            @RequestParam(name = GeoNames.ParameterNames.QUERY) String query,
+            @RequestParam(name = GeoNames.ParameterNames.IS_NAME_REQUIRED,
+                    required = false) String isNameRequiredString,
+            @RequestParam(name = GeoNames.ParameterNames.FEATURE_CLASS,
+                    required = false) String featureClassString)  {
         LOGGER.info("non-cached GET {} with query: {}, isNameRequired: {}, featureClass: {}",GeoNames.SEARCH,
                 query,isNameRequiredString,featureClassString);
         ValidationUtils.validateQuery(query);
@@ -98,10 +96,9 @@ public class GeoNamesController {
 
     @GetMapping(GeoNames.FETCH_BY_ID)
     @Cacheable("geoFetchFullVoyager")
-    public ResponseEntity<String> fetchFull(@PathVariable(name = ParameterNames.ID_PATH_VAR_NAME)
-                                                 String geoIdString)  {
+    public ResponseEntity<String> fetchFull(@PathVariable(name = ParameterNames.ID) String geoIdString)  {
         LOGGER.info("non-cached GET {}/{}",GeoNames.FETCH, geoIdString);
-        Long geoId = ValidationUtils.validateAndGetLong(ParameterNames.ID_PATH_VAR_NAME,
+        Long geoId = ValidationUtils.validateAndGetLong(ParameterNames.ID,
                 geoIdString,false);
         return geoNameService.getFull(geoId,String.class);
     }

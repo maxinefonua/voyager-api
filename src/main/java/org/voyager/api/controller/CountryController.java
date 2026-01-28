@@ -25,7 +25,7 @@ public class CountryController {
 
     @GetMapping
     public List<Country> getCountries(
-            @RequestParam(name = ParameterNames.CONTINENT_PARAM_NAME, required = false) List<String> continentStringList) {
+            @RequestParam(name = ParameterNames.CONTINENT, required = false) List<String> continentStringList) {
         LOGGER.info("GET countries called with continentStringList: '{}'", continentStringList);
         List<Continent> continentList = ValidationUtils.resolveContinentStringList(continentStringList);
         List<Country> response = countryService.getAll(continentList);
@@ -34,7 +34,7 @@ public class CountryController {
     }
 
     @GetMapping("/{countryCode}")
-    public Country getCountry(@PathVariable(name = ParameterNames.COUNTRY_CODE_PARAM_NAME) String countryCodeString) {
+    public Country getCountryByCode(@PathVariable(name = ParameterNames.COUNTRY_CODE) String countryCodeString) {
         LOGGER.info("GET countries/{} called", countryCodeString);
         String validatedCountryCode = ValidationUtils.validateAndGetCountryCode(false,countryCodeString,countryService);
         Country response = countryService.getCountry(validatedCountryCode);

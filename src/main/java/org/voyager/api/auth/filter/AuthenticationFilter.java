@@ -14,7 +14,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.GenericFilterBean;
 import org.voyager.api.auth.service.AuthenticationService;
 import org.voyager.commons.constants.Path;
-
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Set;

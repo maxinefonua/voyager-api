@@ -99,36 +99,38 @@ public class MessageConstants {
     private static final String VALID_LIMIT_CONSTRAINT = "Must be a valid integer greater than 0";
 
     private static final String IATA_RESOURCE_NOT_FOUND = "Information on given IATA code is currently unavailable";
+    private static final String COUNTRY_RESOURCE_NOT_FOUND = "No information on given country code available";
 
     private static final String MISSING_SOURCE_CONSTRAINT = "Must also include 'source' parameter when providing a 'sourceId'";
 
     private static final Map<String,String> MISSING_PARAMETER_MAP = Map.ofEntries(
-            Map.entry(ParameterNames.SOURCE_PARAM_NAME,MISSING_SOURCE_CONSTRAINT)
+            Map.entry(ParameterNames.SOURCE,MISSING_SOURCE_CONSTRAINT)
     );
 
     private static final Map<String,String> NOT_FOUND_MAP = Map.ofEntries(
-            Map.entry(ParameterNames.IATA_PARAM_NAME,IATA_RESOURCE_NOT_FOUND),
-            Map.entry(ParameterNames.ORIGIN_PARAM_NAME,IATA_RESOURCE_NOT_FOUND),
-            Map.entry(ParameterNames.DESTINATION_PARAM_NAME,IATA_RESOURCE_NOT_FOUND),
-            Map.entry(ParameterNames.EXCLUDE_PARAM_NAME,IATA_RESOURCE_NOT_FOUND),
-            Map.entry(ParameterNames.AIRPORTS_PROPERTY_NAME,IATA_RESOURCE_NOT_FOUND)
+            Map.entry(ParameterNames.IATA,IATA_RESOURCE_NOT_FOUND),
+            Map.entry(ParameterNames.ORIGIN,IATA_RESOURCE_NOT_FOUND),
+            Map.entry(ParameterNames.DESTINATION,IATA_RESOURCE_NOT_FOUND),
+            Map.entry(ParameterNames.EXCLUDE,IATA_RESOURCE_NOT_FOUND),
+            Map.entry(ParameterNames.AIRPORTS,IATA_RESOURCE_NOT_FOUND),
+            Map.entry(ParameterNames.COUNTRY_CODE,COUNTRY_RESOURCE_NOT_FOUND)
             );
 
     private static final Map<String,String> CONSTRAINT_MAP = Map.ofEntries(
-            Map.entry(ParameterNames.FLIGHT_NUMBER_PARAM_NAME, VALID_FLIGHT_NUMBER_CONSTRAINT),
-            Map.entry(ParameterNames.COUNTRY_CODE_PARAM_NAME,VALID_COUNTRY_CODE_CONSTRAINT),
-            Map.entry(ParameterNames.AIRLINE_PARAM_NAME,VALID_AIRLINE_CONSTRAINT),
-            Map.entry(ParameterNames.TYPE_PARAM_NAME,VALID_TYPE_CONSTRAINT),
-            Map.entry(ParameterNames.SOURCE_PARAM_NAME,VALID_SOURCE_PROPERTY_CONSTRAINT),
-            Map.entry(ParameterNames.SOURCE_ID_PARAM_NAME,VALID_SOURCE_ID_CONSTRAINT),
-            Map.entry(ParameterNames.IATA_PARAM_NAME,VALID_IATA_CONSTRAINT),
-            Map.entry(ParameterNames.ID_PATH_VAR_NAME,VALID_ID_CONSTRAINT),
-            Map.entry(ParameterNames.ORIGIN_PARAM_NAME,VALID_IATA_CONSTRAINT),
-            Map.entry(ParameterNames.DESTINATION_PARAM_NAME,VALID_IATA_CONSTRAINT),
-            Map.entry(ParameterNames.EXCLUDE_PARAM_NAME,VALID_IATA_CONSTRAINT),
-            Map.entry(ParameterNames.AIRPORTS_PROPERTY_NAME,VALID_AIRPORTS_PROPERTY_CONSTRAINT),
-            Map.entry(ParameterNames.CONTINENT_PARAM_NAME,VALID_CONTINENT_CONSTRAINT),
-            Map.entry(ParameterNames.LIMIT_PARAM_NAME,VALID_LIMIT_CONSTRAINT),
+            Map.entry(ParameterNames.FLIGHT_NUMBER, VALID_FLIGHT_NUMBER_CONSTRAINT),
+            Map.entry(ParameterNames.COUNTRY_CODE,VALID_COUNTRY_CODE_CONSTRAINT),
+            Map.entry(ParameterNames.AIRLINE,VALID_AIRLINE_CONSTRAINT),
+            Map.entry(ParameterNames.TYPE,VALID_TYPE_CONSTRAINT),
+            Map.entry(ParameterNames.SOURCE,VALID_SOURCE_PROPERTY_CONSTRAINT),
+            Map.entry(ParameterNames.SOURCE_ID,VALID_SOURCE_ID_CONSTRAINT),
+            Map.entry(ParameterNames.IATA,VALID_IATA_CONSTRAINT),
+            Map.entry(ParameterNames.ID,VALID_ID_CONSTRAINT),
+            Map.entry(ParameterNames.ORIGIN,VALID_IATA_CONSTRAINT),
+            Map.entry(ParameterNames.DESTINATION,VALID_IATA_CONSTRAINT),
+            Map.entry(ParameterNames.EXCLUDE,VALID_IATA_CONSTRAINT),
+            Map.entry(ParameterNames.AIRPORTS,VALID_AIRPORTS_PROPERTY_CONSTRAINT),
+            Map.entry(ParameterNames.CONTINENT,VALID_CONTINENT_CONSTRAINT),
+            Map.entry(ParameterNames.LIMIT,VALID_LIMIT_CONSTRAINT),
             Map.entry(ParameterNames.DEPARTURE_ZDT,"Must be in ISO-8601 format (e.g., 2025-07-04T02:30:00Z)")
     );
 

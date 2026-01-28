@@ -11,4 +11,5 @@ public interface CountryService {
     Country addCountry(@Valid CountryForm countryForm);
     boolean countryCodeExists(String countryCode);
     Country getCountry(String countryCode);
+    void deleteCountry(String countryCode);
 }

@@ -91,7 +91,7 @@ public class AirportsServiceImpl implements AirportsService {
         } else {
             throw new IllegalStateException("one field must have been set");
         }
-        return matches;
+        return matches.stream().sorted().toList();
     }
 
     @Override
