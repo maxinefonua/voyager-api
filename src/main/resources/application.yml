@@ -21,16 +21,35 @@ spring:
     url: jdbc:postgresql://${POSTGRES_HOST:}:${POSTGRES_PORT:}/${POSTGRES_DB:}
     username: ${POSTGRES_USER:}
     password: ${POSTGRES_PASSWORD:}
+    hikari:
+      # Connection pool settings
+      maximum-pool-size: 10  # Start with a reasonable number
+      minimum-idle: 3
+      connection-timeout: 30000  # 30 seconds
+      idle-timeout: 600000  # 10 minutes
+      max-lifetime: 1800000  # 30 minutes
+      pool-name: MainPool
+
+      # PostgreSQL specific optimizations
+      connection-init-sql: "SELECT 1"
+      validation-timeout: 5000
+      leak-detection-threshold: 60000  # Detect leaks after 60 second
   admin:
     datasource:
       url: jdbc:postgresql://${POSTGRES_HOST:}:${POSTGRES_PORT:}/${POSTGRES_DB:}
       username: ${POSTGRES_ADMIN_USER:}
       password: ${POSTGRES_ADMIN_PASSWORD:}
+      hikari:
+        maximum-pool-size: 5  # Smaller pool for admin
+        pool-name: AdminPool
   tests:
     datasource:
       url: jdbc:postgresql://${POSTGRES_HOST:}:${POSTGRES_PORT:}/${POSTGRES_DB:}
       username: ${POSTGRES_TESTS_USER:}
       password: ${POSTGRES_TESTS_PASSWORD:}
+      hikari:
+        maximum-pool-size: 5  # Smaller pool for tests
+        pool-name: TestsPool
 
 server:
   port: ${SERVER_PORT:8080}

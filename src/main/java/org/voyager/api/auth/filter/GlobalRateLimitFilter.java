@@ -16,7 +16,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.GenericFilterBean;
 import org.voyager.api.auth.ApiKeyAuthentication;
-
 import java.io.IOException;
 import java.io.PrintWriter;
 

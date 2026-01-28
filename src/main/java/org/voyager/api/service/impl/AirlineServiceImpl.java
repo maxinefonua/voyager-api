@@ -13,14 +13,23 @@ import org.springframework.web.server.ResponseStatusException;
 import org.voyager.api.error.MessageConstants;
 import org.voyager.api.model.entity.AirlineEntity;
 import org.voyager.api.repository.admin.AdminAirlineAirportRepository;
-import org.voyager.commons.model.airline.*;
+import org.voyager.commons.model.airline.Airline;
+import org.voyager.commons.model.airline.AirlineBatchUpsert;
+import org.voyager.commons.model.airline.AirlineBatchUpsertResult;
+import org.voyager.commons.model.airline.AirlineQuery;
+import org.voyager.commons.model.airline.AirlinePathQuery;
+import org.voyager.commons.model.airline.AirlineAirportQuery;
 import org.voyager.api.model.entity.AirlineAirportEntity;
 import org.voyager.api.repository.primary.AirlineAirportRepository;
 import org.voyager.api.repository.admin.AdminAirlineRepository;
 import org.voyager.api.service.AirlineService;
 import org.voyager.api.service.utils.MapperUtils;
-
-import java.util.*;
+import java.util.List;
+import java.util.Set;
+import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.Comparator;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import static org.voyager.api.service.utils.ServiceUtils.handleJPAExceptions;
@@ -140,7 +149,6 @@ public class AirlineServiceImpl implements AirlineService {
                 .build();
     }
 
-    @Override
     @Transactional("adminTransactionManager")
     public int batchDelete(Airline airline) {
         return handleJPAExceptions(()-> adminAirlineAirportRepository.deleteByAirline(airline));
