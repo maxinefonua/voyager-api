@@ -122,6 +122,11 @@
             <artifactId>voyager-models</artifactId>
             <version>${voyager-models.version}</version>
         </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+            <version>1.16.4</version>
+        </dependency>
     </dependencies>
 
     <build>

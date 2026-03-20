@@ -74,6 +74,16 @@ cors:
     - "http://localhost:*"
     - "https://localhost:*"
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
 app:
   version: @project.version@
   name: @project.name@
