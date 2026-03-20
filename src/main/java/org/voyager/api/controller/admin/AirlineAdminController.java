@@ -34,14 +34,4 @@ public class AirlineAdminController {
         ValidationUtils.validateAirlineBatchUpsert(airlineBatchUpsert,bindingResult);
         return airlineService.batchUpsert(airlineBatchUpsert);
     }
-
-    @DeleteMapping
-    public Integer batchDeleteAirline(
-            @RequestParam(name = ParameterNames.AIRLINE) String airlineString) {
-        LOGGER.info("DELETE {} called with airlineString: '{}'", Path.AIRLINES, airlineString);
-        Airline airline = ValidationUtils.validateAndGetAirline(airlineString);
-        Integer deleted = airlineService.batchDelete(airline);
-        LOGGER.debug("response: {} deleted", deleted);
-        return deleted;
-    }
 }

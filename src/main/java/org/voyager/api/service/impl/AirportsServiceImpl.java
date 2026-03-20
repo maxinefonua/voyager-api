@@ -26,8 +26,6 @@ import org.voyager.api.repository.primary.AirlineAirportRepository;
 import org.voyager.api.repository.primary.AirportRepository;
 import org.voyager.api.service.AirportsService;
 import org.voyager.api.service.utils.MapperUtils;
-import org.voyager.commons.model.flight.FlightAirlineQuery;
-import org.voyager.commons.model.flight.FlightQuery;
 import org.voyager.commons.model.response.PagedResponse;
 
 import java.util.List;

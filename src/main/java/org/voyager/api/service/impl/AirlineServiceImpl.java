@@ -148,17 +148,4 @@ public class AirlineServiceImpl implements AirlineService {
                 .updatedCount(updates)
                 .build();
     }
-
-    @Transactional("adminTransactionManager")
-    public int batchDelete(Airline airline) {
-        return handleJPAExceptions(()-> adminAirlineAirportRepository.deleteByAirline(airline));
-    }
-
-    @Override
-    public boolean hasAnyActiveAirlineForAllAirports(List<Airline> airlineList, List<String> iataList) {
-        return handleJPAExceptions(() ->
-                airlineAirportRepository.existsByAnyAirlineInAndAllAirportsIn(
-                        iataList.size(), iataList,
-                        true, airlineList));
-    }
 }
