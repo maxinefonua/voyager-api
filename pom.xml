@@ -13,7 +13,7 @@
 
     <groupId>org.voyager</groupId>
     <artifactId>voyager-api</artifactId>
-    <version>0.1.12</version>
+    <version>0.1.13</version>
     <name>Voyager API</name>
     <description>Backend services for data ingestion and Voyager's web app</description>
     <packaging>jar</packaging>
@@ -121,6 +121,11 @@
             <groupId>org.voyager</groupId>
             <artifactId>voyager-models</artifactId>
             <version>${voyager-models.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+            <version>1.16.4</version>
         </dependency>
     </dependencies>
 
