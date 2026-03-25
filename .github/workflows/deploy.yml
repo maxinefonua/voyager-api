@@ -66,7 +66,7 @@ jobs:
         mvn help:effective-pom -Doutput=effective-pom.xml || echo "Continuing with build..."
     
     - name: Build with Maven
-      run: mvn clean package -DskipTests
+      run: mvn clean -U package -DskipTests
     
     - name: Verify JAR file
       run: |
@@ -110,7 +110,7 @@ jobs:
         scp -o StrictHostKeyChecking=no "/tmp/$NEW_JAR_NAME" ec2-user@$EC2_HOST:/tmp/
         
         # Run deployment script
-        ssh -o StrictHostKeyChecking=no ec2-user@$EC2_HOST "bash /home/ec2-user/api/scripts/deploy.sh"
+        ssh -o StrictHostKeyChecking=no ec2-user@$EC2_HOST "bash /home/ec2-user/scripts/start-service-and-monitoring-cleanup-old.sh"
         
         # Clean up
         rm -f "/tmp/$NEW_JAR_NAME"
