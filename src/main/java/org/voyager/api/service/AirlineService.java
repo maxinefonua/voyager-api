@@ -9,6 +9,5 @@ public interface AirlineService {
     List<Airline> getAirlines();
     List<Airline> getAirlines(@NonNull AirlineQuery airlineQuery);
     AirlineBatchUpsertResult batchUpsert(@NonNull AirlineBatchUpsert airlineBatchUpsert);
-    int batchDelete(Airline airline);
-    boolean hasAnyActiveAirlineForAllAirports(List<Airline> airlineList, List<String> iataList);
+    Integer deactivateAirline(@NonNull Airline airline);
 }

@@ -74,7 +74,7 @@ public class RouteAdminController {
     @PatchMapping(Path.Admin.SYNC)
     public Integer batchUpdate(@RequestBody(required = false) RouteSyncBatchUpdate routeSyncBatchUpdate,
                                BindingResult bindingResult) {
-        LOGGER.info("PATCH {} of {}", Path.Admin.ROUTES.concat(Path.Admin.SYNC),routeSyncBatchUpdate);
+        LOGGER.info("PATCH {}{} of {}", Path.Admin.ROUTES,Path.Admin.SYNC,routeSyncBatchUpdate);
         ValidationUtils.validate(routeSyncBatchUpdate,bindingResult);
         return routeSyncService.batchUpdate(routeSyncBatchUpdate);
     }
@@ -83,7 +83,7 @@ public class RouteAdminController {
     public RouteSync patchRouteSync(@PathVariable(name = ParameterNames.ID) String idString,
                                     @RequestBody(required = false) RouteSyncPatch routeSyncPatch,
                                     BindingResult bindingResult) {
-        LOGGER.info("PATCH {} of {}", Path.Admin.ROUTES.concat(Path.Admin.SYNC).concat("/").concat(idString),routeSyncPatch);
+        LOGGER.info("PATCH {}/{} of {}", Path.Admin.ROUTES.concat(Path.Admin.SYNC),idString,routeSyncPatch);
         Integer routeId = ValidationUtils.validateAndGetRouteId(idString,routeService);
         ValidationUtils.validate(routeSyncPatch,bindingResult);
         return routeSyncService.patch(routeId,routeSyncPatch);
