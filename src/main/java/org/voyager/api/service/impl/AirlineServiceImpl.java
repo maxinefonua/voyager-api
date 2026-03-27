@@ -148,4 +148,9 @@ public class AirlineServiceImpl implements AirlineService {
                 .updatedCount(updates)
                 .build();
     }
+
+    @Override
+    public Integer deactivateAirline(@NonNull Airline airline) {
+        return adminAirlineAirportRepository.deactivateAirline(airline);
+    }
 }

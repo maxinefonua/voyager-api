@@ -9,4 +9,5 @@ public interface AirlineService {
     List<Airline> getAirlines();
     List<Airline> getAirlines(@NonNull AirlineQuery airlineQuery);
     AirlineBatchUpsertResult batchUpsert(@NonNull AirlineBatchUpsert airlineBatchUpsert);
+    Integer deactivateAirline(@NonNull Airline airline);
 }
