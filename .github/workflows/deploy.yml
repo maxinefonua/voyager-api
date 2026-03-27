@@ -105,13 +105,18 @@ jobs:
         cp "${{ env.JAR_PATH }}" "/tmp/$NEW_JAR_NAME"
         
         echo "📦 Deploying: $NEW_JAR_NAME"
+
+        # Moving old JAR
+        ssh -o StrictHostKeyChecking=no ec2-user@$EC2_HOST "mkdir /home/ec2-user/api/backup;sudo mv /home/ec2-user/api/voyager-api-*.jar /home/ec2-user/api/backup/"
+        
+        echo "📦 Deploying: $NEW_JAR_NAME"
         
         # Copy using sudo
         scp -o StrictHostKeyChecking=no "/tmp/$NEW_JAR_NAME" ec2-user@$EC2_HOST:/tmp/
         ssh -o StrictHostKeyChecking=no ec2-user@$EC2_HOST "sudo mv /tmp/$NEW_JAR_NAME /home/ec2-user/api"
         
         # Run deployment script
-        ssh -o StrictHostKeyChecking=no ec2-user@$EC2_HOST "bash /home/ec2-user/scripts/start-service-and-monitoring-cleanup-old.sh /home/ec2-user/api/$NEW_JAR_NAME"
+        ssh -o StrictHostKeyChecking=no ec2-user@$EC2_HOST "bash /home/ec2-user/scripts/start-service-and-monitoring-cleanup-old.sh"
         
         # Clean up local temp file
         rm -f "/tmp/$NEW_JAR_NAME"
