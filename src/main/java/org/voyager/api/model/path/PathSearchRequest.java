@@ -12,7 +12,7 @@ import java.util.Set;
 public class PathSearchRequest {
     private Set<String> origins;
     private Set<String> destinations;
-    private Set<String> excludeDestinations;
+    private Set<String> excludeAirports;
     private Set<String> excludeFlightNumbers;
     private Set<Integer> excludeRouteIds;
     private List<Airline> airlines;

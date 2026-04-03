@@ -119,7 +119,7 @@ public class PathController {
         return pathSearchService.searchPaths(PathSearchRequest.builder()
                 .origins(originSet)
                 .destinations(destinationSet)
-                .excludeDestinations(excludeAirportCodes)
+                .excludeAirports(excludeAirportCodes)
                 .excludeRouteIds(excludeRouteIds)
                 .excludeFlightNumbers(excludeFlightNumbers)
                 .airlines(airlineList)

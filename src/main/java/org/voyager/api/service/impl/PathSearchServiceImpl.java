@@ -68,7 +68,7 @@ public class PathSearchServiceImpl implements PathSearchService {
         return SearchResponse.builder()
                 .content(paginated)
                 .status(cachedSearchResponse.getStatus())
-                .hasMore(cachedSearchResponse.getStatus().equals(SearchStatus.SEARCHING))
+                .hasMore(cachedSearchResponse.isHasMore())
                 .totalFound(cachedSearchResponse.getContent().size())
                 .size(paginated.size())
                 .build();
@@ -85,10 +85,11 @@ public class PathSearchServiceImpl implements PathSearchService {
                      MessageConstants.INTERNAL_SERVICE_ERROR_GENERIC_MESSAGE);
         } else if (cachedPathResults.getStatus().equals(SearchStatus.SEARCHING)) {
             cachedPathResults = fetchActivePathResults(cachedPathResults,pathCacheKey);
-            if (cachedPathResults.getStatus().equals(SearchStatus.COMPLETE)) {
+            cachedSearchResponse.setHasMore(cachedPathResults.getStatus().equals(SearchStatus.SEARCHING));
+            if (cachedPathResults.getStatus().equals(SearchStatus.COMPLETE) && cachedPathResults.getConnections().size() > cachedSearchResponse.getConverted()) {
                 cachedSearchResponse.setStatus(SearchStatus.CONVERTING);
             } else {
-                cachedSearchResponse.setStatus(cachedSearchResponse.getStatus());
+                cachedSearchResponse.setStatus(cachedPathResults.getStatus());
             }
             cachePaths(pathCacheKey,cachedPathResults);
         }
@@ -106,6 +107,8 @@ public class PathSearchServiceImpl implements PathSearchService {
                 if (cachedPathResults.getStatus().equals(SearchStatus.COMPLETE)) {
                     cachedSearchResponse.setStatus(SearchStatus.CONVERTING);
                 }
+            } else if (!cachedSearchResponse.isHasMore()) {
+                cachedSearchResponse.setStatus(SearchStatus.COMPLETE);
             }
             return cachedSearchResponse;
         } else {
@@ -256,6 +259,8 @@ public class PathSearchServiceImpl implements PathSearchService {
                 .build();
     }
 
+    // TODO: conversion is marking complete before search is complete. if a second conversion is happening, it is not being converted to completion
+    // TODO: if still converting, mark hasMore as TRUE
     private void startBackgroundConversion(List<Path> connectionPaths, PathSearchRequest request, String conversionCacheKey) {
         taskExecutor.execute(() -> {
             Option<Session<PathDetailed>> sessionOption = sessionManager.getConversionSession(conversionCacheKey);
@@ -337,8 +342,7 @@ public class PathSearchServiceImpl implements PathSearchService {
                 comprehensivePathSearchService.streamPaths(
                         request,
                         session::addResult
-                );
-                LOGGER.info("marking complete search session of pathCacheKey {} with {} paths found",
+                );LOGGER.info("marking complete search session of pathCacheKey {} with {} paths found",
                         pathCacheKey,session.getTotalFound());
                 session.markComplete();
             } catch (Exception e) {

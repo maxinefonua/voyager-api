@@ -66,9 +66,9 @@ public class RouteServiceImpl implements RouteService {
                 .orElse(Collections.emptyList());
         List<String> destinationList = Optional.ofNullable(routeQuery.getDestinationList())
                 .orElse(Collections.emptyList());
-        List<String> excludeDestinationList = new ArrayList<>(
-                Optional.ofNullable(routeQuery.getExcludeDestinationSet())
-                        .orElse(Collections.emptySet()));
+        List<String> excludeAirportList = new ArrayList<>(
+                Optional.ofNullable(routeQuery.getExcludeAirportList())
+                        .orElse(Collections.emptyList()));
         List<Integer> excludeRouteIdList = new ArrayList<>(
                 Optional.ofNullable(routeQuery.getExcludeRouteIdSet())
                         .orElse(Collections.emptySet()));
@@ -76,7 +76,7 @@ public class RouteServiceImpl implements RouteService {
         List<RouteEntity> routeEntityList = routeRepository.findRoutes(
                 originList.isEmpty() ? null : originList,
                 destinationList.isEmpty() ? null : destinationList,
-                excludeDestinationList.isEmpty() ? null : excludeDestinationList,
+                excludeAirportList.isEmpty() ? null : excludeAirportList,
                 excludeRouteIdList.isEmpty() ? null : excludeRouteIdList
         );
 
