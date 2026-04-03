@@ -16,7 +16,11 @@ import org.voyager.api.service.AirportsService;
 import org.voyager.api.service.RouteService;
 import org.voyager.api.validate.ValidationUtils;
 import org.voyager.commons.model.route.RouteQuery;
+
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @RestController
 public class RoutesController {
@@ -28,7 +32,9 @@ public class RoutesController {
     @GetMapping(Path.ROUTES)
     public List<Route> getRoutes(
             @RequestParam(name = ParameterNames.ORIGIN, required = false) List<String> originList,
-            @RequestParam(name = ParameterNames.DESTINATION, required = false) List<String> destinationList) {
+            @RequestParam(name = ParameterNames.DESTINATION, required = false) List<String> destinationList,
+            @RequestParam(name = ParameterNames.EXCLUDE, required = false) List<String> excludeAirportList,
+            @RequestParam(name = ParameterNames.EXCLUDE_ROUTE, required = false) List<String> excludeRouteList) {
         RouteQuery routeQuery = null;
         if (originList != null && !originList.isEmpty()) {
             originList = originList.stream().map(origin->
@@ -42,6 +48,20 @@ public class RoutesController {
                             ParameterNames.DESTINATION,true)).toList();
             if (routeQuery == null) routeQuery = RouteQuery.builder().build();
             routeQuery.setDestinationList(destinationList);
+        }
+        // TODO: add functional tests for exclusions
+        if (excludeAirportList != null && !excludeAirportList.isEmpty()) {
+            excludeAirportList = excludeAirportList.stream().map(airportCode->
+                    ValidationUtils.validateIataToUpperCase(airportCode,airportService,
+                            ParameterNames.EXCLUDE,true)).toList();
+            if (routeQuery == null) routeQuery = RouteQuery.builder().build();
+            routeQuery.setExcludeAirportList(excludeAirportList);
+        }
+        if (excludeRouteList != null && !excludeRouteList.isEmpty()) {
+            Set<Integer> excludeRouteSet = excludeRouteList.stream().map(airportCode->
+                    ValidationUtils.validateAndGetRouteId(airportCode,routeService)).collect(Collectors.toSet());
+            if (routeQuery == null) routeQuery = RouteQuery.builder().build();
+            routeQuery.setExcludeRouteIdSet(excludeRouteSet);
         }
         if (routeQuery == null) return routeService.getRoutes();
         return routeService.getRoutes(routeQuery);

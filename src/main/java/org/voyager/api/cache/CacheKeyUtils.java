@@ -10,7 +10,7 @@ public class CacheKeyUtils {
         return String.format("search:%s:%s:%s:%s:%s:%s:%s",
                 sortedJoinString(request.getOrigins()),
                 sortedJoinString(request.getDestinations()),
-                sortedJoinString(request.getExcludeDestinations()),
+                sortedJoinString(request.getExcludeAirports()),
                 sortedJoinString(request.getExcludeFlightNumbers()),
                 sortedJoinString(request.getAirlines().stream()
                         .map(Airline::name).collect(Collectors.toSet())),
@@ -24,7 +24,7 @@ public class CacheKeyUtils {
         return String.format("response:%s:%s:%s:%s:%s:%s:%s",
                 sortedJoinString(request.getOrigins()),
                 sortedJoinString(request.getDestinations()),
-                sortedJoinString(request.getExcludeDestinations()),
+                sortedJoinString(request.getExcludeAirports()),
                 sortedJoinString(request.getExcludeFlightNumbers()),
                 sortedJoinString(request.getAirlines().stream()
                         .map(Airline::name).collect(Collectors.toSet())),
@@ -38,7 +38,7 @@ public class CacheKeyUtils {
         return String.format("response:%s:%s:%s:%s:%s:%s:%s",
                 sortedJoinString(request.getOrigins()),
                 sortedJoinString(request.getDestinations()),
-                sortedJoinString(request.getExcludeDestinations()),
+                sortedJoinString(request.getExcludeAirports()),
                 sortedJoinString(request.getExcludeFlightNumbers()),
                 sortedJoinString(request.getAirlines().stream()
                         .map(Airline::name).collect(Collectors.toSet())),
@@ -49,9 +49,10 @@ public class CacheKeyUtils {
     }
 
     public static String generatePathKey(PathSearchRequest request) {
-        return String.format("search:%s:%s",
+        return String.format("search:%s:%s:exclude:%s",
                 sortedJoinString(request.getOrigins()),
-                sortedJoinString(request.getDestinations())
+                sortedJoinString(request.getDestinations()),
+                sortedJoinString(request.getExcludeAirports())
         );
     }
 

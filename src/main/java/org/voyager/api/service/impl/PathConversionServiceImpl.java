@@ -19,10 +19,7 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Consumer;
 
 @Service
@@ -38,6 +35,13 @@ public class PathConversionServiceImpl implements PathConversionService {
     public void convertStreaming(List<Path> pathList, PathSearchRequest pathSearchRequest, Consumer<PathDetailed> pathConsumer) {
         if (pathList == null || pathList.isEmpty()) {
             return;
+        }
+        Set<String> excludeAirports = pathSearchRequest.getExcludeAirports();
+        if (excludeAirports != null && !excludeAirports.isEmpty()) {
+            pathList.removeIf(path ->
+                    path.getRouteList().stream().anyMatch(route ->
+                            excludeAirports.contains(route.getDestination())
+                                    || excludeAirports.contains(route.getOrigin())));
         }
         pathList.forEach(path ->
                 buildAllFlightPathsForPath(path, pathSearchRequest, pathConsumer));

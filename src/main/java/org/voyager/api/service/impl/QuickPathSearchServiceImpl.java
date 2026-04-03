@@ -26,7 +26,7 @@ public class QuickPathSearchServiceImpl implements QuickPathSearchService {
         // for each origin -> destination, check for direct routes
         for (String origin : originSet) {
             for (String destination : destinationSet) {
-                if (request.getExcludeDestinations().contains(destination)) continue;
+                if (request.getExcludeAirports().contains(destination)) continue;
                 Option<Route> routeOption = routeService.getRoute(origin,destination);
                 // add empty route
                 if (routeOption.isEmpty()) {
@@ -52,7 +52,7 @@ public class QuickPathSearchServiceImpl implements QuickPathSearchService {
         // for each origin -> destination, check for direct routes
         for (String origin : originSet) {
             for (String destination : destinationSet) {
-                if (request.getExcludeDestinations().contains(destination)) continue;
+                if (request.getExcludeAirports().contains(destination)) continue;
                 Option<Route> routeOption = routeService.getRoute(origin,destination);
                 // add empty route
                 if (routeOption.isEmpty()) {

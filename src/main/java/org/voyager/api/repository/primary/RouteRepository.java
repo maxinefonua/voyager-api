@@ -13,11 +13,11 @@ public interface RouteRepository extends JpaRepository<RouteEntity,Integer> {
     @Query("SELECT r FROM RouteEntity r WHERE " +
             "(:origins IS NULL OR r.origin IN :origins) AND " +
             "(:destinations IS NULL OR r.destination IN :destinations) AND " +
-            "(:excludeDestinations IS NULL OR r.destination NOT IN :excludeDestinations) AND " +
+            "(:excludeAirports IS NULL OR (r.destination NOT IN :excludeAirports AND r.origin NOT IN :excludeAirports)) AND " +
             "(:excludeRouteIds IS NULL OR r.id NOT IN :excludeRouteIds)")
     List<RouteEntity> findRoutes(
             @Param("origins") List<String> origins,
             @Param("destinations") List<String> destinations,
-            @Param("excludeDestinations") List<String> excludeDestinations,
+            @Param("excludeAirports") List<String> excludeAirports,
             @Param("excludeRouteIds") List<Integer> excludeRouteIds);
 }
