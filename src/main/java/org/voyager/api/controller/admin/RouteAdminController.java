@@ -64,11 +64,18 @@ public class RouteAdminController {
     }
 
     @GetMapping(Path.Admin.SYNC)
-    public List<RouteSync> getRouteByStatus(
+    public List<RouteSync> getRouteSyncByStatus(
             @RequestParam(name = ParameterNames.STATUS, required = false) List<String> statusStringList) {
         LOGGER.info("GET {} with {}:{}", Path.Admin.ROUTES.concat(Path.Admin.SYNC),ParameterNames.STATUS,statusStringList);
         List<Status> statusList = ValidationUtils.validateAndGetStatusList(ParameterNames.STATUS,statusStringList);
         return routeSyncService.getRouteSyncList(statusList);
+    }
+
+    @GetMapping(Path.Admin.SYNC_BY_ID)
+    public RouteSync getRouteSyncById(@PathVariable(name = ParameterNames.ID) String idString) {
+        LOGGER.info("GET {}/{}", Path.Admin.ROUTES.concat(Path.Admin.SYNC),idString);
+        Integer routeId = ValidationUtils.validateAndGetRouteId(idString,routeService);
+        return routeSyncService.getByRouteId(routeId);
     }
 
     @PatchMapping(Path.Admin.SYNC)
