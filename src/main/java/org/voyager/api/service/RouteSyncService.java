@@ -13,4 +13,5 @@ public interface RouteSyncService {
     List<RouteSync> getRouteSyncList(@NonNull List<Status> statusList);
     Integer batchUpdate(@NonNull @Validated RouteSyncBatchUpdate routeSyncBatchUpdate);
     RouteSync patch(@NonNull Integer routeId, @NonNull @Validated RouteSyncPatch routeSyncPatch);
+    RouteSync getByRouteId(@NonNull Integer routeId);
 }

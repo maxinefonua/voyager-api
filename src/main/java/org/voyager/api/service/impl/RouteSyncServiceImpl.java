@@ -63,4 +63,11 @@ public class RouteSyncServiceImpl implements RouteSyncService {
         routeSyncEntity.setUpdatedAt(now);
         return MapperUtils.entityToRouteSync(adminRouteSyncRepository.save(routeSyncEntity));
     }
+
+    @Override
+    public RouteSync getByRouteId(@NonNull Integer routeId) {
+        Optional<RouteSyncEntity> optional = adminRouteSyncRepository.findById(routeId);
+        assert optional.isPresent();
+        return MapperUtils.entityToRouteSync(optional.get());
+    }
 }
