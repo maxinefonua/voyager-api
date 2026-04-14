@@ -18,7 +18,6 @@ import org.voyager.commons.constants.Regex;
 import org.voyager.api.error.MessageConstants;
 import org.voyager.commons.error.ValidationException;
 import org.voyager.commons.model.airline.Airline;
-import org.voyager.commons.model.airline.AirlineBatchUpsert;
 import org.voyager.commons.model.airport.AirportPatch;
 import org.voyager.commons.model.airport.AirportType;
 import org.voyager.commons.model.country.Continent;
@@ -435,14 +434,6 @@ public class ValidationUtils {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                     INTERNAL_SERVICE_ERROR_GENERIC_MESSAGE);
         }
-    }
-
-    public static void validateAirlineBatchUpsert(AirlineBatchUpsert airlineBatchUpsert,
-                                                  BindingResult bindingResult) {
-        processRequestBodyBindingErrors(airlineBatchUpsert,bindingResult);
-        airlineBatchUpsert.setIataList(airlineBatchUpsert.getIataList().stream()
-                .map(String::toUpperCase).toList());
-        airlineBatchUpsert.setAirline(airlineBatchUpsert.getAirline().toUpperCase());
     }
 
     public static <T> void validate(T object, BindingResult bindingResult) {

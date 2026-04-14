@@ -38,6 +38,8 @@ import java.util.HashMap;
 import java.util.Optional;
 import java.util.Comparator;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+
 import static org.voyager.api.service.utils.ServiceUtils.handleJPAExceptions;
 
 @Service
@@ -80,6 +82,12 @@ public class FlightServiceImpl implements FlightService {
                 flightQuery.getStartTime(),
                 flightQuery.getEndTime())
                 .stream().map(MapperUtils::entityToFlight).toList();
+    }
+
+    @Override
+    public List<String> getActiveAirportCodes(List<Airline> airlineList) {
+        return flightRepository.findDistinctAirportsWithAirlineIn(
+                airlineList.stream().map(Airline::name).collect(Collectors.toList()));
     }
 
     @Override

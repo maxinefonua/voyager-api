@@ -3,7 +3,6 @@ package org.voyager.api.repository.primary;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.voyager.commons.model.airline.Airline;
@@ -93,4 +92,57 @@ public interface FlightRepository  extends JpaRepository<FlightEntity,Integer> {
             ZonedDateTime startTime,
             ZonedDateTime endTime
     );
+
+    @Query(value = "SELECT DISTINCT r.orgn AS airport_code " +
+            "FROM routes r INNER JOIN flights f ON f.route_id = r.id " +
+            "WHERE f.active = true AND f.airline IN (:airlines) " +
+            "UNION " +
+            "SELECT DISTINCT r.dstn " +
+            "FROM routes r INNER JOIN flights f ON f.route_id = r.id " +
+            "WHERE f.active = true AND f.airline IN (:airlines) " +
+            "ORDER BY airport_code ASC", nativeQuery = true)
+    List<String> findDistinctAirportsWithAirlineIn(@Param("airlines") List<String> airlineStringList);
+
+    @Query(value = "SELECT DISTINCT f.airline FROM public.flights f " +
+            "JOIN public.routes r ON f.route_id = r.id " +
+            "WHERE f.active = true " +
+            "AND (r.orgn IN (:iataList) OR r.dstn IN (:iataList))",
+            nativeQuery = true)
+    List<Airline> findDistinctAirlinesForAnyIataIn(@Param("iataList") List<String> iataList);
+
+    @Query(value = "WITH airport_airlines AS (" +
+            "  SELECT f.airline, r.orgn AS airport_code FROM public.flights f " +
+            "  JOIN public.routes r ON f.route_id = r.id " +
+            "  WHERE f.active = true AND r.orgn IN (:iataList) " +
+            "  UNION " +
+            "  SELECT f.airline, r.dstn AS airport_code FROM public.flights f " +
+            "  JOIN public.routes r ON f.route_id = r.id " +
+            "  WHERE f.active = true AND r.dstn IN (:iataList)" +
+            ") " +
+            "SELECT DISTINCT airline FROM airport_airlines aa " +
+            "GROUP BY airline " +
+            "HAVING COUNT(DISTINCT airport_code) = :iataListSize",
+            nativeQuery = true)
+    List<Airline> findDistinctAirlinesForAllIataIn(
+            @Param("iataList") List<String> iataList,
+            @Param("iataListSize") int iataListSize
+    );
+
+    @Query(value = """
+    SELECT DISTINCT f.airline
+    FROM public.flights f
+    JOIN public.routes r ON f.route_id = r.id
+    WHERE f.active = true
+      AND r.orgn IN (:originList)
+    INTERSECT
+    SELECT DISTINCT f.airline
+    FROM public.flights f
+    JOIN public.routes r ON f.route_id = r.id
+    WHERE f.active = true
+      AND r.dstn IN (:destinationList)
+    """,
+            nativeQuery = true)
+    List<Airline> findDistinctAirlinesWithOriginInAndDestinationIn(
+            @Param("originList") List<String> originList,
+            @Param("destinationList") List<String> destinationList);
 }
