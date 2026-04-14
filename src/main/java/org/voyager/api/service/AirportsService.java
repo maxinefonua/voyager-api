@@ -17,7 +17,6 @@ public interface AirportsService {
     List<String> getIata();
     List<String> getIata(IataQuery iataQuery);
     PagedResponse<Airport> getPagedAirports(AirportQuery airportQuery);
-    List<Airport> getAll(Option<String> countryCode, List<AirportType> airportTypeList, List<Airline> airline);
     List<Airport> getByDistance(double latitude, double longitude, int limit, List<AirportType> airportTypeList, List<Airline> airline);
     List<Airport> getNearbyAirport(String iata, int limit, List<AirportType> airportTypeList, List<Airline> airline);
     Airport getByIata(String iata);

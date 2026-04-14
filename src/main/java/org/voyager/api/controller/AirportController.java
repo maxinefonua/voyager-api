@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
+import org.voyager.api.service.FlightService;
 import org.voyager.commons.constants.ParameterNames;
 import org.voyager.commons.constants.Path;
 import org.voyager.commons.model.airline.Airline;
@@ -29,24 +30,27 @@ public class AirportController {
     AirportsService airportsService;
 
     @Autowired
+    FlightService flightService;
+
+    @Autowired
     CountryService countryService;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AirportController.class);
 
     @GetMapping(Path.IATA)
     @Cacheable("iataCache")
-    public List<String> getIataCodes(@RequestParam(name = ParameterNames.TYPE,
-            required = false) List<String> typeList,
-                                     @RequestParam(name = ParameterNames.AIRLINE,
-                                             required = false) List<String> airlineStringList) {
+    public List<String> getIataCodes(
+            @RequestParam(name = ParameterNames.TYPE, required = false) List<String> typeList,
+            @RequestParam(name = ParameterNames.AIRLINE, required = false) List<String> airlineStringList) {
         LOGGER.info("GET /iata called with typeList: {}, airlineList: {}", typeList, airlineStringList);
         List<AirportType> airportTypeList = ValidationUtils.resolveTypeList(typeList);
         List<Airline> airlineList = ValidationUtils.resolveAirlineStringList(airlineStringList);
         if (airportTypeList.isEmpty() && airlineList.isEmpty()) return airportsService.getIata();
-        IataQuery.IataQueryBuilder iataQueryBuilder = IataQuery.builder();
-        if (!airportTypeList.isEmpty()) {
-            iataQueryBuilder.withAirportTypeList(airportTypeList);
+        if (airportTypeList.isEmpty()) {
+            return flightService.getActiveAirportCodes(airlineList);
         }
+        // TODO: remove dependency on airline airports
+        IataQuery.IataQueryBuilder iataQueryBuilder = IataQuery.builder().withAirportTypeList(airportTypeList);
         if (!airlineList.isEmpty()) {
             iataQueryBuilder.withAirlineList(airlineList);
         }

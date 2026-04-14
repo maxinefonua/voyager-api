@@ -2,6 +2,7 @@ package org.voyager.api.service;
 
 import io.vavr.control.Option;
 import org.springframework.validation.annotation.Validated;
+import org.voyager.commons.model.airline.Airline;
 import org.voyager.commons.model.flight.Flight;
 import org.voyager.commons.model.flight.FlightBatchDelete;
 import org.voyager.commons.model.flight.FlightQuery;
@@ -16,6 +17,7 @@ public interface FlightService {
     Boolean existsByFlightNumber(String flightNumber);
     Option<Flight> getById(Integer id);
     List<Flight> getFlights(FlightQuery flightQuery);
+    List<String> getActiveAirportCodes(List<Airline> airlineList);
     PagedResponse<Flight> getPagedFlights(@Validated FlightQuery flightQuery);
     Integer batchDelete(FlightBatchDelete flightBatchDelete);
     FlightBatchUpsertResult batchUpsert(@Validated FlightBatchUpsert flightBatchUpsert);

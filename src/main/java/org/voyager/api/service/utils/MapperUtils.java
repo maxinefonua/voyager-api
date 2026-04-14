@@ -5,9 +5,7 @@ import org.voyager.api.model.entity.RouteSyncEntity;
 import org.voyager.api.model.entity.AirportEntity;
 import org.voyager.api.model.entity.RouteEntity;
 import org.voyager.api.model.entity.FlightEntity;
-import org.voyager.api.model.entity.AirlineAirportEntity;
 import org.voyager.api.model.entity.CountryEntity;
-import org.voyager.commons.model.airline.AirlineAirport;
 import org.voyager.commons.model.airport.Airport;
 import org.voyager.commons.model.airport.AirportForm;
 import org.voyager.commons.model.airport.AirportType;
@@ -126,12 +124,6 @@ public class MapperUtils {
 
     public static Airline entityToAirline(AirlineEntity airlineEntity) {
         return airlineEntity.getAirline();
-    }
-
-    public static AirlineAirport entityToAirlineAirport(AirlineAirportEntity airlineAirportEntity) {
-        return AirlineAirport.builder().airline(airlineAirportEntity.getAirline())
-                .iata(airlineAirportEntity.getIata())
-                .isActive(airlineAirportEntity.getIsActive()).build();
     }
 
     public static AirportEntity formToAirportEntity(AirportForm airportForm) {

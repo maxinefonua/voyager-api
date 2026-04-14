@@ -104,7 +104,6 @@ public class GeoNamesController {
     }
 
     @GetMapping(GeoNames.COUNTRIES)
-    @Cacheable("geoCountryVoyager")
     public ResponseEntity<String> getCountryGNList() {
         LOGGER.info("non-cached GET {}",GeoNames.COUNTRIES);
         return geoNameService.getCountries();

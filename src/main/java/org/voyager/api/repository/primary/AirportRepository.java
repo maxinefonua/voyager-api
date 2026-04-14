@@ -12,16 +12,10 @@ import java.util.List;
 
 public interface AirportRepository extends JpaRepository<AirportEntity,String> {
     @Query("SELECT DISTINCT a FROM AirportEntity a " +
-            "WHERE (:airlineList IS NULL OR EXISTS (" +
-            "    SELECT 1 FROM AirlineAirportEntity aa " +
-            "    WHERE aa.iata = a.iata " +
-            "    AND aa.airline IN :airlineList" +
-            ")) " +
-            "AND (:typeList IS NULL OR a.type IN :typeList) " +
+            "WHERE (:typeList IS NULL OR a.type IN :typeList) " +
             "AND (:countryCode IS NULL OR a.countryCode = :countryCode) " +
             "ORDER BY a.iata ASC")
-    Page<AirportEntity> findAirportsDynamic(
-            @Param("airlineList") List<Airline> airlineList,
+    Page<AirportEntity> findAirportsDynamicWithoutAirlines(
             @Param("typeList") List<AirportType> typeList,
             @Param("countryCode") String countryCode,
             Pageable pageable);
@@ -33,8 +27,164 @@ public interface AirportRepository extends JpaRepository<AirportEntity,String> {
     List<String> selectIataByTypeIn(List<AirportType> typeList);
 
     List<AirportEntity> findByIataInOrderByIataAsc(List<String> iataList);
-    List<AirportEntity> findByCountryCodeOrderByIataAsc(String countryCode);
-    List<AirportEntity> findByCountryCodeAndTypeInOrderByIataAsc(String countryCode, List<AirportType> typeList);
     List<AirportEntity> findByTypeInOrderByIataAsc(List<AirportType> typeList);
-    Page<AirportEntity> findAllByOrderByIataAsc(Pageable pageable);
+
+    @Query(value = """
+        SELECT DISTINCT a.*
+        FROM airports a
+        WHERE a.iata IN (
+            SELECT r.orgn
+            FROM routes r
+            INNER JOIN flights f ON f.route_id = r.id
+            WHERE f.active = true AND f.airline IN (:airlineList)
+            UNION
+            SELECT r.dstn
+            FROM routes r
+            INNER JOIN flights f ON f.route_id = r.id
+            WHERE f.active = true AND f.airline IN (:airlineList)
+        )
+        AND a.type IN (:typeList)
+        AND a.country = :countryCode
+        ORDER BY a.iata ASC
+        """,
+            countQuery = """
+        SELECT COUNT(DISTINCT a.iata)
+        FROM airports a
+        WHERE a.iata IN (
+            SELECT r.orgn
+            FROM routes r
+            INNER JOIN flights f ON f.route_id = r.id
+            WHERE f.active = true AND f.airline IN (:airlineList)
+            UNION
+            SELECT r.dstn
+            FROM routes r
+            INNER JOIN flights f ON f.route_id = r.id
+            WHERE f.active = true AND f.airline IN (:airlineList)
+        )
+        AND a.type IN (:typeList)
+        AND a.country = :countryCode
+        """,
+            nativeQuery = true)
+    Page<AirportEntity> findAirportsByAirlinesAndTypesAndCountry(
+            @Param("airlineList") List<String> airlineList,
+            @Param("typeList") List<String> typeList,
+            @Param("countryCode") String countryCode,
+            Pageable pageable);
+
+    // 2. Airlines + Types (no country)
+    @Query(value = """
+        SELECT DISTINCT a.*
+        FROM airports a
+        WHERE a.iata IN (
+            SELECT r.orgn
+            FROM routes r
+            INNER JOIN flights f ON f.route_id = r.id
+            WHERE f.active = true AND f.airline IN (:airlineList)
+            UNION
+            SELECT r.dstn
+            FROM routes r
+            INNER JOIN flights f ON f.route_id = r.id
+            WHERE f.active = true AND f.airline IN (:airlineList)
+        )
+        AND a.type IN (:typeList)
+        ORDER BY a.iata ASC
+        """,
+            countQuery = """
+        SELECT COUNT(DISTINCT a.iata)
+        FROM airports a
+        WHERE a.iata IN (
+            SELECT r.orgn
+            FROM routes r
+            INNER JOIN flights f ON f.route_id = r.id
+            WHERE f.active = true AND f.airline IN (:airlineList)
+            UNION
+            SELECT r.dstn
+            FROM routes r
+            INNER JOIN flights f ON f.route_id = r.id
+            WHERE f.active = true AND f.airline IN (:airlineList)
+        )
+        AND a.type IN (:typeList)
+        """,
+            nativeQuery = true)
+    Page<AirportEntity> findAirportsByAirlinesAndTypes(
+            @Param("airlineList") List<String> airlineList,
+            @Param("typeList") List<String> typeList,
+            Pageable pageable);
+
+    // 3. Airlines + Country (no types)
+    @Query(value = """
+        SELECT DISTINCT a.*
+        FROM airports a
+        WHERE a.iata IN (
+            SELECT r.orgn
+            FROM routes r
+            INNER JOIN flights f ON f.route_id = r.id
+            WHERE f.active = true AND f.airline IN (:airlineList)
+            UNION
+            SELECT r.dstn
+            FROM routes r
+            INNER JOIN flights f ON f.route_id = r.id
+            WHERE f.active = true AND f.airline IN (:airlineList)
+        )
+        AND a.country = :countryCode
+        ORDER BY a.iata ASC
+        """,
+            countQuery = """
+        SELECT COUNT(DISTINCT a.iata)
+        FROM airports a
+        WHERE a.iata IN (
+            SELECT r.orgn
+            FROM routes r
+            INNER JOIN flights f ON f.route_id = r.id
+            WHERE f.active = true AND f.airline IN (:airlineList)
+            UNION
+            SELECT r.dstn
+            FROM routes r
+            INNER JOIN flights f ON f.route_id = r.id
+            WHERE f.active = true AND f.airline IN (:airlineList)
+        )
+        AND a.country = :countryCode
+        """,
+            nativeQuery = true)
+    Page<AirportEntity> findAirportsByAirlinesAndCountry(
+            @Param("airlineList") List<String> airlineList,
+            @Param("countryCode") String countryCode,
+            Pageable pageable);
+
+    // 4. Airlines only
+    @Query(value = """
+        SELECT DISTINCT a.*
+        FROM airports a
+        WHERE a.iata IN (
+            SELECT r.orgn
+            FROM routes r
+            INNER JOIN flights f ON f.route_id = r.id
+            WHERE f.active = true AND f.airline IN (:airlineList)
+            UNION
+            SELECT r.dstn
+            FROM routes r
+            INNER JOIN flights f ON f.route_id = r.id
+            WHERE f.active = true AND f.airline IN (:airlineList)
+        )
+        ORDER BY a.iata ASC
+        """,
+            countQuery = """
+        SELECT COUNT(DISTINCT a.iata)
+        FROM airports a
+        WHERE a.iata IN (
+            SELECT r.orgn
+            FROM routes r
+            INNER JOIN flights f ON f.route_id = r.id
+            WHERE f.active = true AND f.airline IN (:airlineList)
+            UNION
+            SELECT r.dstn
+            FROM routes r
+            INNER JOIN flights f ON f.route_id = r.id
+            WHERE f.active = true AND f.airline IN (:airlineList)
+        )
+        """,
+            nativeQuery = true)
+    Page<AirportEntity> findAirportsByAirlinesOnly(
+            @Param("airlineList") List<String> airlineList,
+            Pageable pageable);
 }
