@@ -9,7 +9,6 @@ import org.voyager.commons.model.flight.FlightQuery;
 import org.voyager.commons.model.flight.FlightBatchUpsertResult;
 import org.voyager.commons.model.flight.FlightBatchUpsert;
 import org.voyager.commons.model.response.PagedResponse;
-
 import java.time.ZonedDateTime;
 import java.util.List;
 

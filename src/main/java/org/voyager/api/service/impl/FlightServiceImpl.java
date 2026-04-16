@@ -27,7 +27,6 @@ import org.voyager.api.repository.primary.FlightRepository;
 import org.voyager.api.service.FlightService;
 import org.voyager.api.service.utils.MapperUtils;
 import org.voyager.commons.model.response.PagedResponse;
-
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;

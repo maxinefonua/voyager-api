@@ -16,8 +16,6 @@ import org.voyager.api.service.AirportsService;
 import org.voyager.api.service.RouteService;
 import org.voyager.api.validate.ValidationUtils;
 import org.voyager.commons.model.route.RouteQuery;
-
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
