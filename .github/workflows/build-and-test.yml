@@ -40,7 +40,6 @@ jobs:
           GITHUB_ACTOR: ${{ github.actor }}
 
       - name: Run Voyager API with Secrets
-        env: dev
         run: |
           # Export all variables first
           export ADMIN_API_KEY="${{ secrets.ADMIN_API_KEY }}"
@@ -54,6 +53,10 @@ jobs:
           export POSTGRES_USER="${{ secrets.POSTGRES_USER }}"
           export TESTS_API_KEY="${{ secrets.TESTS_API_KEY }}"
           export VOYAGER_API_KEY="${{ secrets.VOYAGER_API_KEY }}"
+          export POSTGRES_DB="${{ vars.VOYAGER_API_KEY }}"
+          export POSTGRES_PORT="${{ vars.POSTGRES_PORT }}"
+          export SERVER_PORT="${{ vars.SERVER_PORT }}"
+          export SPRING_PROFILES_ACTIVE="${{ vars.dev }}"
 
           # Now start the API
           nohup mvn spring-boot:run > api.log 2>&1 &
