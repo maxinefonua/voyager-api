@@ -18,6 +18,15 @@ jobs:
           echo "Looking for pom.xml:"
           find . -name "pom.xml" -type f
 
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          server-id: github
+          server-username: maxinefonua
+          server-password: ${{ secrets.COMMONS_READ_TOKEN }} # 👈 Use the PAT secret here
+
       - name: Build API
         run: mvn clean install -DskipTests
 
