@@ -6,6 +6,10 @@ jobs:
   functional-test:
     runs-on: ubuntu-latest
     environment: dev
+    permissions:
+      contents: read
+      packages: read
+
     steps:
       - name: Checkout voyager-api code
         uses: actions/checkout@v4
@@ -27,7 +31,7 @@ jobs:
       - name: Configure Maven settings.xml
         run: |
           mkdir -p ~/.m2
-          cat > ~/.m2/settings.xml << EOF
+          cat > ~/.m2/settings.xml << 'EOF'
           <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
                     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                     xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
@@ -41,7 +45,7 @@ jobs:
             </servers>
           </settings>
           EOF
-
+          
           echo "✅ Created settings.xml"
           echo "Server configuration for id: github"
           echo "Username: maxinefonua"
@@ -49,6 +53,8 @@ jobs:
 
       - name: Build API
         run: mvn clean install -DskipTests
+        env:
+          MAVEN_PASSWORD: ${{ secrets.COMMONS_READ_TOKEN }}
 
       - name: Run Voyager API with Secrets
         env:
@@ -67,14 +73,13 @@ jobs:
           nohup mvn spring-boot:run > api.log 2>&1 &
           echo "Waiting for API to start..."
 
-          # More robust health check with retry
           for i in {1..30}; do
             if curl --silent --fail http://localhost:8080/actuator/health; then
-              echo "API is ready!"
+              echo "✅ API is ready!"
               break
             fi
             if [ $i -eq 30 ]; then
-              echo "API failed to start within 30 seconds"
+              echo "❌ API failed to start within 30 seconds"
               cat api.log
               exit 1
             fi
@@ -86,6 +91,7 @@ jobs:
         with:
           repository: maxinefonua/voyager-tests
           path: voyager-tests
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build functional test uber jar
         run: mvn clean package -f voyager-tests/pom.xml
