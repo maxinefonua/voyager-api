@@ -83,6 +83,8 @@ management:
     export:
       prometheus:
         enabled: true
+      simple:
+        enabled: true
 
 app:
   version: @project.version@
