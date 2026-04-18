@@ -7,6 +7,17 @@ jobs:
     runs-on: ubuntu-latest
     environment: dev
     steps:
+      - name: Checkout voyager-api code
+        uses: actions/checkout@v4
+
+      - name: Debug - List directory contents
+        run: |
+          echo "Current directory: $(pwd)"
+          echo "Files in current directory:"
+          ls -la
+          echo "Looking for pom.xml:"
+          find . -name "pom.xml" -type f
+
       - name: Build API
         run: mvn clean install -DskipTests
 
