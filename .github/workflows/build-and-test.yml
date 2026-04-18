@@ -1,6 +1,6 @@
 name: Build and Test
 
-on: [push, pull_request]
+on: [push]
 
 jobs:
   functional-test:
@@ -23,9 +23,29 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-          server-id: github
-          server-username: maxinefonua
-          server-password: ${{ secrets.COMMONS_READ_TOKEN }} # 👈 Use the PAT secret here
+
+      - name: Configure Maven settings.xml
+        run: |
+          mkdir -p ~/.m2
+          cat > ~/.m2/settings.xml << EOF
+          <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
+                                        http://maven.apache.org/xsd/settings-1.0.0.xsd">
+            <servers>
+              <server>
+                <id>github</id>
+                <username>maxinefonua</username>
+                <password>${env.MAVEN_PASSWORD}</password>
+              </server>
+            </servers>
+          </settings>
+          EOF
+
+          echo "✅ Created settings.xml"
+          echo "Server configuration for id: github"
+          echo "Username: maxinefonua"
+          echo "Password: [HIDDEN]"
 
       - name: Build API
         run: mvn clean install -DskipTests
