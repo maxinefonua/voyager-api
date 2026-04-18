@@ -64,7 +64,8 @@ jobs:
           echo "SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}"
 
           # Now start the API
-          mvn spring-boot:run 
+          nohup mvn spring-boot:run > api.log 2>&1 &
+          echo "Waiting for API to start..."
 
           for i in {1..30}; do
             if curl --silent --fail http://localhost:8080/actuator/health; then
