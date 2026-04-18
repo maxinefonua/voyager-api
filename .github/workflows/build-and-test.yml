@@ -53,10 +53,15 @@ jobs:
           export POSTGRES_USER="${{ secrets.POSTGRES_USER }}"
           export TESTS_API_KEY="${{ secrets.TESTS_API_KEY }}"
           export VOYAGER_API_KEY="${{ secrets.VOYAGER_API_KEY }}"
-          export POSTGRES_DB="${{ vars.VOYAGER_API_KEY }}"
+          export POSTGRES_DB="${{ vars.POSTGRES_DB }}"
           export POSTGRES_PORT="${{ vars.POSTGRES_PORT }}"
           export SERVER_PORT="${{ vars.SERVER_PORT }}"
-          export SPRING_PROFILES_ACTIVE="${{ vars.dev }}"
+          export SPRING_PROFILES_ACTIVE="dev"
+          
+          echo "POSTGRES_HOST: ${POSTGRES_HOST}"
+          echo "POSTGRES_DB: ${POSTGRES_DB}"
+          echo "POSTGRES_PORT: ${POSTGRES_PORT}"
+          echo "SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}"
 
           # Now start the API
           mvn spring-boot:run 
