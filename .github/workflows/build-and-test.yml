@@ -40,6 +40,7 @@ jobs:
           GITHUB_ACTOR: ${{ github.actor }}
 
       - name: Run Voyager API with Secrets
+        env: dev
         run: |
           # Export all variables first
           export ADMIN_API_KEY="${{ secrets.ADMIN_API_KEY }}"
