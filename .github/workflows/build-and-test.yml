@@ -40,19 +40,21 @@ jobs:
           GITHUB_ACTOR: ${{ github.actor }}
 
       - name: Run Voyager API with Secrets
-        env:
-          ADMIN_API_KEY: ${{ secrets.ADMIN_API_KEY }}
-          GEONAMES_API_USERNAME: ${{ secrets.GEONAMES_API_USERNAME }}
-          POSTGRES_ADMIN_PASSWORD: ${{ secrets.POSTGRES_ADMIN_PASSWORD }}
-          POSTGRES_ADMIN_USER: ${{ secrets.POSTGRES_ADMIN_USER }}
-          POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
-          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-          POSTGRES_TESTS_PASSWORD: ${{ secrets.POSTGRES_TESTS_PASSWORD }}
-          POSTGRES_TESTS_USER: ${{ secrets.POSTGRES_TESTS_USER }}
-          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
-          TESTS_API_KEY: ${{ secrets.TESTS_API_KEY }}
-          VOYAGER_API_KEY: ${{ secrets.VOYAGER_API_KEY }}
         run: |
+          # Export all variables first
+          export ADMIN_API_KEY="${{ secrets.ADMIN_API_KEY }}"
+          export GEONAMES_API_USERNAME="${{ secrets.GEONAMES_API_USERNAME }}"
+          export POSTGRES_ADMIN_PASSWORD="${{ secrets.POSTGRES_ADMIN_PASSWORD }}"
+          export POSTGRES_ADMIN_USER="${{ secrets.POSTGRES_ADMIN_USER }}"
+          export POSTGRES_HOST="${{ secrets.POSTGRES_HOST }}"
+          export POSTGRES_PASSWORD="${{ secrets.POSTGRES_PASSWORD }}"
+          export POSTGRES_TESTS_PASSWORD="${{ secrets.POSTGRES_TESTS_PASSWORD }}"
+          export POSTGRES_TESTS_USER="${{ secrets.POSTGRES_TESTS_USER }}"
+          export POSTGRES_USER="${{ secrets.POSTGRES_USER }}"
+          export TESTS_API_KEY="${{ secrets.TESTS_API_KEY }}"
+          export VOYAGER_API_KEY="${{ secrets.VOYAGER_API_KEY }}"
+
+          # Now start the API
           nohup mvn spring-boot:run > api.log 2>&1 &
           echo "Waiting for API to start..."
 
