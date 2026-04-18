@@ -1,8 +1,8 @@
 package org.voyager.api.service;
 
 import lombok.NonNull;
-import org.voyager.commons.model.airline.*;
-
+import org.voyager.commons.model.airline.Airline;
+import org.voyager.commons.model.airline.AirlineQuery;
 import java.util.List;
 
 public interface AirlineService {

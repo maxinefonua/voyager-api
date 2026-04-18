@@ -1,0 +1,100 @@
+name: Build and Test
+
+on: [pull_request]
+
+jobs:
+  functional-test:
+    runs-on: ubuntu-latest
+    environment: dev
+    permissions:
+      contents: read
+      packages: read
+
+    steps:
+      - name: Checkout voyager-api code
+        uses: actions/checkout@v4
+
+      - name: Debug - List directory contents
+        run: |
+          echo "Current directory: $(pwd)"
+          echo "Files in current directory:"
+          ls -la
+          echo "Looking for pom.xml:"
+          find . -name "pom.xml" -type f
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Configure Maven Settings
+        run: |
+          mkdir -p ~/.m2
+          cp .github/workflows/settings.xml ~/.m2/settings.xml
+
+      - name: Build API
+        run: mvn clean install -DskipTests
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_ACTOR: ${{ github.actor }}
+
+      - name: Run Voyager API with Secrets
+        run: |
+          # Export all variables first
+          export ADMIN_API_KEY="${{ secrets.ADMIN_API_KEY }}"
+          export GEONAMES_API_USERNAME="${{ secrets.GEONAMES_API_USERNAME }}"
+          export POSTGRES_ADMIN_PASSWORD="${{ secrets.POSTGRES_ADMIN_PASSWORD }}"
+          export POSTGRES_ADMIN_USER="${{ secrets.POSTGRES_ADMIN_USER }}"
+          export POSTGRES_HOST="${{ secrets.POSTGRES_HOST }}"
+          export POSTGRES_PASSWORD="${{ secrets.POSTGRES_PASSWORD }}"
+          export POSTGRES_TESTS_PASSWORD="${{ secrets.POSTGRES_TESTS_PASSWORD }}"
+          export POSTGRES_TESTS_USER="${{ secrets.POSTGRES_TESTS_USER }}"
+          export POSTGRES_USER="${{ secrets.POSTGRES_USER }}"
+          export TESTS_API_KEY="${{ secrets.TESTS_API_KEY }}"
+          export VOYAGER_API_KEY="${{ secrets.VOYAGER_API_KEY }}"
+          export POSTGRES_DB="${{ vars.POSTGRES_DB }}"
+          export POSTGRES_PORT="${{ vars.POSTGRES_PORT }}"
+          export SERVER_PORT="${{ vars.SERVER_PORT }}"
+          export SPRING_PROFILES_ACTIVE="dev"
+          
+          echo "POSTGRES_HOST: ${POSTGRES_HOST}"
+          echo "POSTGRES_DB: ${POSTGRES_DB}"
+          echo "POSTGRES_PORT: ${POSTGRES_PORT}"
+          echo "SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}"
+
+          # Now start the API
+          nohup mvn spring-boot:run > api.log 2>&1 &
+          echo "Waiting for API to start..."
+
+          for i in {1..30}; do
+            if curl --silent --fail http://localhost:8080/actuator/health; then
+              echo "✅ API is ready!"
+              break
+            fi
+            if [ $i -eq 30 ]; then
+              echo "❌ API failed to start within 30 seconds"
+              cat api.log
+              exit 1
+            fi
+            sleep 1
+          done
+
+      - name: Checkout voyager-tests
+        uses: actions/checkout@v4
+        with:
+          repository: maxinefonua/voyager-tests
+          path: voyager-tests
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build functional test uber jar
+        run: mvn clean package -f voyager-tests/pom.xml
+
+      - name: Run functional tests
+        env:
+          ADMIN_AUTH_TOKEN: ${{ secrets.ADMIN_API_KEY }}
+          RUNTIME_ENVIRONMENT: local
+          TEST_AUTH_TOKEN: ${{ secrets.TESTS_API_KEY }}
+          VOYAGER_AUTH_TOKEN: ${{ secrets.VOYAGER_API_KEY }}
+          VOYAGER_URL: http://localhost:8080
+        run: java -jar voyager-tests/target/voyager-tests-*.jar

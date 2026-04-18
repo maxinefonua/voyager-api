@@ -1,6 +1,5 @@
 package org.voyager.api.service;
 
-import io.vavr.control.Option;
 import org.springframework.validation.annotation.Validated;
 import org.voyager.commons.model.airline.Airline;
 import org.voyager.commons.model.airport.Airport;

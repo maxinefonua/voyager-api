@@ -6,7 +6,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.voyager.api.model.entity.FlightEntity;
 import org.voyager.commons.model.airline.Airline;
-
 import java.time.ZonedDateTime;
 import java.util.List;
 
