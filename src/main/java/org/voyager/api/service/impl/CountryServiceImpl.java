@@ -1,8 +1,12 @@
 package org.voyager.api.service.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.voyager.api.model.request.CountryPageRequest;
 import org.voyager.api.repository.admin.AdminCountryRepository;
 import org.voyager.api.repository.tests.TestsCountryRepository;
 import org.voyager.commons.model.country.Continent;
@@ -12,6 +16,8 @@ import org.voyager.api.model.entity.CountryEntity;
 import org.voyager.api.repository.primary.CountryRepository;
 import org.voyager.api.service.CountryService;
 import org.voyager.api.service.utils.MapperUtils;
+import org.voyager.commons.model.response.PagedResponse;
+
 import java.util.List;
 import static org.voyager.api.service.utils.ServiceUtils.handleJPAExceptions;
 
@@ -37,6 +43,31 @@ public class CountryServiceImpl implements CountryService {
             }
             return countryEntities.stream().map(MapperUtils::entityToCountry).toList();
         });
+    }
+
+    @Override
+    public PagedResponse<Country> getPagedCountries(CountryPageRequest countryPageRequest) {
+        List<Continent> continentList = getContinentList(countryPageRequest.getContinentList());
+        PageRequest pageRequest = countryPageRequest.getPageRequest();
+        Page<CountryEntity> page = countryRepository.findDynamic(
+                continentList,
+                Pageable.ofSize(pageRequest.getPageSize())
+                        .withPage(pageRequest.getPageNumber()));
+        return PagedResponse.<Country>builder()
+                .content(page.getContent().stream().map(MapperUtils::entityToCountry).toList())
+                .page(pageRequest.getPageNumber())
+                .size(pageRequest.getPageSize())
+                .first(page.isFirst())
+                .last(page.isLast())
+                .totalPages(page.getTotalPages())
+                .numberOfElements(page.getNumberOfElements())
+                .totalElements(page.getTotalElements())
+                .build();
+    }
+
+    private List<Continent> getContinentList(List<Continent> continentList) {
+        if (continentList == null || continentList.isEmpty()) return null;
+        return continentList;
     }
 
     @Override
